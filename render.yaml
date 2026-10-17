@@ -1,0 +1,23 @@
+# Render Blueprint for the Express backend.
+# Render dashboard -> New -> Blueprint -> select this repository.
+services:
+  - type: web
+    name: taskflow-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_SECRET
+        generateValue: true
+      # Set these two in the Render dashboard:
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_URL # e.g. https://your-app.vercel.app
+        sync: false
