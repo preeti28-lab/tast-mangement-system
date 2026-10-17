@@ -8,6 +8,11 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
+import connectDB from "./config/db.js";
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set");
+}
 
 const app = express();
 
@@ -22,6 +27,18 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+// Make sure the DB is connected before handling a request. Locally server.js connects
+// at start-up; on Vercel the app is a serverless function, so this connects lazily.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error(`MongoDB connection error: ${error.message}`);
+    res.status(503).json({ message: "Database unavailable. Please try again shortly." });
+  }
+});
 
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
