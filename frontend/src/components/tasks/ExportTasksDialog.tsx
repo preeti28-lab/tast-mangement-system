@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Surface";
-import { popoverInputClass } from "@/components/ui/table";
+import { dateFieldClass } from "@/components/ui/DateRangeFilter";
 import type { Task } from "@/lib/api";
 import { formatDate, toDateInput, todayInput } from "@/lib/format";
 
@@ -160,7 +160,7 @@ export default function ExportTasksDialog({ open, busy, onClose, onExport }: Pro
                   value={custom.from}
                   max={custom.to || undefined}
                   onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))}
-                  className={`mt-1 ${popoverInputClass} py-2`}
+                  className={dateFieldClass}
                   required
                 />
               </label>
@@ -171,7 +171,7 @@ export default function ExportTasksDialog({ open, busy, onClose, onExport }: Pro
                   value={custom.to}
                   min={custom.from || undefined}
                   onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))}
-                  className={`mt-1 ${popoverInputClass} py-2`}
+                  className={dateFieldClass}
                   required
                 />
               </label>

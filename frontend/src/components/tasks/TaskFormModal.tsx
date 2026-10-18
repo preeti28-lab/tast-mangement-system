@@ -18,7 +18,7 @@ import {
   type TaskStatus,
   type UserRef,
 } from "@/lib/api";
-import { dateInputToIso, toDateInput, todayInput } from "@/lib/format";
+import { dueToIso, toDateInput, toTimeInput, todayInput } from "@/lib/format";
 import { PRIORITY_OPTIONS, RECURRENCE_OPTIONS, STATUS_OPTIONS, selectClass } from "./options";
 
 export type SaveResult =
@@ -46,6 +46,7 @@ type FormValues = {
   title: string;
   description: string;
   dueDate: string; // YYYY-MM-DD
+  dueTime: string; // HH:MM, or "" for end of day
   priority: TaskPriority;
   status: TaskStatus;
   recurrence: TaskRecurrence;
@@ -65,10 +66,12 @@ function TaskForm({
 }) {
   const { user } = useUser();
   const initialDue = toDateInput(task?.dueDate);
+  const initialTime = toTimeInput(task?.dueDate);
   const [values, setValues] = useState<FormValues>({
     title: task?.title ?? "",
     description: task?.description ?? "",
     dueDate: initialDue,
+    dueTime: initialTime,
     priority: task?.priority ?? "medium",
     status: task?.status ?? "todo",
     recurrence: task?.recurrence ?? "none",
@@ -97,6 +100,15 @@ function TaskForm({
     // overdue date can be kept while editing other fields.
     if (values.dueDate && values.dueDate !== initialDue && values.dueDate < todayInput())
       found.dueDate = "Due date can't be in the past";
+    const dueChanged = values.dueDate !== initialDue || values.dueTime !== initialTime;
+    if (
+      values.dueDate &&
+      values.dueTime &&
+      dueChanged &&
+      !found.dueDate &&
+      new Date(dueToIso(values.dueDate, values.dueTime)) <= new Date()
+    )
+      found.dueTime = "This time has already passed";
     if (values.recurrence !== "none" && !values.dueDate)
       found.dueDate = "Recurring tasks need a due date";
     return found;
@@ -112,7 +124,7 @@ function TaskForm({
     const payload: TaskInput = {
       title: values.title.trim(),
       description: values.description.trim(),
-      dueDate: values.dueDate ? dateInputToIso(values.dueDate, "end") : null,
+      dueDate: values.dueDate ? dueToIso(values.dueDate, values.dueTime) : null,
       priority: values.priority,
       status: values.status,
       recurrence: values.recurrence,
@@ -195,6 +207,30 @@ function TaskForm({
         </div>
 
         <div className="space-y-1.5">
+          <label htmlFor="dueTime" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Due time <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <input
+            id="dueTime"
+            name="dueTime"
+            type="time"
+            value={values.dueTime}
+            onChange={onChange}
+            disabled={!values.dueDate}
+            aria-invalid={!!errors.dueTime}
+            aria-describedby="dueTime-hint"
+            className={`${selectClass} block w-full disabled:opacity-50 ${errors.dueTime ? "border-red-500" : ""}`}
+          />
+          {errors.dueTime ? (
+            <p className="text-xs text-red-600 dark:text-red-400">{errors.dueTime}</p>
+          ) : (
+            <p id="dueTime-hint" className="text-xs text-slate-400">
+              {values.dueDate ? "Blank = end of day. You'll get a reminder 1 hour before." : "Pick a due date first."}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
           <label htmlFor="assignedTo" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Assign to
           </label>
@@ -244,7 +280,7 @@ function TaskForm({
           </select>
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <label htmlFor="recurrence" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Repeat
           </label>

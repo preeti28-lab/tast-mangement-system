@@ -6,7 +6,7 @@ import { PlayIcon, RestartIcon, XIcon } from "@/components/icons";
 import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import { useToast } from "@/components/ui/Toast";
 import { ApiError, OfflineQueuedError, taskApi, type Task, type TaskPriority } from "@/lib/api";
-import { formatDate, isOverdue } from "@/lib/format";
+import { formatDue, isOverdue } from "@/lib/format";
 import { emitTasksChanged } from "@/lib/taskEvents";
 
 const LEAVE_MS = 350;
@@ -87,7 +87,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
   const skipped = decisions.length - started;
 
   return (
-    <section className={`p-5 sm:p-6 ${cardClass}`}>
+    <section className={`flex h-full flex-col p-5 sm:p-6 ${cardClass}`}>
       <SectionHeader
         icon={PlayIcon}
         tone="emerald"
@@ -96,7 +96,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
       />
 
       <div
-        className="mt-6 flex flex-col items-center gap-5 outline-none"
+        className="mt-6 flex flex-1 flex-col items-center justify-center gap-5 outline-none"
         role="region"
         aria-roledescription="carousel"
         aria-label="To-do tasks deck"
@@ -162,7 +162,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
                   </span>
                   <p className="line-clamp-2 text-[15px] font-bold tracking-tight drop-shadow-sm">{task.title}</p>
                   <p className="text-xs text-white/90">
-                    {style.label} · {task.dueDate ? `${overdue ? "Overdue" : "Due"} ${formatDate(task.dueDate)}` : "No due date"}
+                    {style.label} · {task.dueDate ? `${overdue ? "Overdue" : "Due"} ${formatDue(task.dueDate)}` : "No due date"}
                   </p>
                   <p className="text-[11px] text-white/75">{from}</p>
                   {isTop && (

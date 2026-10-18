@@ -152,10 +152,10 @@
   -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
-/* Menus over busy content (dropdowns, filter popovers): nearly opaque so rows
-   behind never bleed through the text. */
+/* Menus over busy content (dropdowns, filter popovers, account menu): an opaque
+   surface plus the glass sheen, so bright content behind never shows through. */
 @utility glass-menu {
-  background-color: color-mix(in srgb, var(--surface) 96%, transparent);
+  background-color: var(--surface);
   background-image: var(--glass-sheen);
   border: 1px solid var(--line);
   box-shadow: var(--glass-highlight), 0 20px 44px -14px rgba(15, 23, 42, 0.35), 0 2px 6px rgba(15, 23, 42, 0.08);

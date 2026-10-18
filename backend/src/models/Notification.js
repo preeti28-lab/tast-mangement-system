@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export const NOTIFICATION_TYPES = ["task_assigned", "task_updated"];
+export const NOTIFICATION_TYPES = ["task_assigned", "task_updated", "task_reminder"];
 
 const notificationSchema = new mongoose.Schema(
   {

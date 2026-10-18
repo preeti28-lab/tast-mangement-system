@@ -20,8 +20,31 @@ export function toDateInput(value?: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** Due time as "HH:MM", or "" for the default end-of-day deadline (no time picked). */
+export function toTimeInput(value?: string | null) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (d.getHours() === 23 && d.getMinutes() === 59) return "";
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Due date for display: the day, plus the time when one was picked. */
+export function formatDue(value?: string) {
+  const time = toTimeInput(value);
+  if (!value || !time) return formatDate(value);
+  return `${formatDate(value)}, ${new Date(value).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+}
+
 export function todayInput() {
   return toDateInput(new Date().toISOString());
+}
+
+/** "YYYY-MM-DD" + optional "HH:MM" -> ISO timestamp; without a time, the end of that day. */
+export function dueToIso(date: string, time: string) {
+  if (!time) return dateInputToIso(date, "end");
+  const [y, m, d] = date.split("-").map(Number);
+  const [h, min] = time.split(":").map(Number);
+  return new Date(y, m - 1, d, h, min, 0, 0).toISOString();
 }
 
 /** "YYYY-MM-DD" -> ISO timestamp at the start or end of that local day. */

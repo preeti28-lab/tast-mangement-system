@@ -39,6 +39,8 @@ export type DashboardData = {
     createdByMe: number;
     overdue: number;
     completed: number;
+    /** Not-completed tasks due in the next 7 days. */
+    dueSoon?: number;
   };
   recentTasks: Task[];
   overdueTasks: Task[];
@@ -54,7 +56,7 @@ export type DashboardData = {
 
 export type Notification = {
   _id: string;
-  type: "task_assigned" | "task_updated";
+  type: "task_assigned" | "task_updated" | "task_reminder";
   message: string;
   task?: { _id: string; title: string } | null;
   read: boolean;
@@ -63,8 +65,8 @@ export type Notification = {
 
 export type NotificationPrefs = {
   muteAll: boolean;
-  inApp: { taskAssigned: boolean; taskUpdated: boolean };
-  email: { taskAssigned: boolean; taskUpdated: boolean };
+  inApp: { taskAssigned: boolean; taskUpdated: boolean; dueReminder: boolean };
+  email: { taskAssigned: boolean; taskUpdated: boolean; dueReminder: boolean };
 };
 
 export type AuditAction =
@@ -249,6 +251,10 @@ export const userApi = {
     request<{ user: User }>(`/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
   getPreferences: () =>
     request<{ preferences: NotificationPrefs; emailAvailable: boolean }>("/users/me/preferences"),
+  updateProfile: (body: { name: string }) =>
+    request<{ user: User }>("/users/me", { method: "PATCH", body: JSON.stringify(body) }),
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
+    request<{ message: string }>("/users/me/password", { method: "PUT", body: JSON.stringify(body) }),
   updatePreferences: (prefs: Partial<NotificationPrefs>) =>
     request<{ preferences: NotificationPrefs; emailAvailable: boolean }>("/users/me/preferences", {
       method: "PUT",

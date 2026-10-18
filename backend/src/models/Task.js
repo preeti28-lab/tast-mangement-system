@@ -27,6 +27,9 @@ const taskSchema = new mongoose.Schema(
     // Next occurrence created when this recurring task was completed (prevents duplicates
     // if the task is re-opened and completed again).
     nextOccurrence: { type: mongoose.Schema.Types.ObjectId, ref: "Task", default: null },
+    // When the "due in 1 hour" reminder went out; cleared when the due date changes
+    // so a rescheduled task gets a fresh reminder.
+    reminderSentAt: { type: Date, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
@@ -36,5 +39,6 @@ const taskSchema = new mongoose.Schema(
 taskSchema.index({ createdBy: 1, updatedAt: -1 });
 taskSchema.index({ assignedTo: 1, updatedAt: -1 });
 taskSchema.index({ dueDate: 1, status: 1 });
+taskSchema.index({ reminderSentAt: 1, dueDate: 1 });
 
 export default mongoose.model("Task", taskSchema);

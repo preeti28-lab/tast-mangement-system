@@ -180,9 +180,12 @@ function ProfileCard() {
   );
 }
 
-const EVENTS: { key: "taskAssigned" | "taskUpdated"; label: string; hint: string }[] = [
+type EventKey = "taskAssigned" | "taskUpdated" | "dueReminder";
+
+const EVENTS: { key: EventKey; label: string; hint: string }[] = [
   { key: "taskAssigned", label: "A task is assigned to me", hint: "When someone puts you on a task" },
   { key: "taskUpdated", label: "A task I'm on changes status", hint: "To do, in progress, done" },
+  { key: "dueReminder", label: "A task is due in 1 hour", hint: "A nudge to finish before the deadline" },
 ];
 
 export default function SettingsView() {
@@ -214,7 +217,7 @@ export default function SettingsView() {
     }
   };
 
-  const set = (channel: "inApp" | "email", key: "taskAssigned" | "taskUpdated", value: boolean) =>
+  const set = (channel: "inApp" | "email", key: EventKey, value: boolean) =>
     prefs &&
     save({ [channel]: { [key]: value } } as Partial<NotificationPrefs>, {
       ...prefs,

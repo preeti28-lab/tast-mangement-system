@@ -208,12 +208,12 @@ export default function DataGrid<T>({
         <ExportButton onClick={exportCsv} disabled={sorted.length === 0} label="Export CSV" />
       </TableToolbar>
 
-      {/* Below xl the header filters are hidden, so dropdown filters get their own strip */}
+      {/* Dropdown filters live in their own strip at every width: two per row on phones */}
       {selectColumns.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3 xl:hidden">
+        <div className="grid grid-cols-2 gap-2 border-b border-line px-4 py-3 sm:px-5 md:flex md:flex-wrap md:items-center">
           {selectColumns.map((col) => (
-            <span key={col.key} className="min-w-36 flex-1 sm:w-48 sm:flex-none">
-              {selectFilter(col, "sm")}
+            <span key={col.key} className="min-w-0 last:odd:col-span-2 md:w-48">
+              {selectFilter(col, "md")}
             </span>
           ))}
         </div>
@@ -268,11 +268,6 @@ export default function DataGrid<T>({
                   >
                     <div className={`flex items-center gap-1.5 ${justify(col.align)}`}>
                       {col.sortable ? <SortHeader label={col.label} dir={dir} onClick={() => toggleSort(col.key)} /> : <span>{col.label}</span>}
-                      {col.searchable && col.filter === "select" && (
-                        <FilterPopover label={col.label.toLowerCase()} active={Boolean(colFilters[col.key])}>
-                          {selectFilter(col, "md")}
-                        </FilterPopover>
-                      )}
                       {col.searchable && col.filter !== "select" && (
                         <FilterPopover label={col.label.toLowerCase()} active={Boolean(colFilters[col.key]?.trim())}>
                           <input

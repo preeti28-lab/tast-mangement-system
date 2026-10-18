@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { AppLoader, InlineLoader } from "@/components/ui/Loader";
+import { AppLoader, InlineLoader, LOGOUT_STEPS } from "@/components/ui/Loader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { authApi, type ApiError, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
@@ -23,6 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     authApi
@@ -41,21 +42,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const logout = useCallback(async () => {
+    setLoggingOut(true);
     clearOfflineQueue();
     // Drop cached API responses so the next user on this device can't see them offline.
     navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_API_CACHE" });
-    await authApi.logout().catch(() => {});
+    // Keep the sign-out screen up briefly so it reads as a step, not a flicker.
+    await Promise.all([authApi.logout().catch(() => {}), new Promise((r) => setTimeout(r, 700))]);
     router.replace("/login");
     router.refresh();
   }, [router]);
 
-  const ctx = useMemo(() => (user ? { user, logout } : null), [user, logout]);
+  const ctx = useMemo(() => (user ? { user, logout, updateUser: setUser } : null), [user, logout]);
 
   if (!ctx) return <AppLoader />;
 
   return (
     <UserContext.Provider value={ctx}>
       <ToastProvider>
+        {loggingOut && <AppLoader steps={LOGOUT_STEPS} overlay />}
         <OfflineSync />
         <TiltController />
         <div className="relative isolate flex min-h-screen flex-1 bg-app">

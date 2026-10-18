@@ -5,7 +5,7 @@ import Modal from "@/components/ui/Modal";
 import { useUser } from "@/components/layout/UserContext";
 import { Spinner } from "@/components/layout/AppShell";
 import { taskApi, type ApiError, type Task, type TaskStatus } from "@/lib/api";
-import { formatDate, isOverdue } from "@/lib/format";
+import { formatDate, formatDue, isOverdue } from "@/lib/format";
 import { canChangeStatus, canDeleteTask, canEditTask } from "@/lib/permissions";
 import { RECURRENCE_OPTIONS } from "./options";
 import TaskHistory from "./TaskHistory";
@@ -72,7 +72,7 @@ function TaskDetail({
     [
       "Due date",
       <span key="d" className={overdue ? "font-medium text-red-600 dark:text-red-400" : ""}>
-        {formatDate(task.dueDate)}
+        {formatDue(task.dueDate)}
         {overdue && " (overdue)"}
       </span>,
     ],

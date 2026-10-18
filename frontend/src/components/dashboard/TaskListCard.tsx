@@ -3,7 +3,7 @@ import type { ComponentType, SVGProps } from "react";
 import { ArrowRightIcon } from "@/components/icons";
 import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import type { Task } from "@/lib/api";
-import { formatDate, isOverdue } from "@/lib/format";
+import { formatDue, isOverdue } from "@/lib/format";
 import { PriorityBadge, StatusBadge } from "@/components/tasks/TaskBadges";
 import { EmptyNote } from "@/components/ui/Tile";
 
@@ -29,7 +29,7 @@ export default function TaskListCard({
   currentUserId,
 }: Props) {
   return (
-    <section className={`p-5 ${cardClass}`}>
+    <section className={`flex h-full flex-col p-5 ${cardClass}`}>
       <SectionHeader
         icon={Icon}
         tone={tone}
@@ -47,9 +47,7 @@ export default function TaskListCard({
       />
 
       {tasks.length === 0 ? (
-        <EmptyNote>
-          {emptyText}
-        </EmptyNote>
+        <EmptyNote className="mt-5 grid flex-1 place-items-center">{emptyText}</EmptyNote>
       ) : (
         <ul className="mt-5 space-y-3">
           {tasks.map((task) => {
@@ -76,7 +74,7 @@ export default function TaskListCard({
                     <span className="mx-1.5">&middot;</span>
                     <span className={overdue ? "font-medium text-red-600 dark:text-red-400" : ""}>
                       {overdue ? "Overdue: " : "Due: "}
-                      {formatDate(task.dueDate)}
+                      {formatDue(task.dueDate)}
                     </span>
                   </p>
                 </div>

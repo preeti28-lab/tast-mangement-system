@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 import Notification from "../models/Notification.js";
+import { maybeSendDueReminders } from "../services/reminderService.js";
 
 // GET /api/notifications
 export const listNotifications = async (req, res) => {
   const recipient = req.user._id;
+  // Clients poll this every 30s, so it doubles as the reminder clock on serverless hosts.
+  await maybeSendDueReminders();
   const [notifications, unreadCount] = await Promise.all([
     Notification.find({ recipient }).sort({ createdAt: -1 }).limit(20).populate("task", "title"),
     Notification.countDocuments({ recipient, read: false }),

@@ -3,7 +3,12 @@
 import { createContext, useContext } from "react";
 import type { User } from "@/lib/api";
 
-type UserContextValue = { user: User; logout: () => Promise<void> };
+type UserContextValue = {
+  user: User;
+  logout: () => Promise<void>;
+  /** Replace the signed-in user after a profile edit (navbar, menus update at once). */
+  updateUser: (user: User) => void;
+};
 
 export const UserContext = createContext<UserContextValue | null>(null);
 

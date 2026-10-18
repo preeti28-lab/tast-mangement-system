@@ -32,7 +32,7 @@ export default function UpcomingDeadlines({ tasks }: { tasks: Task[] }) {
         }
       />
       {tasks.length === 0 ? (
-        <p className="mt-5 flex-1 rounded-xl border border-dashed border-line px-5 py-10 text-center text-sm text-muted">
+        <p className="mt-5 grid flex-1 place-items-center rounded-xl border border-dashed border-line px-5 py-10 text-center text-sm text-muted">
           Nothing due this week. Enjoy the breathing room.
         </p>
       ) : (

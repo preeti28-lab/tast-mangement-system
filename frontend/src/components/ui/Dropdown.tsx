@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircleIcon, ChevronDownIcon, XIcon } from "@/components/icons";
 import { useFloating } from "./floating";
@@ -24,6 +24,8 @@ export default function Dropdown({
   allLabel,
   label,
   size = "md",
+  icon: Icon,
+  plainReset = false,
   className = "",
 }: {
   value: string;
@@ -34,6 +36,10 @@ export default function Dropdown({
   /** Accessible name, e.g. "Status filter". */
   label: string;
   size?: "sm" | "md";
+  /** Leading icon on the trigger, shown when the choice has no color dot. */
+  icon?: ComponentType<{ className?: string }>;
+  /** Treat the empty value as a normal choice (e.g. a default sort), not an "All" reset. */
+  plainReset?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -89,7 +95,7 @@ export default function Dropdown({
   };
 
   const sm = size === "sm";
-  const isSet = value !== "";
+  const isSet = value !== "" && !plainReset;
 
   return (
     <>
@@ -115,7 +121,11 @@ export default function Dropdown({
             : "border-line text-fg"
         } ${open ? "border-brand-500 ring-2 ring-brand-500/25" : ""} ${className}`}
       >
-        {selected.dot && <span className={`h-2 w-2 shrink-0 rounded-full ${selected.dot}`} aria-hidden="true" />}
+        {selected.dot ? (
+          <span className={`h-2 w-2 shrink-0 rounded-full ${selected.dot}`} aria-hidden="true" />
+        ) : (
+          Icon && <Icon className={`h-4 w-4 ${isSet ? "text-brand-600 dark:text-brand-400" : "text-muted"}`} />
+        )}
         <span className="min-w-0 flex-1 truncate">{selected.label}</span>
         <ChevronDownIcon className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
@@ -148,11 +158,11 @@ export default function Dropdown({
                   onClick={() => pick(o.value)}
                   className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors ${
                     i === active ? "bg-brand-50 text-brand-800 dark:bg-brand-500/15 dark:text-brand-200" : "text-fg"
-                  } ${i === 0 ? "mb-1 border-b border-line pb-2.5 text-muted" : ""}`}
+                  } ${i === 0 && !plainReset ? "mb-1 border-b border-line pb-2.5 text-muted" : ""}`}
                 >
                   {o.dot ? (
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/60 dark:ring-black/20 ${o.dot}`} aria-hidden="true" />
-                  ) : i === 0 ? (
+                  ) : i === 0 && !plainReset ? (
                     <XIcon className="h-3.5 w-3.5 shrink-0 opacity-60" />
                   ) : (
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600" aria-hidden="true" />

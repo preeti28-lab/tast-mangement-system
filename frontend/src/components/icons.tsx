@@ -8,6 +8,7 @@ import {
   ArrowsDownUp,
   ArrowsClockwise,
   Bell,
+  CalendarBlank,
   CaretDown,
   CaretLeft,
   CaretRight,
@@ -99,5 +100,6 @@ export const ChevronRightIcon = make(CaretRight, "bold");
 export const DownloadIcon = make(DownloadSimple);
 export const SearchIcon = make(MagnifyingGlass);
 export const SortIcon = make(ArrowsDownUp);
+export const CalendarIcon = make(CalendarBlank);
 export const TrashIcon = make(Trash);
 export const MonitorIcon = make(Monitor);

@@ -23,7 +23,6 @@ export const metadata: Metadata = {
   description: "Task management system",
   applicationName: "TaskFlow",
   appleWebApp: { capable: true, title: "TaskFlow", statusBarStyle: "default" },
-  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

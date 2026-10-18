@@ -1,29 +1,28 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { PencilIcon, RepeatIcon, TrashIcon } from "@/components/icons";
+import { PencilIcon, RepeatIcon, SortIcon, TrashIcon, XIcon } from "@/components/icons";
 import { Highlight } from "@/components/ui/DataGrid";
+import DateRangeFilter, { describeRange } from "@/components/ui/DateRangeFilter";
 import Dropdown from "@/components/ui/Dropdown";
 import {
   ExportButton,
-  FilterPopover,
   SearchField,
   SortHeader,
   TableCard,
   TableEmpty,
   TableFooter,
   TableToolbar,
-  popoverInputClass,
   rowClass,
   tdClass,
   thClass,
 } from "@/components/ui/table";
 import type { Task, TaskPriority, TaskSort, TaskStatus, User } from "@/lib/api";
 import { canChangeStatus, canDeleteTask, canEditTask } from "@/lib/permissions";
-import { formatDate, isOverdue } from "@/lib/format";
+import { formatDate, formatDue, isOverdue } from "@/lib/format";
 import { PriorityBadge } from "./TaskBadges";
 import StatusSelect from "./StatusSelect";
-import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "./options";
+import { PRIORITY_OPTIONS, SORT_OPTIONS, STATUS_OPTIONS } from "./options";
 import Avatar from "@/components/ui/Avatar";
 
 export type TableFilters = {
@@ -168,7 +167,7 @@ export default function TasksTable({
     return (
       <span className={`whitespace-nowrap tabular-nums ${overdue ? "font-medium text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400"}`}>
         {overdue && "⚠ "}
-        {formatDate(task.dueDate)}
+        {formatDue(task.dueDate)}
       </span>
     );
   };
@@ -206,72 +205,80 @@ export default function TasksTable({
     </span>
   );
 
-  // ---- filter popover bodies ----------------------------------------------
+  // ---- filter bar ----------------------------------------------------------
 
-  const dueFilter = (
-    <FilterPopover label="due date" active={!!(filters.dueFrom || filters.dueTo)}>
-      <label className="mb-1 block text-xs text-muted">
-        From
-        <input
-          type="date"
-          value={filters.dueFrom}
-          max={filters.dueTo || undefined}
-          onChange={(e) => onFilterChange({ dueFrom: e.target.value })}
-          className={`mt-1 ${popoverInputClass}`}
+  const label = (opts: { value: string; label: string }[], v: string) => opts.find((o) => o.value === v)?.label ?? v;
+  const chips = [
+    filters.search && { key: "search", text: `“${filters.search}”`, clear: () => setSearchText("") },
+    filters.status && { key: "status", text: `Status: ${label(STATUS_OPTIONS, filters.status)}`, clear: () => onFilterChange({ status: "" }) },
+    filters.priority && { key: "priority", text: `Priority: ${label(PRIORITY_OPTIONS, filters.priority)}`, clear: () => onFilterChange({ priority: "" }) },
+    (filters.dueFrom || filters.dueTo) && {
+      key: "due",
+      text: `Due: ${describeRange({ from: filters.dueFrom, to: filters.dueTo })}`,
+      clear: () => onFilterChange({ dueFrom: "", dueTo: "" }),
+    },
+  ].filter(Boolean) as { key: string; text: string; clear: () => void }[];
+
+  const filterBar = (
+    <div className="space-y-3 border-b border-line px-4 py-3 sm:px-5">
+      <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
+        <Dropdown
+          label="Status filter"
+          allLabel="All statuses"
+          value={filters.status}
+          onChange={(v) => onFilterChange({ status: v as TableFilters["status"] })}
+          options={STATUS_OPTIONS.map((o) => ({ ...o, dot: STATUS_DOT[o.value] }))}
+          className="w-full md:w-44"
         />
-      </label>
-      <label className="block text-xs text-muted">
-        To
-        <input
-          type="date"
-          value={filters.dueTo}
-          min={filters.dueFrom || undefined}
-          onChange={(e) => onFilterChange({ dueTo: e.target.value })}
-          className={`mt-1 ${popoverInputClass}`}
+        <Dropdown
+          label="Priority filter"
+          allLabel="All priorities"
+          value={filters.priority}
+          onChange={(v) => onFilterChange({ priority: v as TableFilters["priority"] })}
+          options={PRIORITY_OPTIONS.map((o) => ({ ...o, dot: PRIORITY_DOT[o.value] }))}
+          className="w-full md:w-44"
         />
-      </label>
-      {(filters.dueFrom || filters.dueTo) && (
-        <button type="button" onClick={() => onFilterChange({ dueFrom: "", dueTo: "" })} className="mt-2 text-xs font-medium text-brand-600 hover:underline">
-          Clear dates
-        </button>
+        <DateRangeFilter
+          label="Due date"
+          value={{ from: filters.dueFrom, to: filters.dueTo }}
+          onChange={({ from, to }) => onFilterChange({ dueFrom: from, dueTo: to })}
+          className="col-span-2 md:w-60"
+        />
+        <Dropdown
+          label="Sort tasks"
+          icon={SortIcon}
+          plainReset
+          allLabel={SORT_OPTIONS[0].label}
+          value={filters.sort === "newest" ? "" : filters.sort}
+          onChange={(v) => setSort((v || "newest") as TaskSort)}
+          options={SORT_OPTIONS.slice(1)}
+          className="col-span-2 w-full md:ml-auto md:w-52"
+        />
+      </div>
+      {chips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {chips.map((c) => (
+            <span
+              key={c.key}
+              className="inline-flex max-w-full items-center gap-1 rounded-full border border-brand-500/25 bg-brand-50 py-1 pr-1 pl-2.5 text-[12px] font-medium text-brand-800 dark:bg-brand-500/10 dark:text-brand-200"
+            >
+              <span className="truncate">{c.text}</span>
+              <button
+                type="button"
+                onClick={c.clear}
+                aria-label={`Remove filter ${c.text}`}
+                className="grid h-5 w-5 shrink-0 place-items-center rounded-full hover:bg-brand-500/15"
+              >
+                <XIcon className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+          <button type="button" onClick={clearAll} className="ml-1 text-[12px] font-medium text-muted hover:text-fg hover:underline">
+            Clear all
+          </button>
+        </div>
       )}
-    </FilterPopover>
-  );
-
-  const priorityDropdown = (size: "sm" | "md") => (
-    <Dropdown
-      size={size}
-      label="Priority filter"
-      allLabel="All priorities"
-      value={filters.priority}
-      onChange={(v) => onFilterChange({ priority: v as TableFilters["priority"] })}
-      options={PRIORITY_OPTIONS.map((o) => ({ ...o, dot: PRIORITY_DOT[o.value] }))}
-      className="w-full"
-    />
-  );
-
-  const statusDropdown = (size: "sm" | "md") => (
-    <Dropdown
-      size={size}
-      label="Status filter"
-      allLabel="All statuses"
-      value={filters.status}
-      onChange={(v) => onFilterChange({ status: v as TableFilters["status"] })}
-      options={STATUS_OPTIONS.map((o) => ({ ...o, dot: STATUS_DOT[o.value] }))}
-      className="w-full"
-    />
-  );
-
-  const priorityFilter = (
-    <FilterPopover label="priority" active={!!filters.priority}>
-      {priorityDropdown("md")}
-    </FilterPopover>
-  );
-
-  const statusFilter = (
-    <FilterPopover label="status" active={!!filters.status}>
-      {statusDropdown("md")}
-    </FilterPopover>
+    </div>
   );
 
   return (
@@ -281,16 +288,10 @@ export default function TasksTable({
         <ExportButton onClick={onExport} busy={exporting} disabled={total === 0} />
       </TableToolbar>
 
-      {/* Below xl: sort/filter strip, then one card per task (two columns from md) */}
+      {filterBar}
+
+      {/* Below xl: one card per task (two columns from md) */}
       <div className={`transition-opacity xl:hidden ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
-        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3 text-[11.5px] font-semibold tracking-[0.04em] text-muted uppercase">
-          <span className="min-w-32 flex-1 sm:w-44 sm:flex-none">{statusDropdown("sm")}</span>
-          <span className="min-w-32 flex-1 sm:w-44 sm:flex-none">{priorityDropdown("sm")}</span>
-          <span className="ml-auto flex items-center gap-1.5">
-            <ServerSort label="Due" asc="due_asc" desc="due_desc" sort={filters.sort} onChange={setSort} />
-            {dueFilter}
-          </span>
-        </div>
         {tasks.length === 0 ? (
           empty
         ) : (
@@ -325,22 +326,13 @@ export default function TasksTable({
                 Assignee
               </th>
               <th scope="col" className={thClass} aria-sort={filters.sort === "due_asc" ? "ascending" : filters.sort === "due_desc" ? "descending" : "none"}>
-                <div className="flex items-center gap-1.5">
-                  <ServerSort label="Due date" asc="due_asc" desc="due_desc" sort={filters.sort} onChange={setSort} />
-                  {dueFilter}
-                </div>
+                <ServerSort label="Due date" asc="due_asc" desc="due_desc" sort={filters.sort} onChange={setSort} />
               </th>
               <th scope="col" className={thClass}>
-                <div className="flex items-center gap-1.5">
-                  <span>Priority</span>
-                  {priorityFilter}
-                </div>
+                Priority
               </th>
               <th scope="col" className={thClass}>
-                <div className="flex items-center gap-1.5">
-                  <span>Status</span>
-                  {statusFilter}
-                </div>
+                Status
               </th>
               <th
                 scope="col"

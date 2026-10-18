@@ -53,8 +53,10 @@ const PREF_PATHS = [
   "muteAll",
   "inApp.taskAssigned",
   "inApp.taskUpdated",
+  "inApp.dueReminder",
   "email.taskAssigned",
   "email.taskUpdated",
+  "email.dueReminder",
 ];
 
 // GET /api/users/me/preferences
@@ -80,4 +82,35 @@ export const updatePreferences = async (req, res) => {
 
   const user = await User.findByIdAndUpdate(req.user._id, { $set: updates }, { returnDocument: "after" });
   res.json({ preferences: user.notificationPrefs, emailAvailable: isEmailEnabled() });
+};
+
+// PATCH /api/users/me   { name }
+// Lets a user rename themselves. Email stays fixed (it is the login).
+export const updateProfile = async (req, res) => {
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (name.length < 2 || name.length > 50) {
+    return res.status(400).json({ message: "Please fix the errors below", errors: { name: "Name must be 2–50 characters" } });
+  }
+  const user = await User.findByIdAndUpdate(req.user._id, { name }, { new: true, runValidators: true });
+  res.json({ user });
+};
+
+// PUT /api/users/me/password   { currentPassword, newPassword }
+export const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  const errors = {};
+  if (!currentPassword) errors.currentPassword = "Enter your current password";
+  if (typeof newPassword !== "string" || newPassword.length < 8) errors.newPassword = "Password must be at least 8 characters";
+  if (Object.keys(errors).length) return res.status(400).json({ message: "Please fix the errors below", errors });
+
+  const user = await User.findById(req.user._id).select("+password");
+  if (!(await user.comparePassword(String(currentPassword)))) {
+    return res.status(400).json({ message: "Current password is incorrect", errors: { currentPassword: "Current password is incorrect" } });
+  }
+  if (await user.comparePassword(newPassword)) {
+    return res.status(400).json({ message: "Please fix the errors below", errors: { newPassword: "Choose a password different from the current one" } });
+  }
+  user.password = newPassword;
+  await user.save();
+  res.json({ message: "Password updated" });
 };

@@ -13,11 +13,13 @@ import { TableSkeleton } from "@/components/ui/Loader";
 const TYPE_LABEL: Record<Notification["type"], string> = {
   task_assigned: "Assigned",
   task_updated: "Status update",
+  task_reminder: "Reminder",
 };
 
 const TYPE_PILL: Record<Notification["type"], string> = {
   task_assigned: "bg-brand-50 text-brand-700 ring-brand-600/20 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-400/20",
   task_updated: "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/20",
+  task_reminder: "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/20",
 };
 
 const pill = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ring-1 ring-inset";

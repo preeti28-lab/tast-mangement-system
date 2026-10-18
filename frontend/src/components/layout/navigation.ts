@@ -45,6 +45,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/team": "Team",
   "/notifications": "Notifications",
   "/settings": "Settings",
+  "/profile": "My profile",
 };
 
 export function getPageTitle(pathname: string) {

@@ -9,6 +9,7 @@ const PROTECTED_PREFIXES = [
   "/activity",
   "/team",
   "/settings",
+  "/profile",
 ];
 
 // Optimistic redirect based on cookie presence; the backend still verifies the JWT.
@@ -38,6 +39,7 @@ export const config = {
     "/activity/:path*",
     "/team/:path*",
     "/settings/:path*",
+    "/profile/:path*",
     // Router prefetches of the auth pages are skipped: right after login the client
     // re-prefetches the /login link, and redirecting that request to /dashboard 404s.
     {

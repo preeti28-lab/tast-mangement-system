@@ -101,13 +101,14 @@ export const getDashboard = async (req, res) => {
     status: { $ne: "completed" },
   };
 
-  const [assignedToMe, createdByMe, overdueCount, completed, total, recentTasks, overdueTasks, topPerformers, upcomingTasks, activity] =
+  const [assignedToMe, createdByMe, overdueCount, completed, total, dueSoon, recentTasks, overdueTasks, topPerformers, upcomingTasks, activity] =
     await Promise.all([
       Task.countDocuments({ assignedTo: userId }),
       Task.countDocuments({ createdBy: userId }),
       Task.countDocuments(overdue),
       Task.countDocuments({ ...involved, status: "completed" }),
       Task.countDocuments(involved),
+      Task.countDocuments(upcoming),
       Task.find(involved)
         .sort({ updatedAt: -1 })
         .limit(5)
@@ -125,7 +126,7 @@ export const getDashboard = async (req, res) => {
     ]);
 
   res.json({
-    stats: { total, assignedToMe, createdByMe, overdue: overdueCount, completed },
+    stats: { total, assignedToMe, createdByMe, overdue: overdueCount, completed, dueSoon },
     recentTasks,
     overdueTasks,
     topPerformers,

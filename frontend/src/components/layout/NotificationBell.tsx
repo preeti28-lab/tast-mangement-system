@@ -34,7 +34,7 @@ export default function NotificationBell() {
           setItems(data.notifications);
           setUnread(data.unreadCount);
           // Pop up new notifications and let open pages refresh their task data.
-          fresh.slice(0, 3).forEach((n) => toast(n.message));
+          fresh.slice(0, 3).forEach((n) => toast(n.type === "task_reminder" ? `⏰ ${n.message}` : n.message));
           if (fresh.length) emitTasksChanged();
         })
         // Keep the last known state; the bell is not critical.

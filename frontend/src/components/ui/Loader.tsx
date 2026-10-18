@@ -7,17 +7,25 @@ import { cardFlatClass } from "./Surface";
 // shaped like the page that's coming, and a small inline spinner.
 
 const SPLASH_STEPS = ["Checking your session…", "Loading your workspace…", "Syncing your tasks…"];
+export const LOGOUT_STEPS = ["Signing you out…", "Clearing your session…", "See you soon!"];
 
-/** Full-screen splash shown while AppShell loads the current user. */
-export function AppLoader() {
+/** Full-screen splash shown while AppShell loads the current user, or (with `overlay`)
+ *  on top of the app while logging out. */
+export function AppLoader({ steps = SPLASH_STEPS, overlay = false }: { steps?: string[]; overlay?: boolean }) {
   const [step, setStep] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setStep((s) => Math.min(s + 1, SPLASH_STEPS.length - 1)), 1400);
+    const id = setInterval(() => setStep((s) => Math.min(s + 1, steps.length - 1)), overlay ? 700 : 1400);
     return () => clearInterval(id);
-  }, []);
+  }, [steps, overlay]);
 
   return (
-    <div role="status" aria-live="polite" className="relative isolate grid min-h-screen flex-1 place-items-center overflow-hidden bg-app px-6">
+    <div
+      role="status"
+      aria-live="polite"
+      className={`isolate grid place-items-center overflow-hidden bg-app px-6 ${
+        overlay ? "fixed inset-0 z-[100] animate-[fade-in_200ms_ease-out]" : "relative min-h-screen flex-1"
+      }`}
+    >
       <div className="glass-backdrop" aria-hidden="true">
         <span className="-top-32 right-[-8rem] h-[28rem] w-[28rem] bg-emerald-300 dark:bg-emerald-500" />
         <span className="top-1/3 -left-40 h-[26rem] w-[26rem] bg-sky-300 dark:bg-sky-600" />
@@ -41,7 +49,7 @@ export function AppLoader() {
           <span className="text-brand-600 dark:text-brand-400">Flow</span>
         </p>
         <p key={step} className="mt-2 h-5 animate-[rise_400ms_ease-out_backwards] text-sm text-muted">
-          {SPLASH_STEPS[step]}
+          {steps[step]}
         </p>
 
         <div className="mt-6 h-1.5 w-56 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/10" aria-hidden="true">

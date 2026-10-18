@@ -291,6 +291,9 @@ export const updateTask = async (req, res) => {
 
   const before = task.toObject();
   task.set(data);
+  if ("dueDate" in data && data.dueDate?.getTime() !== before.dueDate?.getTime()) {
+    task.reminderSentAt = null;
+  }
   if ("status" in data && data.status !== before.status) {
     task.completedAt = data.status === "completed" ? new Date() : null;
   }

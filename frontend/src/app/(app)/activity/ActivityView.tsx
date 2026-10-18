@@ -1,39 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ComponentType, type SVGProps } from "react";
-import {
-  ActivityIcon,
-  CheckCircleIcon,
-  PencilIcon,
-  PlusIcon,
-  RepeatIcon,
-  SettingsIcon,
-  UserIcon,
-  UsersIcon,
-  XIcon,
-} from "@/components/icons";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIcon } from "@/components/icons";
 import { EmptyState, PageHeader, TONE_BADGE, type Tone } from "@/components/ui/Surface";
+import { ACTION_STYLE } from "@/components/activity/actionStyle";
 import DataGrid, { Highlight, type GridColumn } from "@/components/ui/DataGrid";
 import FormAlert from "@/components/auth/FormAlert";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
-import { auditApi, type AuditAction, type AuditLog } from "@/lib/api";
+import { auditApi, type AuditLog } from "@/lib/api";
 import { describeAudit, getUserDirectory, type UserDirectory } from "@/lib/audit";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import { isStaff } from "@/lib/permissions";
 import { TableSkeleton } from "@/components/ui/Loader";
 
-const ACTION_STYLE: Record<AuditAction, { label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; tone: Tone }> = {
-  "task.created": { label: "Created", icon: PlusIcon, tone: "emerald" },
-  "task.updated": { label: "Edited", icon: PencilIcon, tone: "sky" },
-  "task.assigned": { label: "Assigned", icon: UserIcon, tone: "brand" },
-  "task.status_changed": { label: "Status changed", icon: CheckCircleIcon, tone: "emerald" },
-  "task.deleted": { label: "Deleted", icon: XIcon, tone: "red" },
-  "task.recurred": { label: "Recurring", icon: RepeatIcon, tone: "violet" },
-  "user.registered": { label: "Joined", icon: UsersIcon, tone: "brand" },
-  "user.role_changed": { label: "Role changed", icon: SettingsIcon, tone: "amber" },
-};
 
 const TONE_DOT: Record<Tone, string> = {
   brand: "bg-brand-500",

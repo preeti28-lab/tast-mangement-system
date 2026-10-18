@@ -7,7 +7,7 @@
 //  Writes made while offline are queued by the app itself (src/lib/offlineQueue.ts)
 //  and replayed when the connection returns.
 
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `taskflow-static-${VERSION}`;
 const PAGE_CACHE = `taskflow-pages-${VERSION}`;
 const API_CACHE = `taskflow-api-${VERSION}`;

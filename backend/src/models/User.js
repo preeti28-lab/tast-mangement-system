@@ -41,10 +41,12 @@ const userSchema = new mongoose.Schema(
       inApp: {
         taskAssigned: { type: Boolean, default: true },
         taskUpdated: { type: Boolean, default: true },
+        dueReminder: { type: Boolean, default: true },
       },
       email: {
         taskAssigned: { type: Boolean, default: false },
         taskUpdated: { type: Boolean, default: false },
+        dueReminder: { type: Boolean, default: false },
       },
     },
   },
