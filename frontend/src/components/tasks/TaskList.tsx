@@ -3,6 +3,7 @@
 import { PencilIcon, RepeatIcon } from "@/components/icons";
 import type { Task, TaskStatus, User } from "@/lib/api";
 import { canChangeStatus, canDeleteTask, canEditTask } from "@/lib/permissions";
+import { cardClass } from "@/components/ui/Surface";
 import { formatDate, initials, isOverdue } from "@/lib/format";
 import { PriorityBadge } from "./TaskBadges";
 import StatusSelect from "./StatusSelect";
@@ -33,9 +34,9 @@ export default function TaskList({
   onStatusChange,
 }: Props) {
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className={`overflow-hidden ${cardClass}`}>
       {/* Column headings (desktop only) */}
-      <div className="hidden grid-cols-[minmax(0,1fr)_150px_130px_90px_130px_72px] gap-4 border-b border-zinc-200 bg-zinc-50 px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 lg:grid dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div className="hidden grid-cols-[minmax(0,1fr)_150px_130px_90px_130px_72px] gap-4 border-b border-zinc-200/70 bg-zinc-50/70 px-6 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 lg:grid dark:border-zinc-800 dark:bg-zinc-900/60">
         <span>Task</span>
         <span>Assignee</span>
         <span>Due date</span>
@@ -56,11 +57,11 @@ export default function TaskList({
           return (
             <li
               key={task._id}
-              className="grid grid-cols-1 gap-3 px-5 py-4 transition hover:bg-zinc-50 lg:grid-cols-[minmax(0,1fr)_150px_130px_90px_130px_72px] lg:items-center lg:gap-4 dark:hover:bg-zinc-800/40"
+              className="grid grid-cols-1 gap-3 px-6 py-4 transition hover:bg-indigo-50/40 lg:grid-cols-[minmax(0,1fr)_150px_130px_90px_130px_72px] lg:items-center lg:gap-4 dark:hover:bg-zinc-800/40"
             >
               <button onClick={() => onOpen(task)} className="min-w-0 text-left">
                 <p
-                  className={`truncate font-medium ${
+                  className={`truncate font-semibold ${
                     task.status === "completed"
                       ? "text-zinc-400 line-through"
                       : "text-zinc-900 dark:text-zinc-100"

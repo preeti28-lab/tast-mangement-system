@@ -38,12 +38,12 @@ export default function Modal({ open, title, onClose, children, size = "lg" }: P
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={`relative flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl outline-none sm:rounded-2xl dark:bg-zinc-900 ${
+        className={`relative flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-white shadow-2xl outline-none sm:rounded-2xl dark:bg-zinc-900 ${
           size === "sm" ? "sm:max-w-md" : "sm:max-w-xl"
         }`}
       >
-        <header className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-          <h2 className="font-semibold text-zinc-900 dark:text-white">{title}</h2>
+        <header className="flex items-center justify-between border-b border-zinc-200/70 px-6 py-4 dark:border-zinc-800">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{title}</h2>
           <button
             onClick={onClose}
             className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -52,7 +52,7 @@ export default function Modal({ open, title, onClose, children, size = "lg" }: P
             <XIcon />
           </button>
         </header>
-        <div className="overflow-y-auto px-5 py-5">{children}</div>
+        <div className="overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>
   );

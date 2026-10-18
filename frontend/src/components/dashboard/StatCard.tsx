@@ -60,7 +60,7 @@ export default function StatCard({ label, value, hint, href, icon: Icon, tone = 
         </span>
       )}
       <div className="min-w-0 pt-1.5">
-        <p className="truncate text-base font-medium text-zinc-600 dark:text-zinc-400">{label}</p>
+        <p className="text-base font-medium leading-snug text-zinc-600 dark:text-zinc-400">{label}</p>
         <p className="mt-3 text-4xl font-bold leading-none tracking-tight tabular-nums text-zinc-900 dark:text-white">
           {value}
         </p>

@@ -15,6 +15,14 @@ import TaskList from "@/components/tasks/TaskList";
 import { VIEW_OPTIONS } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
 import {
+  EmptyState,
+  PageHeader,
+  primaryButtonClass,
+  secondaryButtonClass,
+  tabClass,
+  tabListClass,
+} from "@/components/ui/Surface";
+import {
   OfflineQueuedError,
   taskApi,
   userApi,
@@ -31,6 +39,14 @@ import { dateInputToIso } from "@/lib/format";
 import { isStaff } from "@/lib/permissions";
 
 const PAGE_SIZE = 10;
+
+const VIEW_HEADINGS: Record<TaskView, { title: string; subtitle: string }> = {
+  all: { title: "My tasks", subtitle: "Everything you created or are assigned to." },
+  assigned: { title: "Assigned to me", subtitle: "Tasks other people have given you." },
+  created: { title: "Created by me", subtitle: "Tasks you created, whoever they are assigned to." },
+  overdue: { title: "Overdue tasks", subtitle: "Tasks past their due date that need your attention." },
+  team: { title: "Team tasks", subtitle: "Every task across the team." },
+};
 
 type Result = { key: string } & ({ data: TaskListResponse; error?: never } | { error: string; data?: never });
 
@@ -192,32 +208,32 @@ export default function TasksView() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div role="tablist" aria-label="Task views" className="flex gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/60">
+    <div className="w-full space-y-6">
+      <PageHeader
+        title={VIEW_HEADINGS[view]?.title ?? "My tasks"}
+        subtitle={VIEW_HEADINGS[view]?.subtitle}
+        actions={
+          <button onClick={() => updateParams({ new: "1" }, { resetPage: false })} className={primaryButtonClass}>
+            <PlusIcon className="h-5 w-5" />
+            New task
+          </button>
+        }
+      />
+
+      <div>
+        <div role="tablist" aria-label="Task views" className={tabListClass}>
           {VIEW_OPTIONS.filter((o) => o.value !== "team" || isStaff(user)).map((o) => (
             <button
               key={o.value}
               role="tab"
               aria-selected={view === o.value}
               onClick={() => updateParams({ view: o.value })}
-              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                view === o.value
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-white"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              }`}
+              className={tabClass(view === o.value)}
             >
               {o.label}
             </button>
           ))}
         </div>
-        <button
-          onClick={() => updateParams({ new: "1" }, { resetPage: false })}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
-        >
-          <PlusIcon className="h-4 w-4" />
-          New task
-        </button>
       </div>
 
       <TaskFilters values={filters} onChange={onFilterChange} onClear={clearFilters} />
@@ -227,14 +243,11 @@ export default function TasksView() {
       ) : !data ? (
         <Spinner />
       ) : data.tasks.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-14 text-center dark:border-zinc-700 dark:bg-zinc-900">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
-            <ListIcon />
-          </span>
-          <h3 className="mt-4 font-semibold text-zinc-900 dark:text-white">
-            {hasFilters ? "No tasks match your filters" : view === "overdue" ? "Nothing overdue" : "No tasks yet"}
-          </h3>
-          <p className="mt-1 max-w-sm text-sm text-zinc-500">
+        <EmptyState
+          icon={ListIcon}
+          title={hasFilters ? "No tasks match your filters" : view === "overdue" ? "Nothing overdue" : "No tasks yet"}
+        >
+          <p>
             {hasFilters
               ? "Try a different search term or clear the filters."
               : view === "assigned"
@@ -244,20 +257,21 @@ export default function TasksView() {
                   : "Create a task to start tracking your work."}
           </p>
           {hasFilters ? (
-            <button onClick={clearFilters} className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <button onClick={clearFilters} className={`mt-5 ${secondaryButtonClass}`}>
               Clear filters
             </button>
           ) : (
             view !== "overdue" && (
               <button
                 onClick={() => updateParams({ new: "1" }, { resetPage: false })}
-                className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className={`mt-5 ${primaryButtonClass}`}
               >
-                + New task
+                <PlusIcon className="h-4 w-4" />
+                New task
               </button>
             )
           )}
-        </div>
+        </EmptyState>
       ) : (
         <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
           <TaskList
@@ -279,7 +293,7 @@ export default function TasksView() {
                 <button
                   disabled={page <= 1}
                   onClick={() => updateParams({ page: page - 1 }, { resetPage: false })}
-                  className="rounded-lg border border-zinc-300 px-3 py-1.5 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className={secondaryButtonClass}
                 >
                   Previous
                 </button>
@@ -289,7 +303,7 @@ export default function TasksView() {
                 <button
                   disabled={page >= data.pages}
                   onClick={() => updateParams({ page: page + 1 }, { resetPage: false })}
-                  className="rounded-lg border border-zinc-300 px-3 py-1.5 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className={secondaryButtonClass}
                 >
                   Next
                 </button>

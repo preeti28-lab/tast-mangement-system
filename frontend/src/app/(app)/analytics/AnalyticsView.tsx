@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType, type SVGProps } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { BarList, DataTable, Legend, LineChart } from "@/components/analytics/charts";
 import StatCard from "@/components/dashboard/StatCard";
-import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon } from "@/components/icons";
+import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon, ListIcon, UsersIcon } from "@/components/icons";
+import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone } from "@/components/ui/Surface";
 import { Spinner } from "@/components/layout/AppShell";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
@@ -17,12 +18,23 @@ type Scope = "me" | "team";
 const weekLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
-function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function Card({
+  title,
+  subtitle,
+  icon,
+  tone,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  tone: Tone;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="font-semibold text-zinc-900 dark:text-white">{title}</h2>
-      {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
-      <div className="mt-4">{children}</div>
+    <section className={`p-5 sm:p-6 ${cardClass}`}>
+      <SectionHeader icon={icon} tone={tone} title={title} subtitle={subtitle} />
+      <div className="mt-5">{children}</div>
     </section>
   );
 }
@@ -50,34 +62,28 @@ export default function AnalyticsView() {
   const data = result?.data;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Analytics</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            {scope === "team" ? "Everyone's tasks across the team." : "Tasks you created or are assigned to."}
-          </p>
-        </div>
-        {staff && (
-          <div role="tablist" aria-label="Analytics scope" className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/60">
-            {(["team", "me"] as Scope[]).map((s) => (
-              <button
-                key={s}
-                role="tab"
-                aria-selected={scope === s}
-                onClick={() => setScope(s)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  scope === s
-                    ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-white"
-                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"
-                }`}
-              >
-                {s === "team" ? "Team" : "Just me"}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="w-full space-y-6">
+      <PageHeader
+        title="Analytics"
+        subtitle={scope === "team" ? "Everyone's tasks across the team." : "Tasks you created or are assigned to."}
+        actions={
+          staff && (
+            <div role="tablist" aria-label="Analytics scope" className={tabListClass}>
+              {(["team", "me"] as Scope[]).map((s) => (
+                <button
+                  key={s}
+                  role="tab"
+                  aria-selected={scope === s}
+                  onClick={() => setScope(s)}
+                  className={tabClass(scope === s)}
+                >
+                  {s === "team" ? "Team" : "Just me"}
+                </button>
+              ))}
+            </div>
+          )
+        }
+      />
 
       {result?.error ? (
         <FormAlert message={result.error} />
@@ -85,7 +91,7 @@ export default function AnalyticsView() {
         <Spinner />
       ) : (
         <div className={`space-y-6 transition-opacity ${result?.key !== key ? "opacity-60" : ""}`}>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               icon={ChartIcon}
               tone="indigo"
@@ -123,7 +129,7 @@ export default function AnalyticsView() {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <Card title="Created vs. completed" subtitle="Tasks per week, last 8 weeks">
+            <Card icon={ChartIcon} tone="indigo" title="Created vs. completed" subtitle="Tasks per week, last 8 weeks">
               <Legend
                 series={[
                   { key: "created", label: "Created", color: "var(--series-1)" },
@@ -144,7 +150,7 @@ export default function AnalyticsView() {
               />
             </Card>
 
-            <Card title="Overdue trend" subtitle="Open tasks past their due date at the end of each week">
+            <Card icon={ClockIcon} tone="red" title="Overdue trend" subtitle="Open tasks past their due date at the end of each week">
               <LineChart
                 ariaLabel="Overdue tasks at the end of each week"
                 labels={data.trend.map((t) => weekLabel(t.weekStart))}
@@ -156,7 +162,7 @@ export default function AnalyticsView() {
               />
             </Card>
 
-            <Card title="By status">
+            <Card icon={CheckCircleIcon} tone="emerald" title="By status" subtitle="How your tasks are progressing">
               <BarList
                 items={[
                   { label: "To do", value: data.byStatus.todo },
@@ -166,7 +172,7 @@ export default function AnalyticsView() {
               />
             </Card>
 
-            <Card title="By priority">
+            <Card icon={ListIcon} tone="amber" title="By priority" subtitle="Where the effort is going">
               <BarList
                 items={[
                   { label: "High", value: data.byPriority.high },
@@ -178,7 +184,7 @@ export default function AnalyticsView() {
           </div>
 
           {scope === "team" && (
-            <Card title="Completed tasks per user" subtitle="Based on tasks assigned to each person">
+            <Card icon={UsersIcon} tone="violet" title="Completed tasks per user" subtitle="Based on tasks assigned to each person">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <thead className="text-xs uppercase tracking-wide text-zinc-500">

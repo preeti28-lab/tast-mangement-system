@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { TaskPriority, TaskSort, TaskStatus } from "@/lib/api";
+import { cardClass } from "@/components/ui/Surface";
 import { PRIORITY_OPTIONS, SORT_OPTIONS, STATUS_OPTIONS, selectClass } from "./options";
 
 export type FilterValues = {
@@ -40,7 +41,7 @@ export default function TaskFilters({ values, onChange, onClear }: Props) {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className={`space-y-3 p-5 ${cardClass}`}>
       <div className="flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
           <svg
@@ -128,7 +129,7 @@ export default function TaskFilters({ values, onChange, onClear }: Props) {
         <button
           onClick={clear}
           disabled={!hasFilters}
-          className="col-span-2 self-end rounded-lg px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent lg:col-span-1 dark:hover:bg-indigo-500/10"
+          className="col-span-2 self-end rounded-xl px-3 py-2.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent lg:col-span-1 dark:hover:bg-indigo-500/10"
         >
           Clear filters
         </button>

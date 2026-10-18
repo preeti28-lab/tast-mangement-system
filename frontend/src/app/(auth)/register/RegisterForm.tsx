@@ -53,8 +53,8 @@ export default function RegisterForm() {
 
   return (
     <>
-      <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Create your account</h1>
+      <div className="mb-7 space-y-1.5">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Create your account</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Start managing your tasks in seconds.</p>
       </div>
 

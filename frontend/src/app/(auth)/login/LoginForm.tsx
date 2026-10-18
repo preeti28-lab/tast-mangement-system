@@ -44,8 +44,8 @@ export default function LoginForm() {
 
   return (
     <>
-      <div className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Welcome back</h1>
+      <div className="mb-7 space-y-1.5">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Welcome back</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Log in to continue to your tasks.</p>
       </div>
 

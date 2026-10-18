@@ -25,12 +25,12 @@ export default function FormField({ label, name, error, type = "text", ...rest }
           type={isPassword && show ? "text" : type}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
-          className={`block w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:ring-2 dark:bg-zinc-900 dark:text-zinc-100 ${
+          className={`block w-full rounded-xl border bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:ring-2 dark:bg-zinc-900 dark:text-zinc-100 ${
             isPassword ? "pr-16" : ""
           } ${
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-              : "border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/20 dark:border-zinc-700"
+              : "border-zinc-200 focus:border-indigo-500 focus:ring-indigo-500/20 dark:border-zinc-700"
           }`}
           {...rest}
         />

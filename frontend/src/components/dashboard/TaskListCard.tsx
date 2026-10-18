@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { ArrowRightIcon } from "@/components/icons";
+import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import type { Task } from "@/lib/api";
 import { formatDate, isOverdue } from "@/lib/format";
 import { PriorityBadge, StatusBadge } from "@/components/tasks/TaskBadges";
@@ -16,11 +17,6 @@ type Props = {
   currentUserId: string;
 };
 
-const ICON_TONES = {
-  indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400",
-  red: "bg-red-50 text-red-600 dark:bg-red-400/10 dark:text-red-400",
-};
-
 export default function TaskListCard({
   title,
   subtitle,
@@ -32,23 +28,22 @@ export default function TaskListCard({
   currentUserId,
 }: Props) {
   return (
-    <section className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(79,70,229,0.18)] dark:border-zinc-800 dark:bg-zinc-900">
-      <header className="flex items-center gap-4">
-        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${ICON_TONES[tone]}`}>
-          <Icon className="h-6 w-6" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-bold text-zinc-900 dark:text-white">{title}</h2>
-          <p className="text-sm text-zinc-500 sm:truncate dark:text-zinc-400">{subtitle}</p>
-        </div>
-        <Link
-          href={viewAllHref}
-          className="group inline-flex shrink-0 items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+    <section className={`p-5 ${cardClass}`}>
+      <SectionHeader
+        icon={Icon}
+        tone={tone}
+        title={title}
+        subtitle={subtitle}
+        action={
+          <Link
+            href={viewAllHref}
+            className="group inline-flex shrink-0 items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
         >
-          View all
-          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
-      </header>
+            View all
+            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        }
+      />
 
       {tasks.length === 0 ? (
         <p className="mt-5 rounded-xl border border-dashed border-zinc-200 px-5 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
