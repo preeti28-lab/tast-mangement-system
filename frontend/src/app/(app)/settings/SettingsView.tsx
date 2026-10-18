@@ -6,9 +6,10 @@ import { Spinner } from "@/components/layout/AppShell";
 import { useThemePreference } from "@/components/layout/ThemeToggle";
 import { useUser } from "@/components/layout/UserContext";
 import { useToast } from "@/components/ui/Toast";
-import { BellIcon, InboxIcon, MailIcon, MonitorIcon, MoonIcon, SettingsIcon, SunIcon } from "@/components/icons";
+import { BellIcon, CheckCircleIcon, InboxIcon, MailIcon, MonitorIcon, MoonIcon, SettingsIcon, SunIcon, UsersIcon } from "@/components/icons";
+import { Skeleton } from "@/components/ui/Loader";
 import { PageHeader, SectionHeader, cardClass } from "@/components/ui/Surface";
-import { userApi, type ApiError, type NotificationPrefs } from "@/lib/api";
+import { settingsApi, userApi, type ApiError, type NotificationPrefs, type PermissionKey, type RoleAccess } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { setThemePreference, type ThemePreference } from "@/lib/theme";
@@ -182,6 +183,105 @@ function ProfileCard() {
 
 type EventKey = "taskAssigned" | "taskUpdated" | "dueReminder";
 
+/** Admin-only matrix: which permission each role gets. Saves on every toggle. */
+function RoleAccessCard() {
+  const toast = useToast();
+  const [data, setData] = useState<RoleAccess | null>(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    settingsApi
+      .getAccess()
+      .then(setData)
+      .catch((err: Error) => setError(err.message));
+  }, []);
+
+  const toggle = async (role: "manager" | "user", key: PermissionKey, value: boolean) => {
+    if (!data) return;
+    const previous = data;
+    setData({ ...data, access: { ...data.access, [role]: { ...data.access[role], [key]: value } } });
+    setSaving(`${role}.${key}`);
+    try {
+      setData(await settingsApi.updateAccess({ [role]: { [key]: value } } as Partial<RoleAccess["access"]>));
+      const label = data.permissions.find((p) => p.key === key)?.label ?? key;
+      toast(`${ROLE_LABELS[role]}s: “${label}” ${value ? "on" : "off"}`);
+    } catch (err) {
+      setData(previous);
+      toast((err as ApiError).message, "error");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const roles = ["manager", "user"] as const;
+  const grid = "grid grid-cols-[minmax(0,1fr)_3.5rem_3.5rem_3.5rem] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_5.5rem]";
+
+  return (
+    <section className={`p-5 sm:p-6 ${cardClass}`}>
+      <SectionHeader
+        icon={UsersIcon}
+        tone="violet"
+        title="Role access"
+        subtitle="Choose what managers and members can do. Changes apply immediately, on every device."
+      />
+      {error ? (
+        <div className="mt-5">
+          <FormAlert message={error} />
+        </div>
+      ) : !data ? (
+        <div className="mt-5 space-y-3">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-5 overflow-hidden rounded-2xl border border-line">
+          <div className={`${grid} bg-hover/70 px-4 py-2.5 text-xs font-semibold tracking-wide text-muted uppercase`}>
+            <span>Permission</span>
+            <span className="text-center">Admin</span>
+            {roles.map((r) => (
+              <span key={r} className="text-center">
+                {ROLE_LABELS[r]}
+              </span>
+            ))}
+          </div>
+          <ul className="divide-y divide-line">
+            {data.permissions.map((p) => (
+              <li key={p.key} className={`${grid} px-4 py-3.5 transition-colors hover:bg-hover/50`}>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-fg">{p.label}</span>
+                  <span className="mt-0.5 block text-xs text-muted">{p.description}</span>
+                </span>
+                <span className="flex justify-center" title="Admins always have every permission">
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400">
+                    <CheckCircleIcon className="h-4 w-4" />
+                  </span>
+                </span>
+                {roles.map((r) => (
+                  <span key={r} className="flex justify-center">
+                    <Switch
+                      label={`${ROLE_LABELS[r]}: ${p.label}`}
+                      checked={data.access[r][p.key]}
+                      disabled={saving === `${r}.${p.key}`}
+                      onChange={(v) => toggle(r, p.key, v)}
+                    />
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-4 flex items-start gap-2 text-xs text-muted">
+        <SettingsIcon className="mt-px h-4 w-4 shrink-0" />
+        Admins always keep full access so nobody gets locked out. Everyone can still see, edit and delete tasks they created and
+        update tasks assigned to them.
+      </p>
+    </section>
+  );
+}
+
 const EVENTS: { key: EventKey; label: string; hint: string }[] = [
   { key: "taskAssigned", label: "A task is assigned to me", hint: "When someone puts you on a task" },
   { key: "taskUpdated", label: "A task I'm on changes status", hint: "To do, in progress, done" },
@@ -189,6 +289,7 @@ const EVENTS: { key: EventKey; label: string; hint: string }[] = [
 ];
 
 export default function SettingsView() {
+  const { user } = useUser();
   const toast = useToast();
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [emailAvailable, setEmailAvailable] = useState(false);
@@ -230,6 +331,7 @@ export default function SettingsView() {
 
       <ProfileCard />
       <AppearanceCard />
+      {user.role === "admin" && <RoleAccessCard />}
 
       {error ? (
         <FormAlert message={error} />

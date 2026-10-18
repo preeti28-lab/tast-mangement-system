@@ -22,4 +22,8 @@ export const ACTION_STYLE: Record<AuditAction, { label: string; icon: ComponentT
   "task.recurred": { label: "Recurring", icon: RepeatIcon, tone: "violet" },
   "user.registered": { label: "Joined", icon: UsersIcon, tone: "brand" },
   "user.role_changed": { label: "Role changed", icon: SettingsIcon, tone: "amber" },
+  "user.created": { label: "User added", icon: PlusIcon, tone: "brand" },
+  "user.updated": { label: "User edited", icon: PencilIcon, tone: "sky" },
+  "user.deleted": { label: "User removed", icon: XIcon, tone: "red" },
+  "settings.access_changed": { label: "Access changed", icon: SettingsIcon, tone: "violet" },
 };

@@ -32,6 +32,9 @@ export type GridColumn<T> = {
   render?: (row: T, query: string) => ReactNode;
   /** Set false for UI-only columns (e.g. action buttons) to leave them out of the CSV. */
   exportable?: boolean;
+  /** Classes for this column's table cells; replaces the default `whitespace-nowrap`
+   *  (e.g. "w-full min-w-80 whitespace-normal" for a column that should wrap and take the slack). */
+  cellClassName?: string;
   /** Heading of the phone card for each row (defaults to the first column). */
   primary?: boolean;
   /** "select": filter with a dropdown of the column's distinct values (exact match)
@@ -295,7 +298,7 @@ export default function DataGrid<T>({
               paged.map((row) => (
                 <tr key={rowKey(row)} className={rowClass}>
                   {columns.map((col) => (
-                    <td key={col.key} className={`${tdClass} whitespace-nowrap text-slate-700 dark:text-slate-300 ${align(col.align)}`}>
+                    <td key={col.key} className={`${tdClass} ${col.cellClassName ?? "whitespace-nowrap"} text-slate-700 dark:text-slate-300 ${align(col.align)}`}>
                       {cell(row, col)}
                     </td>
                   ))}

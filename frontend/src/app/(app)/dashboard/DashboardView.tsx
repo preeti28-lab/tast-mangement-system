@@ -25,7 +25,7 @@ import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import { useUser } from "@/components/layout/UserContext";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { dashboardApi, type DashboardData, type TaskPriority } from "@/lib/api";
-import { isStaff } from "@/lib/permissions";
+import { can } from "@/lib/permissions";
 import { CardsSkeleton } from "@/components/ui/Loader";
 
 const STATUS_COLORS = { todo: "#94a3b8", in_progress: "#0ea5e9", completed: SERIES_COLORS.completed };
@@ -289,7 +289,7 @@ export default function DashboardView() {
           </div>
 
           {data.topPerformers && (
-            <TopPerformerCard rows={data.topPerformers} currentUserId={user._id} showAnalyticsLink={isStaff(user)} />
+            <TopPerformerCard rows={data.topPerformers} currentUserId={user._id} showAnalyticsLink={can(user, "analytics.team")} />
           )}
         </>
       )}

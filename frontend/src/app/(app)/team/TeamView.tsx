@@ -6,7 +6,7 @@ import { useUser } from "@/components/layout/UserContext";
 import { selectClass } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
 import FlipCard3D from "@/components/ui/FlipCard3D";
-import { SettingsIcon, UserIcon, UsersIcon } from "@/components/icons";
+import { PencilIcon, PlusIcon, SettingsIcon, TrashIcon, UserIcon, UsersIcon } from "@/components/icons";
 import {
   IconBadge,
   PageHeader,
@@ -14,22 +14,23 @@ import {
   TONE_BADGE,
   cardClass,
   cardFlatClass,
+  primaryButtonClass,
   type Tone,
 } from "@/components/ui/Surface";
-import { userApi, type ApiError, type Role, type UserRef } from "@/lib/api";
+import { userApi, type ApiError, type Role } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
-import { ROLE_LABELS, isStaff } from "@/lib/permissions";
+import { ROLE_LABELS, can } from "@/lib/permissions";
+import UserFormModal, { DeleteUserDialog, type Member } from "@/components/team/UserFormModal";
 import TeamInsights from "@/components/team/TeamInsights";
 import Avatar from "@/components/ui/Avatar";
 import { tileInteractiveClass } from "@/components/ui/Tile";
 import { TableSkeleton } from "@/components/ui/Loader";
 
-type Member = UserRef & { role: Role; createdAt: string };
 
 const ROLE_HELP: Record<Role, string> = {
   admin: "Full access, manages roles, deletes any task",
-  manager: "Sees and edits every task, team analytics and activity",
-  user: "Works on tasks they created or are assigned to",
+  manager: "Team-wide access, as the admin sets it in Settings → Role access",
+  user: "Their own tasks, plus anything the admin grants members",
 };
 
 const ROLE_STYLE: Record<Role, { icon: typeof UserIcon; tone: Tone; back: string }> = {
@@ -44,7 +45,27 @@ export default function TeamView() {
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
-  const isAdmin = user.role === "admin";
+  // Admins, or roles the admin granted "Manage users" (who can't touch admin accounts).
+  const canManage = can(user, "users.manage");
+  const manages = (m: Member) => canManage && (m.role !== "admin" || user.role === "admin");
+  const [form, setForm] = useState<{ open: boolean; member: Member | null }>({ open: false, member: null });
+  const [deleting, setDeleting] = useState<Member | null>(null);
+
+  const onSaved = (saved: Member, created: boolean) => {
+    setMembers((list) =>
+      created
+        ? [...(list ?? []), saved].sort((a, b) => a.name.localeCompare(b.name))
+        : (list?.map((m) => (m._id === saved._id ? { ...m, ...saved } : m)) ?? null)
+    );
+    setForm({ open: false, member: null });
+    toast(created ? `${saved.name} was added as ${ROLE_LABELS[saved.role]}` : `${saved.name} was updated`);
+  };
+
+  const onDeleted = (gone: Member, result: { unassignedTasks: number; movedTasks: number }) => {
+    setMembers((list) => list?.filter((m) => m._id !== gone._id) ?? null);
+    setDeleting(null);
+    toast(`${gone.name} was removed · ${result.unassignedTasks} task(s) unassigned, ${result.movedTasks} handed to you`);
+  };
 
   useEffect(() => {
     userApi
@@ -74,8 +95,16 @@ export default function TeamView() {
       <PageHeader
         title="Team"
         subtitle={`${members.length} member${members.length === 1 ? "" : "s"}. ${
-          isAdmin ? "As an admin you can change roles." : "Only admins can change roles."
+          canManage ? "You can add, edit and remove members." : "Only admins can manage members."
         }`}
+        actions={
+          canManage && (
+            <button type="button" onClick={() => setForm({ open: true, member: null })} className={primaryButtonClass}>
+              <PlusIcon className="h-5 w-5" />
+              Add member
+            </button>
+          )
+        }
       />
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,11 +165,11 @@ export default function TeamView() {
         })}
       </div>
 
-      {isStaff(user) && <TeamInsights />}
+      {can(user, "analytics.team") && <TeamInsights />}
 
       <section className={`p-5 sm:p-6 ${cardClass}`}>
         <SectionHeader icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks." />
-        <ul className="mt-5 grid gap-3 xl:grid-cols-2">
+        <ul className="mt-5 grid gap-3 2xl:grid-cols-2">
           {members.map((m) => {
             const isMe = m._id === user._id;
             return (
@@ -159,7 +188,7 @@ export default function TeamView() {
                     </p>
                   </div>
                 </div>
-                {isAdmin && !isMe ? (
+                {manages(m) && !isMe ? (
                   <select
                     aria-label={`Role for ${m.name}`}
                     value={m.role}
@@ -167,7 +196,7 @@ export default function TeamView() {
                     onChange={(e) => changeRole(m, e.target.value as Role)}
                     className={`${selectClass} w-full sm:w-40`}
                   >
-                    {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
+                    {(Object.keys(ROLE_LABELS) as Role[]).filter((r) => r !== "admin" || user.role === "admin").map((role) => (
                       <option key={role} value={role}>
                         {ROLE_LABELS[role]}
                       </option>
@@ -182,11 +211,44 @@ export default function TeamView() {
                     {ROLE_LABELS[m.role]}
                   </span>
                 )}
+                {manages(m) && (
+                  <span className="flex shrink-0 gap-1 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ open: true, member: m })}
+                      aria-label={`Edit ${m.name}`}
+                      title="Edit"
+                      className="rounded-lg p-2 text-slate-500 transition hover:bg-hover hover:text-brand-600"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    {!isMe && (
+                      <button
+                        type="button"
+                        onClick={() => setDeleting(m)}
+                        aria-label={`Remove ${m.name}`}
+                        title="Remove"
+                        className="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </span>
+                )}
               </li>
             );
           })}
         </ul>
       </section>
+
+      <UserFormModal
+        open={form.open}
+        member={form.member}
+        actor={user}
+        onClose={() => setForm({ open: false, member: null })}
+        onSaved={onSaved}
+      />
+      <DeleteUserDialog member={deleting} onClose={() => setDeleting(null)} onDeleted={onDeleted} />
     </div>
   );
 }

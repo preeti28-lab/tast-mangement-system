@@ -19,7 +19,7 @@ import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { analyticsApi, type Analytics } from "@/lib/api";
-import { isStaff } from "@/lib/permissions";
+import { can } from "@/lib/permissions";
 import { CardsSkeleton } from "@/components/ui/Loader";
 
 type Scope = "me" | "team";
@@ -54,7 +54,7 @@ function Card({
 
 export default function AnalyticsView() {
   const { user } = useUser();
-  const staff = isStaff(user);
+  const staff = can(user, "analytics.team");
   const [scope, setScope] = useState<Scope>(staff ? "team" : "me");
   const [refresh, setRefresh] = useState(0);
   const [result, setResult] = useState<{ key: string; data?: Analytics; error?: string } | null>(null);

@@ -13,6 +13,10 @@ const FIELD_LABELS: Record<string, string> = {
   status: "status",
   recurrence: "repeat",
   assignedTo: "assignee",
+  name: "name",
+  email: "email",
+  role: "role",
+  password: "password",
 };
 
 export type UserDirectory = Map<string, UserRef>;
@@ -91,6 +95,16 @@ export function describeAudit(log: AuditLog, users: UserDirectory, currentUserId
       const c = change("role");
       return `${actor} changed ${log.targetUser?.name ?? "a user"}'s role from ${formatValue("role", c?.from, users)} to ${formatValue("role", c?.to, users)}`;
     }
+    case "user.created":
+      return `${actor} added ${log.targetUser?.name ?? "a user"} as ${formatValue("role", change("role")?.to, users)}`;
+    case "user.updated":
+      return `${actor} updated ${log.targetUser?.name ?? "a user"}'s account (${log.changes.map((c) => FIELD_LABELS[c.field] ?? c.field).join(", ")})`;
+    case "user.deleted":
+      return `${actor} removed ${String(change("user")?.from ?? "a user")} from the team`;
+    case "settings.access_changed":
+      return `${actor} changed role access: ${log.changes
+        .map((c) => `${c.field.replace(/^user\./, "member ").replace(/^manager\./, "manager ")} ${c.to ? "on" : "off"}`)
+        .join(", ")}`;
     default:
       return `${actor} did ${log.action}`;
   }

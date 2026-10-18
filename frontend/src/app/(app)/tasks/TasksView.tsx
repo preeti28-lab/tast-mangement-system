@@ -29,7 +29,7 @@ import {
 } from "@/lib/api";
 import { dateInputToIso, toDateInput } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
-import { isStaff } from "@/lib/permissions";
+import { can } from "@/lib/permissions";
 import { TableSkeleton } from "@/components/ui/Loader";
 
 const DEFAULT_PER_PAGE = 10;
@@ -264,7 +264,7 @@ export default function TasksView() {
 
       <div>
         <div role="tablist" aria-label="Task views" className={tabListClass}>
-          {VIEW_OPTIONS.filter((o) => o.value !== "team" || isStaff(user)).map((o) => (
+          {VIEW_OPTIONS.filter((o) => o.value !== "team" || can(user, "tasks.viewAll")).map((o) => (
             <button
               key={o.value}
               role="tab"

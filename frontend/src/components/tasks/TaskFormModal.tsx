@@ -6,6 +6,7 @@ import FormField from "@/components/auth/FormField";
 import SubmitButton from "@/components/auth/SubmitButton";
 import Modal from "@/components/ui/Modal";
 import { useUser } from "@/components/layout/UserContext";
+import { can } from "@/lib/permissions";
 import {
   ApiError,
   OfflineQueuedError,
@@ -152,7 +153,9 @@ function TaskForm({
     }
   };
 
-  const others = users.filter((u) => u._id !== user._id);
+  // Without "Assign tasks to others" only yourself (or the current assignee) can be picked.
+  const mayAssignOthers = can(user, "tasks.assignOthers");
+  const others = users.filter((u) => u._id !== user._id && (mayAssignOthers || u._id === task?.assignedTo?._id));
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
@@ -251,6 +254,9 @@ function TaskForm({
           </select>
           {errors.assignedTo && (
             <p className="text-xs text-red-600 dark:text-red-400">{errors.assignedTo}</p>
+          )}
+          {!mayAssignOthers && !errors.assignedTo && (
+            <p className="text-xs text-muted">Your role can assign tasks only to yourself.</p>
           )}
         </div>
 

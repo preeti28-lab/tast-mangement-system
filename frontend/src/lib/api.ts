@@ -2,13 +2,35 @@ import { enqueueOffline, isQueueable } from "./offlineQueue";
 
 export type Role = "admin" | "manager" | "user";
 
+/** Switches the admin can turn on or off per role (Settings → Role access). */
+export type PermissionKey =
+  | "tasks.viewAll"
+  | "tasks.editAny"
+  | "tasks.deleteAny"
+  | "tasks.assignOthers"
+  | "analytics.team"
+  | "audit.viewAll"
+  | "users.manage";
+
+export type Permissions = Record<PermissionKey, boolean>;
+
 export type User = {
   _id: string;
   name: string;
   email: string;
   role: Role;
   createdAt: string;
+  /** Effective permissions of the user's role (sent by /auth/me). */
+  permissions?: Permissions;
 };
+
+export type RoleAccess = {
+  permissions: { key: PermissionKey; label: string; description: string }[];
+  roles: Exclude<Role, "admin">[];
+  access: Record<Exclude<Role, "admin">, Permissions>;
+};
+
+export type Portal = "admin" | "manager";
 
 export type UserRef = Pick<User, "_id" | "name" | "email"> & { role?: Role };
 
@@ -77,7 +99,11 @@ export type AuditAction =
   | "task.deleted"
   | "task.recurred"
   | "user.registered"
-  | "user.role_changed";
+  | "user.role_changed"
+  | "user.created"
+  | "user.updated"
+  | "user.deleted"
+  | "settings.access_changed";
 
 export type AuditLog = {
   _id: string;
@@ -177,7 +203,7 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  login: (body: { email: string; password: string }) =>
+  login: (body: { email: string; password: string; portal?: Portal }) =>
     request<{ user: User }>("/auth/login", {
       method: "POST",
       body: JSON.stringify(body),
@@ -251,6 +277,12 @@ export const userApi = {
     request<{ user: User }>(`/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
   getPreferences: () =>
     request<{ preferences: NotificationPrefs; emailAvailable: boolean }>("/users/me/preferences"),
+  create: (body: { name: string; email: string; password: string; role: Role }) =>
+    request<{ user: User }>("/users", { method: "POST", body: JSON.stringify(body) }),
+  update: (id: string, body: Partial<{ name: string; email: string; role: Role; password: string }>) =>
+    request<{ user: User }>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  remove: (id: string) =>
+    request<{ message: string; unassignedTasks: number; movedTasks: number }>(`/users/${id}`, { method: "DELETE" }),
   updateProfile: (body: { name: string }) =>
     request<{ user: User }>("/users/me", { method: "PATCH", body: JSON.stringify(body) }),
   changePassword: (body: { currentPassword: string; newPassword: string }) =>
@@ -279,6 +311,12 @@ export const auditApi = {
     request<{ logs: AuditLog[]; total: number; page: number; pages: number }>(
       `/audit-logs${toQueryString(query)}`
     ),
+};
+
+export const settingsApi = {
+  getAccess: () => request<RoleAccess>("/settings/access"),
+  updateAccess: (access: Partial<RoleAccess["access"]>) =>
+    request<RoleAccess>("/settings/access", { method: "PUT", body: JSON.stringify(access) }),
 };
 
 export const analyticsApi = {

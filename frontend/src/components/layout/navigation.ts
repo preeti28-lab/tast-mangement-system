@@ -11,14 +11,15 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "@/components/icons";
-import type { User } from "@/lib/api";
-import { isStaff } from "@/lib/permissions";
+import type { PermissionKey, User } from "@/lib/api";
+import { can } from "@/lib/permissions";
 
 type NavItem = {
   href: string;
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
-  staffOnly?: boolean;
+  /** Hidden unless the role has this permission. */
+  permission?: PermissionKey;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -27,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/tasks?view=assigned", label: "Assigned to Me", icon: InboxIcon },
   { href: "/tasks?view=created", label: "Created by Me", icon: PencilIcon },
   { href: "/tasks?view=overdue", label: "Overdue", icon: ClockIcon },
-  { href: "/tasks?view=team", label: "Team Tasks", icon: UsersIcon, staffOnly: true },
+  { href: "/tasks?view=team", label: "Team Tasks", icon: UsersIcon, permission: "tasks.viewAll" },
   { href: "/analytics", label: "Analytics", icon: ChartIcon },
   { href: "/activity", label: "Activity Log", icon: ActivityIcon },
   { href: "/team", label: "Team", icon: UsersIcon },
@@ -35,7 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-export const navItemsFor = (user: User) => NAV_ITEMS.filter((item) => !item.staffOnly || isStaff(user));
+export const navItemsFor = (user: User) => NAV_ITEMS.filter((item) => !item.permission || can(user, item.permission));
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
