@@ -4,7 +4,10 @@ import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { authApi, type User } from "@/lib/api";
+import { clearOfflineQueue } from "@/lib/offlineQueue";
 import Navbar from "./Navbar";
+import OfflineSync from "./OfflineSync";
+import { RealtimeProvider } from "./RealtimeProvider";
 import Sidebar from "./Sidebar";
 import { UserContext } from "./UserContext";
 
@@ -30,6 +33,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const logout = useCallback(async () => {
+    clearOfflineQueue();
+    // Drop cached API responses so the next user on this device can't see them offline.
+    navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_API_CACHE" });
     await authApi.logout().catch(() => {});
     router.replace("/login");
     router.refresh();
@@ -42,15 +48,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={ctx}>
       <ToastProvider>
-        <div className="flex min-h-screen flex-1 bg-zinc-50 dark:bg-zinc-950">
-          <Suspense>
-            <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          </Suspense>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Navbar onMenuClick={() => setSidebarOpen(true)} />
-            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <RealtimeProvider>
+          <OfflineSync />
+          <div className="flex min-h-screen flex-1 bg-zinc-50 dark:bg-zinc-950">
+            <Suspense>
+              <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </Suspense>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Navbar onMenuClick={() => setSidebarOpen(true)} />
+              <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+            </div>
           </div>
-        </div>
+        </RealtimeProvider>
       </ToastProvider>
     </UserContext.Provider>
   );

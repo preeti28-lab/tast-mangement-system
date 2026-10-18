@@ -8,19 +8,23 @@ import FormAlert from "@/components/auth/FormAlert";
 import { CheckCircleIcon, ClockIcon, InboxIcon, PencilIcon, PlusIcon } from "@/components/icons";
 import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
+import { useTasksChanged } from "@/components/layout/RealtimeProvider";
 import { dashboardApi, type DashboardData } from "@/lib/api";
 
 export default function DashboardView() {
   const { user } = useUser();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
+  // Live-update the numbers when tasks change elsewhere.
+  useTasksChanged(() => setRefresh((n) => n + 1));
 
   useEffect(() => {
     dashboardApi
       .get()
       .then(setData)
       .catch((err: Error) => setError(err.message));
-  }, []);
+  }, [refresh]);
 
   const firstName = user.name.split(" ")[0];
 

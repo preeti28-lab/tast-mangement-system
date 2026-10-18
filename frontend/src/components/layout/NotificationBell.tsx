@@ -5,15 +5,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BellIcon } from "@/components/icons";
 import { notificationApi, type Notification } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
+import { useToast } from "@/components/ui/Toast";
+import { useRealtime } from "./RealtimeProvider";
 import { useClickOutside } from "./useClickOutside";
 
 const POLL_MS = 30_000;
+const RESYNC_MS = 120_000;
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const { status, onNotification } = useRealtime();
+  const toast = useToast();
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(ref, open, close);
 
@@ -30,14 +35,27 @@ export default function NotificationBell() {
     []
   );
 
+  // Polling is the fallback; while the socket is live it only runs occasionally to resync.
+  const pollMs = status === "live" ? RESYNC_MS : POLL_MS;
   useEffect(() => {
     const first = setTimeout(load, 0);
-    const id = setInterval(load, POLL_MS);
+    const id = setInterval(load, pollMs);
     return () => {
       clearTimeout(first);
       clearInterval(id);
     };
-  }, [load]);
+  }, [load, pollMs]);
+
+  // Real-time: new notifications arrive over Socket.io.
+  useEffect(
+    () =>
+      onNotification((n) => {
+        setItems((list) => [n, ...list.filter((item) => item._id !== n._id)].slice(0, 20));
+        setUnread((count) => count + 1);
+        toast(n.message);
+      }),
+    [onNotification, toast]
+  );
 
   const openNotification = (n: Notification) => {
     close();
