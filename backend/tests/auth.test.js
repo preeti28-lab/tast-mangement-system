@@ -62,4 +62,9 @@ describe("auth", () => {
     await request(app).get("/api/tasks").expect(401);
     await request(app).get("/api/tasks").set("Authorization", "Bearer not-a-jwt").expect(401);
   });
+
+  test("an invalid session cookie is cleared so the browser stops sending it", async () => {
+    const res = await request(app).get("/api/auth/me").set("Cookie", "token=signed-with-an-old-secret").expect(401);
+    expect(res.headers["set-cookie"][0]).toMatch(/^token=;.*Expires=Thu, 01 Jan 1970/);
+  });
 });

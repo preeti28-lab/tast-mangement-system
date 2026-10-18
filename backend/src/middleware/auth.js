@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { COOKIE_NAME } from "../utils/token.js";
+import { COOKIE_NAME, clearAuthCookie } from "../utils/token.js";
 
 export const protect = async (req, res, next) => {
   const header = req.headers.authorization;
@@ -12,17 +12,23 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: "Not authenticated" });
   }
 
+  // A bad cookie (expired, signed with an old secret, deleted user) is cleared so the
+  // browser doesn't keep sending it and the frontend's redirects can't loop.
+  let id;
   try {
-    const { id } = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(401).json({ message: "User no longer exists" });
-    }
-    req.user = user;
-    next();
+    ({ id } = jwt.verify(token, process.env.JWT_SECRET));
   } catch {
+    clearAuthCookie(res);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
+
+  const user = await User.findById(id);
+  if (!user) {
+    clearAuthCookie(res);
+    return res.status(401).json({ message: "User no longer exists" });
+  }
+  req.user = user;
+  next();
 };
 
 // Allows the request only for the given roles. Use after `protect`.

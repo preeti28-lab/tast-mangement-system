@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
-import { authApi, type User } from "@/lib/api";
+import { authApi, type ApiError, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
 import Navbar from "./Navbar";
 import OfflineSync from "./OfflineSync";
@@ -28,7 +28,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     authApi
       .me()
       .then(({ user }) => setUser(user))
-      .catch(() => router.replace("/login"));
+      .catch(async (err: ApiError) => {
+        if (err.status === 401) {
+          // Stale session: make sure the cookie is gone, then do a full page load so
+          // proxy.ts sees no cookie and doesn't bounce back to the dashboard.
+          await authApi.logout().catch(() => {});
+          window.location.replace("/login");
+        } else {
+          router.replace("/login");
+        }
+      });
   }, [router]);
 
   const logout = useCallback(async () => {
