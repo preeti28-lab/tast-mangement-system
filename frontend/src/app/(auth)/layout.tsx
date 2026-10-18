@@ -136,33 +136,36 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        {/* soft background accents (desktop) */}
-        <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden="true">
-          <div className="absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-brand-300/25 blur-3xl dark:bg-brand-600/15" />
+        {/* soft background accents: aurora blobs, a glow behind the card and a dot grid */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full bg-brand-300/25 blur-3xl dark:bg-brand-600/15" />
           <div className="absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-emerald-200/30 blur-3xl dark:bg-emerald-700/10" />
-          <div className="absolute inset-0 bg-[radial-gradient(rgba(22,163,74,0.12)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] dark:bg-[radial-gradient(rgba(34,197,94,0.10)_1px,transparent_1px)]" />
+          <div className="absolute top-1/2 left-1/2 hidden h-[30rem] w-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-400/10 blur-[100px] lg:block dark:bg-brand-500/15" />
+          <div className="absolute inset-0 hidden bg-[radial-gradient(rgba(22,163,74,0.12)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] lg:block dark:bg-[radial-gradient(rgba(34,197,94,0.10)_1px,transparent_1px)]" />
         </div>
 
         <div className="relative z-10 -mt-10 flex flex-1 items-start justify-center px-4 pb-10 sm:px-6 lg:mt-0 lg:items-center lg:py-12">
           <div className="w-full max-w-md">
-            <div className="relative rounded-3xl bg-gradient-to-b from-brand-200/80 via-slate-200/40 to-slate-200/40 p-px shadow-[0_24px_60px_-24px_rgba(15,23,42,0.25)] dark:shadow-black/40 dark:from-brand-500/40 dark:via-slate-800 dark:to-slate-800">
-              <div className="rounded-[calc(1.5rem-1px)] bg-surface/95 p-6 backdrop-blur-xl sm:p-8">{children}</div>
+            {/* Glass card: gradient hairline border, brand accent along the top edge, green-tinted lift */}
+            <div className="relative rounded-[1.75rem] bg-gradient-to-b from-brand-300/70 via-slate-200/50 to-slate-200/30 p-px shadow-[0_30px_70px_-30px_rgba(22,163,74,0.35),0_12px_30px_-18px_rgba(15,23,42,0.25)] dark:from-brand-400/40 dark:via-white/10 dark:to-white/5 dark:shadow-[0_30px_80px_-30px_rgba(34,197,94,0.35),0_20px_40px_-20px_rgba(0,0,0,0.6)]">
+              <span className="pointer-events-none absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent dark:via-brand-400" aria-hidden="true" />
+              <div className="rounded-[calc(1.75rem-1px)] bg-surface/90 p-6 backdrop-blur-2xl sm:p-9 dark:bg-slate-900/70">{children}</div>
             </div>
 
-            <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted">
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="4" y="10" width="16" height="11" rx="2" />
-                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-              </svg>
-              Secured with encrypted, httpOnly sessions
-            </p>
-            <p className="mt-2 text-center text-xs text-muted">
-              NexTask &middot; Task Management System
-            </p>
+            <div className="mt-6 flex flex-col items-center gap-2 text-xs text-muted">
+              <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 backdrop-blur-md">
+                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="4" y="10" width="16" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+                Secured with encrypted, httpOnly sessions
+              </p>
+              <p>NexTask &middot; Task Management System</p>
+            </div>
 
             {/* Mobile / tablet: the desktop panel's highlights, below the form */}
             <div className="mt-8 space-y-4 lg:hidden">
-              <HologramProjector3D className="h-[260px]" />
+              <HologramProjector3D tone="auto" className="h-[260px]" />
               <dl className="grid grid-cols-3 gap-2.5">
                 {STATS.map((s) => (
                   <div

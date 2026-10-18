@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import FormField from "@/components/auth/FormField";
 import FormAlert from "@/components/auth/FormAlert";
 import SubmitButton from "@/components/auth/SubmitButton";
+import { AuthHeader, AuthSwitch } from "@/components/auth/AuthHeader";
+import { UserIcon } from "@/components/icons";
 import { ApiError, authApi, type FieldErrors } from "@/lib/api";
 import { validateRegister, type RegisterValues } from "@/lib/validation";
 
@@ -53,16 +54,14 @@ export default function RegisterForm() {
 
   return (
     <>
-      <div className="mb-7 space-y-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-fg">Create your account</h1>
-        <p className="text-sm text-muted">Start managing your tasks in seconds.</p>
-      </div>
+      <AuthHeader eyebrow="Get started" title="Create your account" subtitle="Start managing your tasks in seconds. It's free." />
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         <FormAlert message={formError} />
         <FormField
           label="Full name"
           name="name"
+          icon={UserIcon}
           autoComplete="name"
           placeholder="Your name"
           value={values.name}
@@ -104,17 +103,12 @@ export default function RegisterForm() {
         <p className="text-xs text-muted">
           At least 8 characters, including a letter and a number.
         </p>
-        <SubmitButton loading={loading}>
+        <SubmitButton loading={loading} arrow>
           {loading ? "Creating account..." : "Create account"}
         </SubmitButton>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
-          Log in
-        </Link>
-      </p>
+      <AuthSwitch text="Already have an account?" href="/login" label="Log in" />
     </>
   );
 }

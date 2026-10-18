@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import FormField from "@/components/auth/FormField";
 import FormAlert from "@/components/auth/FormAlert";
 import SubmitButton from "@/components/auth/SubmitButton";
+import { AuthHeader, AuthSwitch } from "@/components/auth/AuthHeader";
 import { ApiError, authApi, type FieldErrors } from "@/lib/api";
 import { validateForgot, validateReset, type ResetValues } from "@/lib/validation";
 
@@ -88,14 +88,19 @@ export default function ForgotPasswordForm() {
 
   return (
     <>
-      <div className="mb-7 space-y-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-fg">Reset password</h1>
-        <p className="text-sm text-muted">
-          {step === "email"
-            ? "Enter your account email and we'll send you a 6-digit OTP."
-            : `Enter the OTP sent to ${email.trim()} and choose a new password.`}
-        </p>
-      </div>
+      <AuthHeader
+        eyebrow={step === "email" ? "Step 1 of 2" : "Step 2 of 2"}
+        title="Reset password"
+        subtitle={
+          step === "email" ? (
+            "Enter your account email and we'll send you a 6-digit OTP."
+          ) : (
+            <>
+              Enter the OTP sent to <span className="font-medium text-fg">{email.trim()}</span> and choose a new password.
+            </>
+          )
+        }
+      />
 
       {step === "email" ? (
         <form onSubmit={onSubmitEmail} noValidate className="space-y-4">
@@ -113,7 +118,9 @@ export default function ForgotPasswordForm() {
             }}
             error={errors.email}
           />
-          <SubmitButton loading={loading}>{loading ? "Sending OTP..." : "Send OTP"}</SubmitButton>
+          <SubmitButton loading={loading} arrow>
+            {loading ? "Sending OTP..." : "Send OTP"}
+          </SubmitButton>
         </form>
       ) : (
         <form onSubmit={onSubmitReset} noValidate className="space-y-4">
@@ -157,7 +164,9 @@ export default function ForgotPasswordForm() {
             onChange={onChange}
             error={errors.confirmPassword}
           />
-          <SubmitButton loading={loading}>{loading ? "Resetting..." : "Reset password"}</SubmitButton>
+          <SubmitButton loading={loading} arrow>
+            {loading ? "Resetting..." : "Reset password"}
+          </SubmitButton>
           <div className="flex justify-between text-sm">
             <button
               type="button"
@@ -182,12 +191,7 @@ export default function ForgotPasswordForm() {
         </form>
       )}
 
-      <p className="mt-6 text-center text-sm text-muted">
-        Remembered it?{" "}
-        <Link href="/login" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
-          Back to log in
-        </Link>
-      </p>
+      <AuthSwitch text="Remembered it?" href="/login" label="Back to log in" />
     </>
   );
 }

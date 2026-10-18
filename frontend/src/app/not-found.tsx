@@ -11,7 +11,7 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-dvh flex-1 flex-col overflow-hidden bg-app text-fg">
       <div className="pointer-events-none absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full bg-brand-300/20 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-cyan-300/15 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-emerald-300/15 blur-3xl" aria-hidden="true" />
 
       <header className="relative flex items-center justify-between px-4 py-5 sm:px-8">
         <Link href="/" aria-label="NexTask home">
@@ -27,6 +27,7 @@ export default function NotFound() {
             stat="▼ signal lost"
             caption="searching · no task found"
             bars={[30, 12, 45, 8, 20]}
+            tone="auto"
             className="h-[280px] sm:h-[320px]"
           />
 

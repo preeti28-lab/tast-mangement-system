@@ -17,11 +17,14 @@ import {
   CheckCircle,
   Clock,
   EnvelopeSimple,
+  Eye,
+  EyeSlash,
   FileText,
   Funnel,
   GearSix,
   House,
   List,
+  LockSimple,
   ListChecks,
   MagnifyingGlass,
   Monitor,
@@ -101,5 +104,8 @@ export const DownloadIcon = make(DownloadSimple);
 export const SearchIcon = make(MagnifyingGlass);
 export const SortIcon = make(ArrowsDownUp);
 export const CalendarIcon = make(CalendarBlank);
+export const EyeIcon = make(Eye);
+export const EyeOffIcon = make(EyeSlash);
+export const LockIcon = make(LockSimple);
 export const TrashIcon = make(Trash);
 export const MonitorIcon = make(Monitor);
