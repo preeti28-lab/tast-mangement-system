@@ -16,24 +16,22 @@ const STATUS_STYLES: Record<TaskStatus, { label: string; className: string }> = 
 };
 
 const PRIORITY_STYLES: Record<TaskPriority, { label: string; className: string }> = {
-  low: { label: "Low", className: "text-zinc-500 dark:text-zinc-400" },
-  medium: { label: "Medium", className: "text-amber-600 dark:text-amber-400" },
-  high: { label: "High", className: "text-red-600 dark:text-red-400" },
+  low: { label: "Low", className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" },
+  medium: { label: "Medium", className: "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300" },
+  high: { label: "High", className: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300" },
 };
+
+const pill = "inline-flex items-center whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-medium leading-none";
 
 export function StatusBadge({ status }: { status: TaskStatus }) {
   const { label, className } = STATUS_STYLES[status];
-  return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>
-      {label}
-    </span>
-  );
+  return <span className={`${pill} ${className}`}>{label}</span>;
 }
 
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {
   const { label, className } = PRIORITY_STYLES[priority];
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${className}`}>
+    <span className={`${pill} gap-1.5 ${className}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {label}
     </span>

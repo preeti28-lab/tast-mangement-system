@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import StatCard from "@/components/dashboard/StatCard";
 import TaskListCard from "@/components/dashboard/TaskListCard";
 import FormAlert from "@/components/auth/FormAlert";
-import { CheckCircleIcon, ClockIcon, InboxIcon, PencilIcon, PlusIcon } from "@/components/icons";
+import { CheckCircleIcon, ClockIcon, DocumentIcon, PencilIcon, PlusIcon, UserIcon } from "@/components/icons";
 import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import { useTasksChanged } from "@/lib/taskEvents";
@@ -29,19 +29,24 @@ export default function DashboardView() {
   const firstName = user.name.split(" ")[0];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="w-full space-y-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Hello, {firstName}</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
+            Hello, {firstName}{" "}
+            <span role="img" aria-label="waving hand" className="inline-block origin-[70%_70%] motion-safe:animate-[wave_1.8s_ease-in-out_1]">
+              👋
+            </span>
+          </h2>
+          <p className="mt-2 text-base text-zinc-500 sm:text-lg dark:text-zinc-400">
             Here&apos;s what&apos;s happening with your tasks today.
           </p>
         </div>
         <Link
           href="/tasks?new=1"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-indigo-600/35"
         >
-          <PlusIcon className="h-4 w-4" />
+          <PlusIcon className="h-5 w-5" />
           New task
         </Link>
       </div>
@@ -52,12 +57,12 @@ export default function DashboardView() {
         <Spinner />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Assigned to me"
               value={data.stats.assignedToMe}
               href="/tasks?view=assigned"
-              icon={InboxIcon}
+              icon={UserIcon}
               tone="indigo"
             />
             <StatCard
@@ -83,19 +88,25 @@ export default function DashboardView() {
             />
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-5">
-            <div className="xl:col-span-3">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
               <TaskListCard
                 title="Recent tasks"
+                subtitle="Your most recent task activity."
+                icon={DocumentIcon}
+                tone="indigo"
                 tasks={data.recentTasks}
                 emptyText="No tasks yet. Create your first task to get started."
                 viewAllHref="/tasks"
                 currentUserId={user._id}
               />
             </div>
-            <div className="xl:col-span-2">
+            <div>
               <TaskListCard
                 title="Overdue tasks"
+                subtitle="Tasks that need your attention."
+                icon={ClockIcon}
+                tone="red"
                 tasks={data.overdueTasks}
                 emptyText="Nothing overdue. Nice work!"
                 viewAllHref="/tasks?view=overdue"

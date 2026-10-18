@@ -57,13 +57,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <UserContext.Provider value={ctx}>
       <ToastProvider>
         <OfflineSync />
-        <div className="flex min-h-screen flex-1 bg-zinc-50 dark:bg-zinc-950">
+        <div className="flex min-h-screen flex-1 bg-[#f7f7fc] bg-[radial-gradient(ellipse_80%_50%_at_100%_0%,rgba(129,140,248,0.10),transparent),radial-gradient(ellipse_60%_40%_at_0%_100%,rgba(167,139,250,0.06),transparent)] dark:bg-zinc-950 dark:bg-none">
           <Suspense>
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
             <Navbar onMenuClick={() => setSidebarOpen(true)} />
-            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+            <main className="flex-1 px-4 py-7 sm:px-6 lg:px-10">{children}</main>
           </div>
         </div>
       </ToastProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { LogoutIcon } from "@/components/icons";
+import { ChevronDownIcon, LogoutIcon } from "@/components/icons";
 import { initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { useClickOutside } from "./useClickOutside";
@@ -18,19 +18,20 @@ export default function UserMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 rounded-full p-1 transition hover:bg-zinc-100 sm:pr-3 dark:hover:bg-zinc-800"
+        className="flex items-center gap-3 rounded-full p-1 transition hover:bg-zinc-100 sm:rounded-xl sm:pr-2 dark:hover:bg-zinc-800"
         aria-expanded={open}
         aria-label="Account menu"
       >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-sm font-semibold text-white">
           {initials(user.name)}
         </span>
         <span className="hidden text-left sm:block">
-          <span className="block text-sm font-medium leading-tight text-zinc-900 dark:text-white">
+          <span className="block text-sm font-semibold leading-tight text-zinc-900 dark:text-white">
             {user.name}
           </span>
-          <span className="block text-xs leading-tight text-zinc-500">{user.email}</span>
+          <span className="mt-0.5 block text-xs leading-tight text-zinc-500">{user.email}</span>
         </span>
+        <ChevronDownIcon className={`hidden h-4 w-4 text-zinc-500 transition-transform sm:block ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (

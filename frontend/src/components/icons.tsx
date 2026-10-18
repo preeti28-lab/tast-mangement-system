@@ -118,6 +118,32 @@ export const RepeatIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const UserIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icon>
+);
+
+export const DocumentIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5M9 13h6M9 17h4" />
+  </Icon>
+);
+
+export const ArrowRightIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m6 9 6 6 6-6" />
+  </Icon>
+);
+
 export const PlusIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 5v14M5 12h14" />
