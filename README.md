@@ -1,6 +1,6 @@
 # NexTask – Task Management System
 
-A task management app for small teams. Users can create tasks, assign them to teammates, get notified when something is assigned to them or about to be due, and keep track of what is due or overdue. Teammates can message each other in a WhatsApp-style chat. Admins decide what managers and members are allowed to do, manage the team, and get team analytics and an audit log. The UI works on phones, tablets and desktops, in light and dark mode.
+NexTask is a task management app for small teams. You can create tasks, assign them to teammates, track what is due or overdue, chat with your team, and see how the work is going in dashboards and analytics. Admins decide what managers and members are allowed to do. It works on phones, tablets and desktops, in light and dark mode, and keeps working offline.
 
 Built for the *Software Developer Take-Home Assignment*. It covers **every core requirement** and **seven of the eight optional advanced tasks**. The one left out is WebSocket-based real-time notifications; see [trade-offs](#assumptions-and-trade-offs).
 
@@ -8,37 +8,69 @@ Built for the *Software Developer Take-Home Assignment*. It covers **every core 
 |---|---|
 | **Live app** | https://taskflow-nu-lake.vercel.app |
 | **REST API** | https://taskflow-backend-bay.vercel.app (health check: [`/api/health`](https://taskflow-backend-bay.vercel.app/api/health)) |
-| **Stack** | Next.js 16 · Tailwind CSS v4 · Node.js · Express 5 · MongoDB (Mongoose) · Jest |
+| **Stack** | Next.js 16 · React 19 · Tailwind CSS v4 · Node.js · Express 5 · MongoDB (Mongoose) · Jest |
+| **Tests** | 82 backend tests (Jest + Supertest, in-memory MongoDB) |
+
+## Contents
+
+- [Features at a glance](#features-at-a-glance)
+- [Features in detail](#features-in-detail)
+  - [1. Accounts and sign-in](#1-accounts-and-sign-in)
+  - [2. Roles and permissions](#2-roles-and-permissions)
+  - [3. Dashboard](#3-dashboard)
+  - [4. Tasks](#4-tasks)
+  - [5. Recurring tasks](#5-recurring-tasks)
+  - [6. Notifications and reminders](#6-notifications-and-reminders)
+  - [7. Chat](#7-chat)
+  - [8. Analytics](#8-analytics)
+  - [9. Team management](#9-team-management)
+  - [10. Activity log](#10-activity-log)
+  - [11. Profile](#11-profile)
+  - [12. Settings](#12-settings)
+  - [13. Offline support (PWA)](#13-offline-support-pwa)
+  - [14. Design and responsiveness](#14-design-and-responsiveness)
+  - [15. Security](#15-security)
+- [Assignment checklist](#assignment-checklist)
+- [Architecture](#architecture) · [Running locally](#running-locally) · [Deployment](#deployment) · [API reference](#api-reference) · [Design decisions](#approach-and-design-decisions) · [Trade-offs](#assumptions-and-trade-offs)
 
 ---
 
-## Features
+## Features at a glance
 
-### Core requirements
-
-| Requirement | Implementation |
+| Area | What you get |
 |---|---|
-| **Authentication** | Register and log in. Passwords are hashed with **bcrypt** (10 rounds; older 12-round hashes are upgraded on the next login). Sessions use a **JWT in an `httpOnly`, `SameSite=Lax` cookie** (`Secure` in production). Admins and managers have their own login pages (`/admin/login`, `/manager/login`) that only let that role in. **Forgot password** emails a 6-digit one-time code (valid 10 minutes, 5 attempts, 1-minute resend cooldown). |
-| **Task CRUD** | Title, description, due date, priority, status. Create, read, update and delete, with validation on both client and server. |
-| **Team collaboration** | Assign a task to any registered user. The assignee is **notified** in-app with the bell and a pop-up (checked every 30 s and whenever the tab regains focus), and optionally by email. |
-| **Dashboard** | KPI tiles for *total*, *assigned to me*, *created by me*, *in progress*, *overdue* and *completed* (each opens the matching task list), a weekly activity chart, a status and priority breakdown, upcoming deadlines for the next 7 days, a *Focus deck* to start or skip to-do tasks, and a top-performer card. Refreshes when new notifications arrive. |
-| **Search and filter** | Search by title or description. Filter by status, priority and due-date range. Sort, paginate, and keep the filters in the URL. Sidebar shortcuts for *Assigned to me*, *Created by me*, *Overdue* and *Team tasks*. Tasks can be **exported to CSV** for a date range (by created or due date). |
+| **Sign-in** | Register, log in, separate admin and manager login pages, forgot password with an emailed OTP |
+| **Roles** | Admin, Manager, Member, with permissions the admin can switch on and off |
+| **Tasks** | Create, edit, delete, assign, search, filter, sort, paginate, export to CSV, task history |
+| **Recurring tasks** | Daily, weekly or monthly; the next one is created automatically on completion |
+| **Dashboard** | KPI tiles, activity chart, status and priority breakdown, upcoming deadlines, focus deck, top performer |
+| **Notifications** | Bell with pop-ups, "due in 1 hour" reminders, optional email, per-type preferences, mute all |
+| **Chat** | WhatsApp-style one-to-one chat with ticks, online / last seen, unread badges, pop-ups and desktop alerts |
+| **Analytics** | Completion and on-time rates, trends, funnel, cohorts, week-over-week, per-member stats, insights |
+| **Team** | Add, edit and remove members, change roles, workload map, searchable team report |
+| **Activity log** | Every change recorded with *from → to* values, filterable |
+| **Offline** | Installable PWA; read cached data offline, task changes sync when you're back online |
+| **Design** | Responsive layout, light / dark / system theme, glass UI with 3D touches |
 
-### Advanced tasks
+---
 
-| Task | Implementation |
-|---|---|
-| **RBAC** | Three roles: **Admin**, **Manager** and **Member**. The first account becomes Admin. What managers and members may do is **configurable by the admin** on *Settings → Role access* (see [roles and permissions](#roles-and-permissions)). Admins, or roles given *Manage users*, can add, edit and remove members and change roles on the *Team* page. The API checks permissions on every request, and the UI hides actions you can't take. |
-| **Recurring tasks** | Tasks can repeat daily, weekly or monthly. Completing one creates the next occurrence with the due date moved forward. Monthly repeats clamp to the end of shorter months (Jan 31 → Feb 28). Re-completing never creates duplicates. |
-| **Audit logging** | Every create, edit (with field-level *from → to* changes), assignment, status change, delete, automatic repeat, registration and role change is logged. There is an *Activity Log* page (filterable, paginated) and a *History* section on each task. |
-| **Offline support (PWA)** | The app is installable, with a manifest and icons. A service worker caches the app shell, pages and API responses (network-first). When offline, task changes are **queued and synced automatically** when the connection comes back, with an offline banner and a pending count. |
-| **Unit and integration tests** | **82 Jest + Supertest tests** run against an in-memory MongoDB. They cover auth and password reset, login portals, CRUD, configurable role access and user management, search and filters, notifications and preferences, due reminders, recurrence, profile and password change, chat (privacy, unread counts, read receipts, polling, paging, delete), audit and analytics. |
-| **Analytics dashboard** | Completion rate, on-time rate, average time to complete, created vs. completed per week, overdue trend, breakdowns by status and priority, **completed tasks per user**, week-over-week comparison, a task funnel, completion cohorts and auto-generated insights. Roles with *Team analytics* can switch between *Team* and *Just me*, and see a workload map and a searchable team report on the *Team* page. |
-| **Customizable notifications** | On the *Settings* page you can mute everything, or switch in-app and email alerts on or off separately for *assigned*, *status changed* and *due in 1 hour*. The **due reminder** goes to the assignee (or the creator if nobody is assigned) once per task, and again if the due date is moved. Email goes out through SMTP when it's configured. |
+## Features in detail
 
-### Roles and permissions
+### 1. Accounts and sign-in
 
-Admins always have every permission, so nobody can lock the admin out. The switches for managers and members are set by the admin on *Settings → Role access* and apply immediately. The defaults are:
+- **Register** with name, email and password (at least 8 characters). The **first account becomes the Admin**, so a fresh install can be managed right away.
+- **Log in** at `/login`. Admins and managers also have their own login pages, **`/admin/login`** and **`/manager/login`**, which only let that role in (anyone else is told to use the regular login).
+- **Forgot password** in two steps: enter your email, then the **6-digit OTP** that arrives by email plus a new password.
+  - The code is valid for 10 minutes and allows 5 wrong attempts.
+  - A new code can be requested after 1 minute.
+  - The page gives the same answer whether or not the email is registered, so it can't be used to find accounts.
+  - Without SMTP, the code is printed in the backend console during development.
+- **Sessions** use a JWT in an `httpOnly` cookie and last 7 days. A stale or invalid session is cleared automatically and sends you back to the login page.
+- **Log out** from the sidebar or the user menu. A short sign-out screen confirms it, and cached data and queued offline changes are cleared, so the next person on the device can't see them.
+
+### 2. Roles and permissions
+
+There are three roles: **Admin**, **Manager** and **Member**. Admins always have every permission, so nobody can lock the admin out. What managers and members may do is set by the admin on **Settings → Role access**, using a switch for each permission and role. Changes apply immediately on every device. The defaults are:
 
 | Permission | Member | Manager | Admin |
 |---|:-:|:-:|:-:|
@@ -50,15 +82,210 @@ Admins always have every permission, so nobody can lock the admin out. The switc
 | Full activity log | – | ✅ | ✅ |
 | Manage users (never admins) | – | – | ✅ |
 
-Whatever the settings say, everyone can see, edit and delete tasks they created, and see and change the status of tasks assigned to them. Only admins can change role access, edit admin accounts, or make someone an admin. Nobody can change their own role or delete their own account, and the last admin can't be deleted.
+- Whatever the settings say, everyone can **see, edit and delete tasks they created**, and **see and change the status of tasks assigned to them**.
+- Only admins can change role access, edit admin accounts, or make someone an admin.
+- Nobody can change their own role or delete their own account, and the last admin can't be deleted.
+- The API checks permissions on every request. The UI also hides buttons, pages and menu items you can't use.
+- A task you aren't allowed to see returns *not found*, so other people's task ids aren't revealed.
+- Roles can also be changed from the command line: `npm run set-role -- someone@example.com manager`.
 
-### Other features
+### 3. Dashboard
 
-- **Chat:** one-to-one messages between anyone in the organization, in a WhatsApp-style layout (chat list on the left, conversation on the right; one pane at a time on phones). Messages show ✓ sent, ✓✓ delivered and blue ✓✓ read, plus *online* / *last seen*. You can search chats, start a new chat from the contact list or with the *Message* button on the *Team* page, copy messages, and delete your own *for everyone*. Older messages load as you scroll up. New messages update an unread badge in the sidebar and navbar, show a pop-up on any page, and send a desktop notification when the tab is in the background (opt-in; off when *Mute all* is on). It uses the REST API only, no sockets: the open chat checks for new messages every 3 s and the rest of the app every 10 s.
-- **Team page:** members grouped by role (tap a card to see what that role can do), and add / edit / remove members. Deleting a member unassigns their tasks and moves the tasks they created to the person deleting them.
-- **Profile page:** your stats, completion and on-time rates, renaming yourself and changing your password.
-- **Settings page:** light, dark or system theme, notification preferences, and role access (admins).
-- **Responsive layout:** a slide-out sidebar on phones, card views instead of tables on small screens, and two-column KPI tiles.
+- **Greeting header** with today's date, how many tasks are due in the next 7 days and how many are in progress, and a **New task** button. It sits over an animated 3D wireframe terrain.
+- **Six KPI tiles:** *Total tasks* (with % completed), *Assigned to me*, *Created by me*, *In progress*, *Overdue* and *Completed* (with a change vs. last week). Some tiles have a sparkline or a progress meter. Each tile opens the matching filtered task list.
+- **My activity:** a chart of tasks created vs. completed per week over the last 8 weeks.
+- **Task breakdown:** a donut chart by status, and bars by priority.
+- **Upcoming deadlines:** tasks due in the next 7 days, soonest first, with priority and "due in N days".
+- **Focus deck:** your *To do* tasks as a stack of cards, soonest due first.
+  - **Start** moves the top task to *In progress*; **Skip** sets it aside for now.
+  - The arrow keys work too (← skip, → start), and **Start over** brings back skipped cards.
+- **Top performer:** the team member with the most completed tasks, shown on a podium with a crown, plus a leaderboard.
+- The dashboard refreshes by itself when a new notification arrives.
+
+### 4. Tasks
+
+**Each task has:** title (up to 120 characters), description (up to 2000), due date and time, priority (*Low*, *Medium*, *High*), status (*To do*, *In progress*, *Completed*), repeat setting, assignee and creator. Fields are validated on both the client and the server.
+
+- **Create and edit** in a form dialog. *Assign to* lists your teammates; without the *Assign tasks to others* permission you can only leave a task unassigned or assign it to yourself.
+- **Task details** dialog with every field and the task's full **History** (who changed what, and when).
+- **Change status** right from the list with a status dropdown.
+- **Delete** with a confirmation dialog.
+- **Views** (tabs and sidebar shortcuts): *All*, *Assigned to me*, *Created by me*, *Overdue*, and *Team tasks* (with *View all team tasks*).
+- **Search** by title or description.
+- **Filter** by status, by priority, and by due date. The due-date filter has presets (*Today*, *Tomorrow*, *This week*, *Next 7 days*, *This month*, *Before today*) and a custom from–to range.
+- **Sort** by newest, oldest, due date (soonest or latest), or recently updated.
+- **Pagination** with a choice of rows per page. Filters, sort and page are **kept in the URL**, so a filtered list can be bookmarked or shared.
+- **Export to CSV:** all time, today, last 7 or 30 days, this month, last month, or a custom range, by created date or due date.
+- **Layout:** a table on large screens and cards on phones and tablets. Overdue tasks are highlighted, and completed tasks are shown struck through.
+- Opening a link like `/tasks?task=<id>` (for example from a notification) opens that task directly.
+
+### 5. Recurring tasks
+
+- A task can repeat **daily**, **weekly** or **monthly**.
+- When it is marked *Completed*, the **next occurrence is created automatically**, with the same details and the due date moved forward.
+- Monthly repeats stay within the month: Jan 31 → Feb 28 (or 29).
+- Completing the same task again (after reopening it) never creates a duplicate.
+- Every automatic repeat is recorded in the activity log.
+
+### 6. Notifications and reminders
+
+- **You are notified when:**
+  - someone **assigns you a task**;
+  - a task you created or are assigned to **changes status**;
+  - a task is **due in 1 hour** (sent once to the assignee, or to the creator if nobody is assigned, and again if the due date is moved).
+- **Bell** in the navbar with an unread count and the latest notifications. Click one to open its task, or mark everything as read.
+- **Pop-ups** appear for new notifications on any page, and open task lists and dashboards refresh.
+- **Notifications page:** every notification in a searchable table, filterable by type and read status, with *Mark read* and *Mark all read*.
+- **Email** for each event is optional (needs SMTP on the server).
+- **Preferences:** in-app and email alerts can be switched on or off separately for each event type, or everything silenced with **Mute all**.
+- New notifications are checked every 30 seconds, and immediately when you come back to the tab.
+
+### 7. Chat
+
+A WhatsApp-style chat for one-to-one messages between anyone in the organization.
+
+- **Layout:**
+  - On desktop, the chat list is on the left and the open conversation on the right.
+  - On phones, one pane shows at a time, with a back button.
+  - The open chat is kept in the URL (`/chat?c=<id>`).
+- **Chat list:**
+  - Each chat shows the person's avatar with a green **online** dot, the last message, its time ("5:02 PM", "Yesterday", a weekday or a date) and an unread count.
+  - Your own last message shows its ticks.
+  - Chats can be searched.
+- **New chat:** the **+** button opens a searchable list of your teammates. The **Message** button on the *Team* page also opens a chat with that member.
+- **Conversation:**
+  - Green bubbles for your messages and white for theirs, with bubble tails, grouped by sender, on WhatsApp's beige wallpaper (dark green and grey in dark mode).
+  - Date chips ("Today", "Yesterday", "Monday", "12 October 2026"), and a note that the messages are private between the two of you.
+  - Older messages load as you scroll up.
+  - When new messages arrive while you've scrolled up, a **↓ button** shows how many.
+- **Message status:** 🕓 sending, ✓ sent, ✓✓ delivered, **blue ✓✓ read**.
+- **Presence:** *online*, or *last seen today at 5:02 PM* / *yesterday at …* / a date.
+- **Writing messages:**
+  - The message box grows with the text. On desktop, **Enter** sends and **Shift + Enter** adds a new line; on phones, Enter adds a new line.
+  - Messages are limited to 2000 characters, with a counter near the limit.
+  - A message that fails to send can be **retried** or removed.
+- **Message menu:** **Copy** any message, and **Delete for everyone** for your own (it becomes "🚫 This message was deleted" on both sides).
+- **Notifications:**
+  - an **unread badge** on *Chat* in the sidebar and on the chat icon in the navbar;
+  - a **pop-up** with the sender and message on any page (click it to open the chat);
+  - a **desktop notification** when the tab is in the background, after you turn it on with the button in the chat list.
+  - Pop-ups and desktop alerts are off when *Mute all* is on.
+- **Privacy:** only the two people in a chat can read or post in it. When a member is removed, their chats are deleted.
+- **No sockets:** chat uses plain REST requests. The open chat checks for new messages every **3 seconds** and the rest of the app every **10 seconds**.
+
+### 8. Analytics
+
+- **Team / Just me** switch for roles with *Team analytics*; everyone else sees their own numbers.
+- **KPI tiles:**
+  - **Completion rate** and **Completed on time**, each with a meter;
+  - **Completed per week**, with the average days from creation to done;
+  - **Overdue now**, with the number of open tasks.
+  - The last two show a sparkline and the change vs. last week.
+- **Insights strip:** short, automatic observations, such as "7 tasks overdue", "4 fewer done than last week", "18 in progress, waiting to finish" or "28% high priority".
+- **Throughput chart:** tasks created vs. completed per week (last 8 weeks), with a *View data table* option.
+- **Overdue trend:** how many tasks were overdue at the end of each week.
+- **Status mix** (donut) and a **priority** breakdown.
+- **Week-over-week comparison** of this week against last week.
+- **Task funnel:** created → started → completed → completed on time.
+- **Completion cohorts:** for tasks created in each of the last 6 weeks, the share completed by each following week.
+- **Top performer** card and leaderboard (team view).
+- **Completed tasks per user:** a searchable table with assigned, completed, on time, overdue and completion rate for each person.
+
+### 9. Team management
+
+- **Role cards** for Admin, Manager and Member with the number of people in each. Hover or tap a card to flip it and see what that role can do, with the members' avatars.
+- **Members list** with name, email, join date and role.
+  - With *Manage users* you can change roles from a dropdown, **add members** (name, email, password, role), **edit** them (including resetting their password) and **remove** them.
+  - Removing a member unassigns their tasks and moves the tasks they created to you.
+- **Message** button on every member to start a chat.
+- **Team workload map** (with *Team analytics*): a treemap of who has the most open work, a list of the busiest members, and each person's assigned, completed, overdue and on-time numbers.
+- **Team report** (with *Team analytics*): a searchable table per member, with role filter, sorting, pagination and **CSV export**.
+
+### 10. Activity log
+
+- Records every task **create**, **edit** (each changed field with its *from → to* value), **assignment**, **status change**, **delete** and **automatic repeat**, plus **registrations**, **members added, edited or removed**, **role changes** and **role access changes**.
+- Shown as a table: who did it, what happened, and when ("30 minutes ago" plus the exact time). Each entry has an **Open task** link.
+- Search across all columns, filter by **action type** and by **person**, paginate, and **export to CSV**.
+- Members see the entries for tasks they're involved in; roles with *Full activity log* see everything.
+- Entries stay readable after a task is deleted, because they keep a copy of its title.
+- Each task's own history is also shown in its details dialog.
+
+### 11. Profile
+
+- **Profile card:** avatar, role, name, email, a short description of what your role can do, member-since date, tasks done, and an *Edit profile* button.
+- **Stats:** *Assigned to me*, *Created by me*, *Completed* and *Overdue*, each linking to the matching task list.
+- **Your performance:** completion rate, on-time rate and average days to finish, shown as rings.
+- **Personal details:** change your name. Email and role are shown read-only; roles are managed by an admin.
+- **Password:** change it with your current password, a new one and a confirmation (with show / hide).
+- **Your recent activity:** the latest things you did.
+
+### 12. Settings
+
+- **Account card** with your name, email, role and member-since date.
+- **Appearance:** *Light*, *Dark* or *System* theme, with a preview of each. The navbar also has a quick theme toggle.
+- **Notifications:** in-app and email switches for *assigned*, *status changed* and *due in 1 hour*. If the server has no SMTP, a note says so; your choice is saved and applies once email is set up.
+- **Do not disturb:** *Mute all* silences everything at once and greys out the other switches.
+- **Role access** (admins only): the permission switches described in [Roles and permissions](#2-roles-and-permissions).
+
+### 13. Offline support (PWA)
+
+- **Installable** as an app on phones and desktops, with a manifest, app icons and a maskable icon.
+- A **service worker** caches the app shell and static files, pages, and API responses (always trying the network first). Dashboards, task lists and other pages can still be **read offline**, and an offline page is shown when nothing is cached.
+- **Task changes made offline are queued.** Creates, edits, status changes and deletes are saved locally, shown with a **pending count** in an **offline banner**, and **synced automatically, in order,** when the connection returns.
+- If a queued change is rejected (for example, the task was deleted meanwhile), it is dropped and you are told.
+
+### 14. Design and responsiveness
+
+- **Responsive** from small phones to wide desktops:
+  - a slide-out sidebar on phones;
+  - card views instead of tables on small screens;
+  - two KPI tiles per row on phones;
+  - a navbar that adapts its controls.
+- **Light, dark and system themes**, with no flash of the wrong theme on load.
+- **Glass UI:** frosted cards over soft colour blobs, a floating pill navbar, 3D buttons and switches, and cards that tilt toward the pointer.
+- **3D visuals:**
+  - a wireframe terrain on the dashboard and a neon grid on analytics;
+  - a hologram projector on the login pages and the 404 page;
+  - flip cards on the team page and a pop-out portrait for the top performer.
+- **Branded loaders and skeletons** while data loads, toasts for confirmations and errors, and a custom 404 page.
+- **Accessibility:**
+  - keyboard focus rings;
+  - labels for icon-only buttons;
+  - `aria-live` regions for pop-ups;
+  - respect for *reduced motion*;
+  - text alternatives for chart data.
+
+### 15. Security
+
+- Passwords are hashed with **bcrypt** (10 rounds; older 12-round hashes are upgraded on the next login).
+- The session JWT lives in an **`httpOnly`, `SameSite=Lax` cookie** (`Secure` in production), so scripts on the page can't read it.
+- The API is served **from the same origin** through a Next.js rewrite, so the cookie is first-party and there is no CORS in the browser.
+- **Permission checks on every request.** Hidden tasks return *not found*, and admins can't be edited by non-admins.
+- **Password-reset codes** are stored hashed, expire, limit attempts, and don't reveal whether an email exists.
+- **Security headers:** `X-Content-Type-Options`, `X-Frame-Options: DENY` and `Referrer-Policy`.
+- **Error handling:** validation errors come back field by field, and stack traces are never sent in production.
+- **On logout,** cached API data and queued offline changes are cleared.
+
+---
+
+## Assignment checklist
+
+| Requirement | Status | Where |
+|---|:-:|---|
+| Authentication | ✅ | [Accounts and sign-in](#1-accounts-and-sign-in) |
+| Task CRUD | ✅ | [Tasks](#4-tasks) |
+| Team collaboration (assign + notify) | ✅ | [Tasks](#4-tasks), [Notifications](#6-notifications-and-reminders) |
+| Dashboard | ✅ | [Dashboard](#3-dashboard) |
+| Search and filter | ✅ | [Tasks](#4-tasks) |
+| *Advanced:* RBAC | ✅ | [Roles and permissions](#2-roles-and-permissions) |
+| *Advanced:* Recurring tasks | ✅ | [Recurring tasks](#5-recurring-tasks) |
+| *Advanced:* Audit logging | ✅ | [Activity log](#10-activity-log) |
+| *Advanced:* Offline support | ✅ | [Offline support](#13-offline-support-pwa) |
+| *Advanced:* Unit and integration tests | ✅ | [Tests](#tests) |
+| *Advanced:* Analytics dashboard | ✅ | [Analytics](#8-analytics) |
+| *Advanced:* Customizable notifications | ✅ | [Notifications](#6-notifications-and-reminders), [Settings](#12-settings) |
+| *Advanced:* Real-time notifications with WebSockets | – | Polling instead; see [trade-offs](#assumptions-and-trade-offs) |
+| *Extra:* Team chat | ✅ | [Chat](#7-chat) |
 
 ---
 
