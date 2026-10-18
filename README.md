@@ -149,7 +149,7 @@ cd backend  && vercel link --project taskflow-backend && vercel env add MONGODB_
 cd frontend && vercel link --project taskflow && vercel env add BACKEND_URL production && vercel deploy --prod
 ```
 
-`BACKEND_URL` is read when the frontend is built, so redeploy the frontend after changing it. You can also connect both projects to this GitHub repository in the Vercel dashboard (set the root directory) to deploy on every push.
+Both Vercel projects are connected to this GitHub repository, so **every push to `main` deploys automatically**. Pushes to other branches get preview URLs. `BACKEND_URL` is read when the frontend is built, so redeploy the frontend after changing it.
 
 > **Windows note:** if the Vercel CLI fails with `fetch failed` / `SELF_SIGNED_CERT_IN_CHAIN`, antivirus or network software is inspecting HTTPS traffic. Run it with `$env:NODE_OPTIONS="--use-system-ca"`.
 
