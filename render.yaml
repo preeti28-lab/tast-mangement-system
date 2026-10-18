@@ -1,12 +1,14 @@
-# Render Blueprint for the Express backend.
+# Render Blueprint for the Socket.io realtime server (backend/src/server.js).
+# The REST API runs on Vercel; this long-running service pushes notifications and
+# task updates to browsers over WebSockets. It also serves the same REST API.
 # Render dashboard -> New -> Blueprint -> select this repository.
 services:
   - type: web
-    name: taskflow-backend
+    name: taskflow-realtime
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm ci
+    buildCommand: npm ci --omit=dev
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -14,10 +16,11 @@ services:
         value: production
       - key: JWT_EXPIRES_IN
         value: 7d
-      - key: JWT_SECRET
-        generateValue: true
-      # Set these two in the Render dashboard:
+      # Set these in the Render dashboard. JWT_SECRET must be the SAME value as the
+      # Vercel API, because the API issues the socket tokens this server verifies.
       - key: MONGODB_URI
         sync: false
-      - key: CLIENT_URL # e.g. https://your-app.vercel.app
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL # the frontend URL, e.g. https://taskflow-nu-lake.vercel.app
         sync: false
