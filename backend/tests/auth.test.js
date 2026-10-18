@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import { app, request, registerUser, useTestDatabase } from "./helpers.js";
 
@@ -24,7 +25,21 @@ describe("auth", () => {
     const { user } = await registerUser("Hash");
     expect(user.password).toBeUndefined();
     const stored = await mongoose.connection.collection("users").findOne({ email: user.email });
-    expect(stored.password).toMatch(/^\$2[aby]\$12\$/);
+    expect(stored.password).toMatch(/^\$2[aby]\$10\$/);
+  });
+
+  test("login moves an old cost-12 hash to the current work factor", async () => {
+    const { user, password } = await registerUser("Rehash");
+    const users = mongoose.connection.collection("users");
+    await users.updateOne({ email: user.email }, { $set: { password: await bcrypt.hash(password, 12) } });
+
+    await request(app).post("/api/auth/login").send({ email: user.email, password }).expect(200);
+    // The rehash runs after the response; give it a moment.
+    for (let i = 0; i < 20 && /^\$2[aby]\$12\$/.test((await users.findOne({ email: user.email })).password); i++) {
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    expect((await users.findOne({ email: user.email })).password).toMatch(/^\$2[aby]\$10\$/);
+    await request(app).post("/api/auth/login").send({ email: user.email, password }).expect(200);
   });
 
   test("sets an httpOnly cookie and /me returns the user", async () => {

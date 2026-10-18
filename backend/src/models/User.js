@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 export const ROLES = ["admin", "manager", "user"];
+// bcrypt work factor. 10 is the OWASP minimum and keeps login fast on serverless CPUs
+// (bcryptjs is pure JS: cost 12 took ~0.7s per check); older hashes are migrated on login.
+export const SALT_ROUNDS = 10;
 
 const userSchema = new mongoose.Schema(
   {
@@ -55,11 +58,16 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password, SALT_ROUNDS);
 });
 
 userSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
+};
+
+/** True when the stored hash uses a different work factor than SALT_ROUNDS. */
+userSchema.methods.needsRehash = function () {
+  return bcrypt.getRounds(this.password) !== SALT_ROUNDS;
 };
 
 userSchema.set("toJSON", {

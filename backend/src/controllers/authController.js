@@ -69,6 +69,11 @@ export const login = async (req, res) => {
   }
 
   sendAuth(res, 200, user);
+  // Move old cost-12 hashes to the faster work factor after replying, so this login isn't slowed.
+  if (user.needsRehash()) {
+    user.password = password;
+    user.save().catch((error) => console.error(`Password rehash failed: ${error.message}`));
+  }
 };
 
 // POST /api/auth/logout
