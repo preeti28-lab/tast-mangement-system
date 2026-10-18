@@ -16,7 +16,7 @@ type Props = {
  * cell, so the scroll is seamless. Transparent canvas over a theme-aware
  * gradient with a content slot on top. Holds still for prefers-reduced-motion.
  */
-export default function NeonGrid3D({ color = "#8b5cf6", speed = 1, children, className = "" }: Props) {
+export default function NeonGrid3D({ color = "#22c55e", speed = 1, children, className = "" }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function NeonGrid3D({ color = "#8b5cf6", speed = 1, children, cla
   return (
     <div
       ref={mountRef}
-      className={`relative h-full w-full overflow-hidden rounded-2xl bg-gradient-to-b from-fuchsia-50 to-indigo-100 shadow-xl shadow-slate-900/5 ring-1 ring-black/5 transition-all duration-300 ease-out hover:shadow-2xl hover:shadow-fuchsia-500/10 dark:from-slate-950 dark:to-fuchsia-950 dark:shadow-black/40 dark:ring-white/10 dark:hover:shadow-black/60 ${className}`}
+      className={`relative h-full w-full overflow-hidden rounded-2xl bg-gradient-to-b from-brand-50 to-emerald-100 shadow-xl shadow-slate-900/5 ring-1 ring-black/5 transition-all duration-300 ease-out hover:shadow-2xl hover:shadow-brand-500/10 dark:from-app dark:to-brand-950 dark:shadow-black/40 dark:ring-white/10 dark:hover:shadow-black/60 ${className}`}
     >
       <div className="pointer-events-none relative z-10 h-full">{children}</div>
     </div>

@@ -109,3 +109,44 @@ describe("analytics", () => {
     expect(body.perUser[0].user._id).toBe(bob.user._id);
   });
 });
+
+describe("dashboard top performers", () => {
+  test("ranks assignees by completed tasks, top 3, visible to regular users", async () => {
+    const admin = await registerUser("Admin");
+    const users = await Promise.all(["Ann", "Ben", "Cat", "Dan"].map((n) => registerUser(n)));
+    const assign = (u, body) =>
+      admin.agent.post("/api/tasks").send({ title: "T", assignedTo: u.user._id, ...body }).expect(201);
+
+    // Ann: 3 done (1 on time), Ben: 1 done + 1 open, Cat: 2 done, Dan: nothing done.
+    await assign(users[0], { status: "completed", dueDate: daysFromNow(2) });
+    await assign(users[0], { status: "completed" });
+    await assign(users[0], { status: "completed" });
+    await assign(users[1], { status: "completed" });
+    await assign(users[1], {});
+    await assign(users[2], { status: "completed" });
+    await assign(users[2], { status: "completed" });
+    await assign(users[3], {});
+
+    const { body } = await users[3].agent.get("/api/dashboard").expect(200);
+    expect(body.topPerformers.map((r) => r.user.name)).toEqual(["Ann", "Cat", "Ben"]);
+    expect(body.topPerformers[0]).toMatchObject({ completed: 3, assigned: 3, onTime: 1, completionRate: 100 });
+    expect(body.topPerformers[2]).toMatchObject({ completed: 1, assigned: 2, completionRate: 50 });
+    expect(body.topPerformers[0].user.password).toBeUndefined();
+  });
+});
+
+describe("dashboard activity", () => {
+  test("returns weekly trend, status/priority mix and upcoming deadlines for the user", async () => {
+    const alice = await registerUser("Alice");
+    await alice.agent.post("/api/tasks").send({ title: "Soon", dueDate: daysFromNow(2), priority: "high" }).expect(201);
+    await alice.agent.post("/api/tasks").send({ title: "Later", dueDate: daysFromNow(20) }).expect(201);
+    await alice.agent.post("/api/tasks").send({ title: "Done", status: "completed" }).expect(201);
+
+    const { body } = await alice.agent.get("/api/dashboard").expect(200);
+    expect(body.trend).toHaveLength(8);
+    expect(body.trend.at(-1)).toMatchObject({ created: 3, completed: 1 });
+    expect(body.byStatus).toEqual({ todo: 2, in_progress: 0, completed: 1 });
+    expect(body.byPriority.high).toBe(1);
+    expect(body.upcomingTasks.map((t) => t.title)).toEqual(["Soon"]);
+  });
+});

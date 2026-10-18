@@ -3,7 +3,7 @@ import type { TaskPriority, TaskStatus } from "@/lib/api";
 const STATUS_STYLES: Record<TaskStatus, { label: string; className: string }> = {
   todo: {
     label: "To do",
-    className: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
   in_progress: {
     label: "In progress",
@@ -16,7 +16,7 @@ const STATUS_STYLES: Record<TaskStatus, { label: string; className: string }> = 
 };
 
 const PRIORITY_STYLES: Record<TaskPriority, { label: string; className: string }> = {
-  low: { label: "Low", className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" },
+  low: { label: "Low", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
   medium: { label: "Medium", className: "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-300" },
   high: { label: "High", className: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300" },
 };

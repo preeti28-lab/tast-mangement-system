@@ -26,14 +26,14 @@ export default function Sidebar({ open, onClose }: Props) {
       {/* Mobile backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-30 bg-zinc-900/50 transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-30 bg-slate-900/50 transition-opacity lg:hidden ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden="true"
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 dark:border-zinc-800 dark:bg-zinc-900 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/60 bg-sidebar/70 backdrop-blur-xl transition-transform dark:border-slate-700/50 duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -41,7 +41,7 @@ export default function Sidebar({ open, onClose }: Props) {
           <Logo />
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 lg:hidden dark:hover:bg-zinc-800"
+            className="rounded-md p-1.5 text-muted hover:bg-hover lg:hidden"
             aria-label="Close menu"
           >
             <XIcon />
@@ -59,8 +59,8 @@ export default function Sidebar({ open, onClose }: Props) {
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-3.5 rounded-xl px-4 py-2.5 text-base font-medium transition ${
                   active
-                    ? "bg-indigo-50 text-indigo-700 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.08)] dark:bg-indigo-500/10 dark:text-indigo-300"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                    ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/25 ring-1 ring-inset ring-white/20"
+                    : "text-slate-600 hover:translate-x-0.5 hover:bg-white/60 hover:text-fg dark:text-muted dark:hover:bg-white/5"
                 }`}
               >
                 <Icon />
@@ -70,10 +70,10 @@ export default function Sidebar({ open, onClose }: Props) {
           })}
         </nav>
 
-        <div className="mx-4 border-t border-zinc-200 py-3 dark:border-zinc-800">
+        <div className="mx-4 border-t border-line py-3">
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3.5 rounded-xl px-4 py-2.5 text-base font-medium text-zinc-600 transition hover:bg-red-50 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+            className="flex w-full items-center gap-3.5 rounded-xl px-4 py-2.5 text-base font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-700 dark:text-muted dark:hover:bg-red-500/10 dark:hover:text-red-300"
           >
             <LogoutIcon />
             Log out

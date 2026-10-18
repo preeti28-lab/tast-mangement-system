@@ -80,8 +80,8 @@ export default function ForgotPasswordForm() {
   return (
     <>
       <div className="mb-7 space-y-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Reset password</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <h1 className="text-3xl font-bold tracking-tight text-fg">Reset password</h1>
+        <p className="text-sm text-muted">
           {step === "email"
             ? "Enter your account email and we'll send you a 6-digit OTP."
             : `Enter the OTP sent to ${email.trim()} and choose a new password.`}
@@ -157,7 +157,7 @@ export default function ForgotPasswordForm() {
                 setFormError("");
                 setErrors({});
               }}
-              className="font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              className="font-medium text-muted hover:text-slate-800 dark:hover:text-slate-200"
             >
               Change email
             </button>
@@ -165,7 +165,7 @@ export default function ForgotPasswordForm() {
               type="button"
               onClick={sendOtp}
               disabled={loading}
-              className="font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-60"
+              className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 disabled:opacity-60"
             >
               Resend OTP
             </button>
@@ -173,9 +173,9 @@ export default function ForgotPasswordForm() {
         </form>
       )}
 
-      <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mt-6 text-center text-sm text-muted">
         Remembered it?{" "}
-        <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link href="/login" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
           Back to log in
         </Link>
       </p>

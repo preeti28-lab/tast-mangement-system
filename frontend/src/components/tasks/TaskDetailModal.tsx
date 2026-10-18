@@ -50,7 +50,7 @@ function TaskDetail({
       );
   }, [taskId]);
 
-  if (error) return <p className="py-6 text-center text-sm text-zinc-500">{error}</p>;
+  if (error) return <p className="py-6 text-center text-sm text-muted">{error}</p>;
   if (!task) return <Spinner />;
 
   const isCreator = task.createdBy._id === user._id;
@@ -85,17 +85,17 @@ function TaskDetail({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{task.title}</h3>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-300">
-          {task.description || <span className="text-zinc-400">No description</span>}
+        <h3 className="text-lg font-semibold text-fg">{task.title}</h3>
+        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
+          {task.description || <span className="text-slate-400">No description</span>}
         </p>
       </div>
 
-      <dl className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 text-sm dark:divide-zinc-800 dark:border-zinc-800">
+      <dl className="divide-y divide-line rounded-lg border border-line text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-4 px-4 py-2.5">
-            <dt className="text-zinc-500">{label}</dt>
-            <dd className="text-right text-zinc-800 dark:text-zinc-200">{value}</dd>
+            <dt className="text-muted">{label}</dt>
+            <dd className="text-right text-slate-800 dark:text-slate-200">{value}</dd>
           </div>
         ))}
       </dl>
@@ -113,20 +113,20 @@ function TaskDetail({
           {canEdit && (
             <button
               onClick={() => onEdit(task)}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+              className="btn-3d btn-3d-brand rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
             >
               Edit task
             </button>
           )}
         </div>
       ) : (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted">
           Only the creator, a manager or an admin can edit this task. You can update its status.
         </p>
       )}
 
       <section>
-        <h4 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">History</h4>
+        <h4 className="mb-3 text-sm font-semibold text-fg">History</h4>
         <TaskHistory taskId={task._id} />
       </section>
     </div>

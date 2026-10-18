@@ -18,7 +18,7 @@ type Props = {
  * the terrain renders a single still frame. The parent must give it a height.
  */
 export default function WireframeTerrain3D({
-  color = "#6366f1",
+  color = "#22c55e",
   speed = 1,
   amplitude = 1.6,
   children,
@@ -133,7 +133,7 @@ export default function WireframeTerrain3D({
   return (
     <div
       ref={mountRef}
-      className={`relative h-full w-full overflow-hidden rounded-2xl bg-gradient-to-b from-white to-indigo-100 shadow-xl shadow-slate-900/5 ring-1 ring-black/5 transition-shadow duration-300 ease-out hover:shadow-2xl dark:from-zinc-950 dark:to-indigo-950 dark:shadow-black/40 dark:ring-white/10 dark:hover:shadow-black/60 ${className}`}
+      className={`relative h-full w-full overflow-hidden rounded-2xl bg-gradient-to-b from-surface to-brand-100 shadow-xl shadow-slate-900/5 ring-1 ring-black/5 transition-shadow duration-300 ease-out hover:shadow-2xl dark:from-app dark:to-brand-950 dark:shadow-black/40 dark:ring-white/10 dark:hover:shadow-black/60 ${className}`}
     >
       <div className="pointer-events-none relative z-10 h-full">{children}</div>
     </div>

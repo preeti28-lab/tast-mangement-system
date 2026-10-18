@@ -105,20 +105,20 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
       >
         <div className="relative h-64 w-60 max-w-full">
           {error ? (
-            <p className="grid h-full place-items-center rounded-2xl border border-dashed border-zinc-300 px-4 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            <p className="grid h-full place-items-center rounded-2xl border border-dashed border-slate-300 px-4 text-center text-sm text-muted dark:border-slate-700">
               {error}
             </p>
           ) : !deck ? (
-            <div className="h-full animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
+            <div className="h-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
           ) : deck.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-300 px-4 text-center dark:border-zinc-700">
+            <div className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 text-center dark:border-slate-700">
               <span className="text-4xl" aria-hidden="true">
                 {decisions.length ? "🎉" : "✅"}
               </span>
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <p className="text-sm font-semibold text-fg">
                 {decisions.length ? "Deck done!" : "Nothing to do right now"}
               </p>
-              <p className="text-xs tabular-nums text-zinc-500">
+              <p className="text-xs tabular-nums text-muted">
                 {decisions.length
                   ? `${started} started · ${skipped} skipped`
                   : "Tasks assigned to you will show up here."}
@@ -127,7 +127,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
                 <button
                   type="button"
                   onClick={() => setRound((r) => r + 1)}
-                  className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                  className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-surface px-3 py-1.5 text-xs font-medium text-slate-800 transition-colors hover:bg-hover dark:border-slate-700 dark:text-fg"
                 >
                   <RestartIcon className="h-3.5 w-3.5" /> Start over
                 </button>
@@ -145,7 +145,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
                 <div
                   key={task._id}
                   aria-hidden={!isTop}
-                  className={`absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br px-5 text-center text-white shadow-xl shadow-zinc-300/50 ring-1 ring-black/5 transition-all ease-out motion-reduce:transition-none dark:shadow-black/50 dark:ring-white/10 ${style.bg} ${
+                  className={`absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br px-5 text-center text-white shadow-xl shadow-slate-300/50 ring-1 ring-black/5 transition-all ease-out motion-reduce:transition-none dark:shadow-black/50 dark:ring-white/10 ${style.bg} ${
                     isTop ? "shadow-2xl ring-2 ring-white/50 dark:ring-white/20" : ""
                   }`}
                   style={{
@@ -186,11 +186,11 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
               onClick={() => decide("skip")}
               aria-label="Skip this task for now"
               title="Skip for now (←)"
-              className="grid h-12 w-12 place-items-center rounded-full border-2 border-zinc-200 bg-white text-zinc-500 shadow-md transition-all duration-150 hover:scale-110 hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              className="grid h-12 w-12 place-items-center rounded-full border-2 border-slate-200 bg-surface text-slate-500 shadow-md transition-all duration-150 hover:scale-110 hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 dark:border-slate-700 dark:text-slate-300"
             >
               <XIcon className="h-5 w-5" />
             </button>
-            <span className="min-w-14 text-center text-xs font-semibold tabular-nums text-zinc-400">
+            <span className="min-w-14 text-center text-xs font-semibold tabular-nums text-slate-400">
               {deck.length} left
             </span>
             <button
@@ -198,7 +198,7 @@ export default function FocusDeck({ currentUserId }: { currentUserId: string }) 
               onClick={() => decide("start")}
               aria-label="Start this task"
               title="Start now (→)"
-              className="grid h-12 w-12 place-items-center rounded-full border-2 border-emerald-200 bg-white text-emerald-600 shadow-md transition-all duration-150 hover:scale-110 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-emerald-400/30 dark:bg-zinc-900 dark:text-emerald-400 dark:hover:bg-emerald-400/10"
+              className="grid h-12 w-12 place-items-center rounded-full border-2 border-emerald-200 bg-surface text-emerald-600 shadow-md transition-all duration-150 hover:scale-110 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:border-emerald-400/30 dark:text-emerald-400 dark:hover:bg-emerald-400/10"
             >
               <PlayIcon className="h-5 w-5" />
             </button>

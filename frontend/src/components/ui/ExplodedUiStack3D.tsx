@@ -17,7 +17,7 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
 
   const tag = (label: string): ReactNode => (
     <span
-      className={`absolute -right-2 top-1/2 -translate-y-1/2 translate-x-full whitespace-nowrap rounded-md bg-zinc-900/90 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-300 transition-opacity duration-300 ${
+      className={`absolute -right-2 top-1/2 -translate-y-1/2 translate-x-full whitespace-nowrap rounded-md bg-slate-900/90 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-300 transition-opacity duration-300 ${
         open ? "opacity-100" : "opacity-0"
       }`}
       aria-hidden="true"
@@ -46,7 +46,7 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
         {/* layer 0 — backdrop */}
         <div
           style={z(0)}
-          className={`${layer} absolute inset-[-14px] rounded-3xl bg-gradient-to-br from-indigo-400 to-violet-500 ring-1 ring-white/25 shadow-[0_40px_60px_-18px_rgba(30,27,75,0.6)]`}
+          className={`${layer} absolute inset-[-14px] rounded-3xl bg-gradient-to-br from-brand-400 to-emerald-600 ring-1 ring-white/25 shadow-[0_40px_60px_-18px_rgba(5,46,22,0.6)]`}
         >
           {tag("background")}
         </div>
@@ -54,13 +54,13 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
         {/* layer 1 — task card */}
         <div
           style={z(44)}
-          className={`${layer} absolute inset-0 rounded-2xl border border-white/50 bg-white/95 shadow-xl dark:border-zinc-600 dark:bg-zinc-800`}
+          className={`${layer} absolute inset-0 rounded-2xl border border-white/50 bg-white/95 shadow-xl dark:border-slate-600 dark:bg-slate-800`}
         >
           <span className="absolute inset-x-3 top-10 space-y-2">
             {["w-3/4", "w-1/2"].map((w, i) => (
               <span key={w} className="flex items-center gap-1.5">
-                <span className={`h-2 w-2 shrink-0 rounded-sm border ${i === 0 ? "border-emerald-500 bg-emerald-500" : "border-zinc-300 dark:border-zinc-500"}`} />
-                <span className={`block h-1.5 ${w} rounded bg-zinc-200 dark:bg-zinc-600`} />
+                <span className={`h-2 w-2 shrink-0 rounded-sm border ${i === 0 ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-slate-500"}`} />
+                <span className={`block h-1.5 ${w} rounded bg-slate-200 dark:bg-slate-600`} />
               </span>
             ))}
           </span>
@@ -70,10 +70,10 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
         {/* layer 2 — progress chart */}
         <div
           style={z(88)}
-          className={`${layer} absolute inset-x-3 bottom-4 flex h-[56px] items-end gap-1 rounded-xl border border-white/60 bg-white p-2 shadow-lg dark:border-zinc-500 dark:bg-zinc-700`}
+          className={`${layer} absolute inset-x-3 bottom-4 flex h-[56px] items-end gap-1 rounded-xl border border-white/60 bg-white p-2 shadow-lg dark:border-slate-500 dark:bg-slate-700`}
         >
           {BARS.map((h, i) => (
-            <span key={i} style={{ height: `${h}%` }} className="w-full flex-1 rounded-t bg-gradient-to-t from-indigo-500 to-violet-400" />
+            <span key={i} style={{ height: `${h}%` }} className="w-full flex-1 rounded-t bg-gradient-to-t from-brand-500 to-emerald-300" />
           ))}
           {tag("progress")}
         </div>
@@ -81,7 +81,7 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
         {/* layer 3 — header */}
         <div
           style={z(126)}
-          className={`${layer} absolute inset-x-3 top-2.5 flex h-6 items-center gap-1.5 rounded-lg bg-zinc-900 px-2 shadow-lg dark:bg-black`}
+          className={`${layer} absolute inset-x-3 top-2.5 flex h-6 items-center gap-1.5 rounded-lg bg-slate-900 px-2 shadow-lg dark:bg-black`}
         >
           <span className="h-2 w-2 rounded-full bg-emerald-400" />
           <span className="h-1.5 w-10 rounded bg-white/40" />
@@ -97,7 +97,7 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
         </div>
       </div>
 
-      <p className="pointer-events-none absolute bottom-3 text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-200/80">
+      <p className="pointer-events-none absolute bottom-3 text-[10.5px] font-bold uppercase tracking-[0.18em] text-brand-200/80">
         {open ? "the anatomy of a screen" : "hover — explode the UI"}
       </p>
     </div>

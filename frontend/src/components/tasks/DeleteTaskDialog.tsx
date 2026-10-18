@@ -36,16 +36,16 @@ export default function DeleteTaskDialog({ task, onClose, onDeleted }: Props) {
 
   return (
     <Modal open={!!task} title="Delete task" onClose={close} size="sm">
-      <p className="text-sm text-zinc-600 dark:text-zinc-300">
+      <p className="text-sm text-slate-600 dark:text-slate-300">
         Are you sure you want to delete{" "}
-        <span className="font-semibold text-zinc-900 dark:text-white">&ldquo;{task?.title}&rdquo;</span>? This
+        <span className="font-semibold text-fg">&ldquo;{task?.title}&rdquo;</span>? This
         can&apos;t be undone.
       </p>
       {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button
           onClick={close}
-          className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-hover dark:border-slate-700 dark:text-slate-200"
         >
           Cancel
         </button>

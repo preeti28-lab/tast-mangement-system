@@ -18,7 +18,7 @@ const niceMax = (max: number) => {
 
 export function Legend({ series }: { series: Pick<Series, "key" | "label" | "color">[] }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-muted">
       {series.map((s) => (
         <li key={s.key} className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 rounded-full" style={{ background: s.color }} aria-hidden="true" />
@@ -32,12 +32,12 @@ export function Legend({ series }: { series: Pick<Series, "key" | "label" | "col
 export function DataTable({ columns, rows }: { columns: string[]; rows: (string | number)[][] }) {
   return (
     <details className="mt-3 text-sm">
-      <summary className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
+      <summary className="cursor-pointer text-xs font-medium text-muted hover:text-slate-800 dark:hover:text-slate-200">
         View data table
       </summary>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-left text-xs">
-          <thead className="text-zinc-500">
+          <thead className="glass-head text-muted">
             <tr>
               {columns.map((c) => (
                 <th key={c} className="py-1 pr-4 font-medium">
@@ -46,9 +46,9 @@ export function DataTable({ columns, rows }: { columns: string[]; rows: (string 
               ))}
             </tr>
           </thead>
-          <tbody className="tabular-nums text-zinc-700 dark:text-zinc-300">
+          <tbody className="tabular-nums text-slate-700 dark:text-slate-300">
             {rows.map((row, i) => (
-              <tr key={i} className="border-t border-zinc-100 dark:border-zinc-800">
+              <tr key={i} className="border-t border-line transition-colors even:glass-row hover:bg-brand-50/60 dark:hover:bg-brand-500/10">
                 {row.map((cell, j) => (
                   <td key={j} className="py-1 pr-4">
                     {cell}
@@ -160,14 +160,14 @@ export function LineChart({ labels, series, ariaLabel }: { labels: string[]; ser
       </svg>
       {hover !== null && (
         <div
-          className="pointer-events-none absolute top-0 z-10 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-md dark:border-zinc-700 dark:bg-zinc-900"
+          className="pointer-events-none absolute top-0 z-10 glass-strong rounded-lg px-3 py-2 text-xs"
           style={{ left: `${(x(hover) / W) * 100}%`, transform: `translateX(${hover > last / 2 ? "-105%" : "5%"})` }}
         >
-          <p className="mb-1 font-medium text-zinc-900 dark:text-white">{labels[hover]}</p>
+          <p className="mb-1 font-medium text-fg">{labels[hover]}</p>
           {series.map((s) => (
-            <p key={s.key} className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+            <p key={s.key} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
               <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-              {s.label}: <span className="font-semibold tabular-nums text-zinc-900 dark:text-white">{s.values[hover]}</span>
+              {s.label}: <span className="font-semibold tabular-nums text-fg">{s.values[hover]}</span>
             </p>
           ))}
         </div>
@@ -183,14 +183,14 @@ export function BarList({ items, color = "var(--series-1)" }: { items: { label: 
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={item.label} className="group grid grid-cols-[88px_1fr_32px] items-center gap-3 text-sm" title={`${item.label}: ${item.value}`}>
-          <span className="truncate text-zinc-600 dark:text-zinc-400">{item.label}</span>
+          <span className="truncate text-slate-600 dark:text-muted">{item.label}</span>
           <span className="relative h-5">
             <span
               className="absolute inset-y-0 left-0 rounded-r transition-opacity group-hover:opacity-80"
               style={{ width: `${(item.value / max) * 100}%`, minWidth: item.value ? 4 : 0, background: color, maxHeight: 24 }}
             />
           </span>
-          <span className="text-right font-medium tabular-nums text-zinc-900 dark:text-white">{item.value}</span>
+          <span className="text-right font-medium tabular-nums text-fg">{item.value}</span>
         </li>
       ))}
     </ul>

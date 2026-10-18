@@ -14,12 +14,15 @@ import {
   SectionHeader,
   TONE_BADGE,
   cardClass,
+  cardFlatClass,
   type Tone,
 } from "@/components/ui/Surface";
 import { userApi, type ApiError, type Role, type UserRef } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
 import { ROLE_LABELS, isStaff } from "@/lib/permissions";
 import TeamInsights from "@/components/team/TeamInsights";
+import Avatar from "@/components/ui/Avatar";
+import { tileInteractiveClass } from "@/components/ui/Tile";
 
 type Member = UserRef & { role: Role; createdAt: string };
 
@@ -31,8 +34,8 @@ const ROLE_HELP: Record<Role, string> = {
 
 const ROLE_STYLE: Record<Role, { icon: typeof UserIcon; tone: Tone; back: string }> = {
   admin: { icon: SettingsIcon, tone: "violet", back: "from-violet-500 to-fuchsia-600 shadow-violet-500/30" },
-  manager: { icon: UsersIcon, tone: "sky", back: "from-sky-500 to-indigo-500 shadow-sky-500/30" },
-  user: { icon: UserIcon, tone: "indigo", back: "from-indigo-500 to-violet-600 shadow-indigo-500/30" },
+  manager: { icon: UsersIcon, tone: "sky", back: "from-sky-500 to-blue-600 shadow-sky-500/30" },
+  user: { icon: UserIcon, tone: "brand", back: "from-brand-500 to-emerald-700 shadow-brand-500/30" },
 };
 
 export default function TeamView() {
@@ -67,7 +70,7 @@ export default function TeamView() {
   if (!members) return <Spinner />;
 
   return (
-    <div className="w-full max-w-5xl space-y-6">
+    <div className="w-full space-y-6">
       <PageHeader
         title="Team"
         subtitle={`${members.length} member${members.length === 1 ? "" : "s"}. ${
@@ -75,7 +78,7 @@ export default function TeamView() {
         }`}
       />
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {(Object.keys(ROLE_HELP) as Role[]).map((role) => {
           const inRole = members.filter((m) => m.role === role);
           return (
@@ -84,20 +87,20 @@ export default function TeamView() {
               direction="vertical"
               focusable
               height={176}
-              frontClassName={`flex flex-col justify-between p-5 ${cardClass}`}
+              frontClassName={`flex flex-col justify-between p-5 ${cardFlatClass}`}
               backClassName={`flex flex-col justify-between bg-gradient-to-br p-5 text-white shadow-xl ring-1 ring-white/20 ${ROLE_STYLE[role].back}`}
               front={
                 <>
                   <div className="flex items-start gap-4">
                     <IconBadge icon={ROLE_STYLE[role].icon} tone={ROLE_STYLE[role].tone} />
                     <div className="min-w-0 pt-0.5">
-                      <h3 className="font-bold text-zinc-900 dark:text-white">{ROLE_LABELS[role]}</h3>
-                      <p className="mt-1 text-3xl font-bold leading-none tabular-nums text-zinc-900 dark:text-white">
+                      <h3 className="font-bold text-fg">{ROLE_LABELS[role]}</h3>
+                      <p className="mt-1 text-3xl font-bold leading-none tabular-nums text-fg">
                         {inRole.length}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs font-medium text-zinc-400">
+                  <p className="text-xs font-medium text-slate-400">
                     member{inRole.length === 1 ? "" : "s"} &middot; hover or tap to see access
                   </p>
                 </>
@@ -137,23 +140,21 @@ export default function TeamView() {
 
       <section className={`p-5 sm:p-6 ${cardClass}`}>
         <SectionHeader icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks." />
-        <ul className="mt-5 space-y-3">
+        <ul className="mt-5 grid gap-3 xl:grid-cols-2">
           {members.map((m) => {
             const isMe = m._id === user._id;
             return (
               <li
                 key={m._id}
-                className="flex flex-col gap-3 rounded-xl border border-zinc-200 px-4 py-3.5 sm:flex-row sm:items-center dark:border-zinc-800"
+                className={`flex min-w-0 flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center ${tileInteractiveClass}`}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3.5">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-sm font-semibold text-white">
-                    {initials(m.name)}
-                  </span>
+                  <Avatar name={m.name} size="lg" />
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-zinc-900 dark:text-zinc-100">
-                      {m.name} {isMe && <span className="text-xs font-normal text-zinc-500">(you)</span>}
+                    <p className="truncate font-semibold text-fg">
+                      {m.name} {isMe && <span className="text-xs font-normal text-muted">(you)</span>}
                     </p>
-                    <p className="truncate text-sm text-zinc-500">
+                    <p className="truncate text-sm text-muted">
                       {m.email} · joined {formatDate(m.createdAt)}
                     </p>
                   </div>
@@ -164,7 +165,7 @@ export default function TeamView() {
                     value={m.role}
                     disabled={savingId === m._id}
                     onChange={(e) => changeRole(m, e.target.value as Role)}
-                    className={`${selectClass} sm:w-40`}
+                    className={`${selectClass} w-full sm:w-40`}
                   >
                     {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
                       <option key={role} value={role}>

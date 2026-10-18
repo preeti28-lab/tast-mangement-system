@@ -9,7 +9,7 @@ type Week = Analytics["trend"][number];
 type Tone = "a" | "b";
 
 const BAR_TONE: Record<Tone, string> = {
-  a: "bg-indigo-500 dark:bg-indigo-400",
+  a: "bg-brand-500 dark:bg-brand-400",
   b: "bg-fuchsia-500 dark:bg-fuchsia-400",
 };
 
@@ -27,15 +27,15 @@ function MetricBar({ label, value, max, tone, highlight }: { label: string; valu
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="font-medium text-zinc-600 dark:text-zinc-300">{label}</span>
+        <span className="font-medium text-slate-600 dark:text-slate-300">{label}</span>
         <span
-          className={`font-semibold tabular-nums ${highlight ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-900 dark:text-zinc-100"}`}
+          className={`font-semibold tabular-nums ${highlight ? "text-emerald-600 dark:text-emerald-400" : "text-fg"}`}
         >
           {value}
         </span>
       </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"
+        className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
         role="meter"
         aria-label={label}
         aria-valuenow={value}
@@ -55,7 +55,7 @@ function WeekColumn({ tone, letter, title, week, max, isWinner }: { tone: Tone; 
       className={`relative rounded-xl border p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 ${
         isWinner
           ? "border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200 dark:border-emerald-500/40 dark:bg-emerald-500/5 dark:ring-emerald-500/30"
-          : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+          : "border-slate-200 bg-surface dark:border-slate-700"
       }`}
     >
       {isWinner && (
@@ -67,14 +67,14 @@ function WeekColumn({ tone, letter, title, week, max, isWinner }: { tone: Tone; 
       <div className="mb-3 flex items-center gap-2.5">
         <span
           className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm font-bold text-white shadow-sm ${
-            tone === "a" ? "bg-gradient-to-br from-indigo-500 to-indigo-600" : "bg-gradient-to-br from-fuchsia-500 to-fuchsia-600"
+            tone === "a" ? "bg-gradient-to-br from-brand-500 to-brand-600" : "bg-gradient-to-br from-fuchsia-500 to-fuchsia-600"
           }`}
         >
           {letter}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">Week of {weekLabel(week.weekStart)}</p>
+          <p className="truncate text-sm font-semibold text-fg">{title}</p>
+          <p className="text-xs text-muted">Week of {weekLabel(week.weekStart)}</p>
         </div>
       </div>
       <div className="space-y-2.5">
@@ -82,15 +82,15 @@ function WeekColumn({ tone, letter, title, week, max, isWinner }: { tone: Tone; 
         <MetricBar label="Created" value={week.created} max={max} tone={tone} highlight={false} />
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-lg bg-zinc-50 px-3 py-2 dark:bg-zinc-800/60">
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Done / created</p>
-          <p className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-100">{ratio === null ? "—" : `${ratio}%`}</p>
+        <div className="rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
+          <p className="text-[11px] text-muted">Done / created</p>
+          <p className="text-sm font-bold tabular-nums text-fg">{ratio === null ? "—" : `${ratio}%`}</p>
         </div>
-        <div className="rounded-lg bg-zinc-50 px-3 py-2 dark:bg-zinc-800/60">
-          <p className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60">
+          <p className="flex items-center gap-1 text-[11px] text-muted">
             <ClockIcon className="h-3 w-3" /> Overdue
           </p>
-          <p className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-100">{week.overdue}</p>
+          <p className="text-sm font-bold tabular-nums text-fg">{week.overdue}</p>
         </div>
       </div>
     </div>

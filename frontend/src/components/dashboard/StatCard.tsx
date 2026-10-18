@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import FlipCard3D from "@/components/ui/FlipCard3D";
 
-type Tone = "indigo" | "sky" | "red" | "emerald";
+type Tone = "brand" | "sky" | "red" | "emerald";
 
 type Props = {
   label: string;
@@ -20,15 +20,15 @@ type Props = {
 };
 
 const TONES: Record<Tone, { icon: string; wave: string; back: string }> = {
-  indigo: {
-    icon: "bg-indigo-50 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400",
-    wave: "text-indigo-400",
-    back: "from-indigo-500 to-violet-600 shadow-indigo-500/30 dark:from-indigo-600 dark:to-violet-700",
+  brand: {
+    icon: "bg-brand-50 text-brand-600 dark:bg-brand-400/10 dark:text-brand-400",
+    wave: "text-brand-400",
+    back: "from-brand-500 to-emerald-700 shadow-brand-500/30 dark:from-brand-600 dark:to-emerald-800",
   },
   sky: {
     icon: "bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
     wave: "text-sky-400",
-    back: "from-sky-500 to-indigo-500 shadow-sky-500/30 dark:from-sky-600 dark:to-indigo-600",
+    back: "from-sky-500 to-brand-500 shadow-sky-500/30 dark:from-sky-600 dark:to-brand-600",
   },
   red: {
     icon: "bg-red-50 text-red-600 dark:bg-red-400/10 dark:text-red-400",
@@ -42,14 +42,13 @@ const TONES: Record<Tone, { icon: string; wave: string; back: string }> = {
   },
 };
 
-const surfaceClass =
-  "border border-zinc-200/70 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(79,70,229,0.18)] dark:border-zinc-800 dark:bg-zinc-900";
+const surfaceClass = "glass";
 
 /** KPI tile: tinted icon on the left, label and big value, soft decorative wave. */
-export default function StatCard({ label, value, hint, href, icon: Icon, tone = "indigo", back, backLinkLabel }: Props) {
+export default function StatCard({ label, value, hint, href, icon: Icon, tone = "brand", back, backLinkLabel }: Props) {
   const colors = TONES[tone];
   const layoutClass = "group relative isolate flex min-w-0 items-start gap-4 overflow-hidden rounded-2xl p-6";
-  const className = `${layoutClass} ${surfaceClass} transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_32px_-12px_rgba(79,70,229,0.28)]`;
+  const className = `${layoutClass} ${surfaceClass} glass-hover`;
 
   const content = (
     <>
@@ -72,11 +71,11 @@ export default function StatCard({ label, value, hint, href, icon: Icon, tone = 
         </span>
       )}
       <div className="min-w-0 pt-1.5">
-        <p className="text-base font-medium leading-snug text-zinc-600 dark:text-zinc-400">{label}</p>
-        <p className="mt-3 text-4xl font-bold leading-none tracking-tight tabular-nums text-zinc-900 dark:text-white">
+        <p className="text-base font-medium leading-snug text-slate-600 dark:text-muted">{label}</p>
+        <p className="mt-3 text-4xl font-bold leading-none tracking-tight tabular-nums text-fg">
           {value}
         </p>
-        {hint && <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">{hint}</p>}
+        {hint && <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">{hint}</p>}
       </div>
     </>
   );
@@ -86,7 +85,7 @@ export default function StatCard({ label, value, hint, href, icon: Icon, tone = 
       <FlipCard3D
         height={152}
         className="transition-transform duration-200 ease-out hover:-translate-y-0.5"
-        frontClassName={`${layoutClass} ${surfaceClass}`}
+        frontClassName={`${layoutClass} glass-flat`}
         backClassName={`flex flex-col justify-between bg-gradient-to-br p-5 text-white shadow-xl ring-1 ring-white/20 ${colors.back}`}
         front={content}
         back={

@@ -24,10 +24,10 @@ type Props = {
 const faceBase = "absolute inset-0 overflow-hidden rounded-2xl [backface-visibility:hidden]";
 
 export const flipFrontClass =
-  "flex flex-col items-center justify-center gap-2 border border-zinc-200/70 bg-gradient-to-br from-white to-zinc-50 p-6 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(79,70,229,0.18)] dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950";
+  "glass-flat flex flex-col items-center justify-center gap-2 p-6 text-center";
 
 export const flipBackClass =
-  "flex flex-col items-center justify-center gap-2 border border-indigo-400/50 bg-gradient-to-br from-indigo-500 to-violet-600 p-6 text-center text-white shadow-xl shadow-indigo-500/30 dark:border-indigo-300/30 dark:from-indigo-600 dark:to-violet-700";
+  "flex flex-col items-center justify-center gap-2 border border-brand-400/50 bg-gradient-to-br from-brand-500 to-emerald-700 p-6 text-center text-white shadow-xl shadow-brand-500/30 dark:border-brand-300/30 dark:from-brand-600 dark:to-emerald-800";
 
 /**
  * Pure CSS 3D flip card: two faces on a preserve-3d body that rotates 180°
@@ -85,7 +85,7 @@ export default function FlipCard3D({
 
   return (
     <div
-      className={`rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950 ${
+      className={`rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-app ${
         trigger === "click" ? "cursor-pointer select-none" : ""
       } ${className}`}
       style={{ perspective: "1100px", width, height }}

@@ -36,4 +36,4 @@ export const SORT_OPTIONS: { value: TaskSort; label: string }[] = [
 ];
 
 export const selectClass =
-  "rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-800 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+  "rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-slate-800 shadow-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-slate-700 dark:text-fg";

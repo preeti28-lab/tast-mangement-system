@@ -54,8 +54,8 @@ export default function RegisterForm() {
   return (
     <>
       <div className="mb-7 space-y-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Create your account</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Start managing your tasks in seconds.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-fg">Create your account</h1>
+        <p className="text-sm text-muted">Start managing your tasks in seconds.</p>
       </div>
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
@@ -101,7 +101,7 @@ export default function RegisterForm() {
             error={errors.confirmPassword}
           />
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-muted">
           At least 8 characters, including a letter and a number.
         </p>
         <SubmitButton loading={loading}>
@@ -109,9 +109,9 @@ export default function RegisterForm() {
         </SubmitButton>
       </form>
 
-      <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+        <Link href="/login" className="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300">
           Log in
         </Link>
       </p>

@@ -4,7 +4,7 @@ import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import type { Analytics } from "@/lib/api";
 
 const BAR_TONES = [
-  "bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500",
+  "bg-gradient-to-r from-brand-500 to-brand-600 dark:from-brand-400 dark:to-brand-500",
   "bg-gradient-to-r from-sky-500 to-sky-600 dark:from-sky-400 dark:to-sky-500",
   "bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500",
   "bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-400 dark:to-amber-500",
@@ -43,7 +43,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
           return (
             <div key={s.name}>
               <div className="flex items-center gap-3">
-                <div className="w-20 shrink-0 text-right text-xs font-medium text-zinc-600 dark:text-zinc-300">{s.name}</div>
+                <div className="w-20 shrink-0 text-right text-xs font-medium text-slate-600 dark:text-slate-300">{s.name}</div>
                 <div className="flex flex-1 justify-center">
                   <div
                     className={`flex h-11 items-center justify-between rounded-lg px-3 text-white shadow-sm transition-[width] duration-500 ease-out hover:brightness-110 ${BAR_TONES[i]}`}
@@ -68,7 +68,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                         i === worstIdx
                           ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200 ring-inset dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30"
-                          : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                       }`}
                     >
                       <TrendingDownIcon className="h-3 w-3" />
@@ -83,7 +83,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
         })}
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 border-t border-zinc-100 pt-4 sm:grid-cols-3 dark:border-zinc-800">
+      <div className="mt-5 grid grid-cols-1 gap-3 border-t border-line pt-4 sm:grid-cols-3">
         <SummaryStat icon={TargetIcon} label="Overall completion" value={`${Math.round(overall * 10) / 10}%`} tone="text-emerald-600 dark:text-emerald-400" />
         <SummaryStat
           icon={TrendingDownIcon}
@@ -91,7 +91,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
           value={worstIdx >= 0 ? `${steps[worstIdx].from} → ${steps[worstIdx].to}` : "—"}
           tone="text-rose-600 dark:text-rose-400"
         />
-        <SummaryStat icon={CheckCircleIcon} label="Done on time" value={summary.completedOnTime ?? 0} tone="text-indigo-600 dark:text-indigo-400" />
+        <SummaryStat icon={CheckCircleIcon} label="Done on time" value={summary.completedOnTime ?? 0} tone="text-brand-600 dark:text-brand-400" />
       </div>
     </section>
   );
@@ -109,8 +109,8 @@ function SummaryStat({
   tone: string;
 }) {
   return (
-    <div className="rounded-xl bg-zinc-50 px-3 py-2.5 dark:bg-zinc-800/60">
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+    <div className="rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/60">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted">
         <Icon className={`h-3.5 w-3.5 ${tone}`} />
         {label}
       </div>

@@ -73,7 +73,7 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative rounded-full p-2.5 text-zinc-600 transition-all duration-200 ease-out hover:scale-105 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-95 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-900"
+        className="relative rounded-full p-2.5 text-slate-600 transition-all duration-200 ease-out hover:scale-105 hover:bg-hover hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 active:scale-95 dark:text-slate-300 dark:focus-visible:ring-offset-slate-900"
         aria-label={`Notifications${unread ? ` (${unread} unread)` : ""}`}
         aria-expanded={open}
       >
@@ -85,22 +85,23 @@ export default function NotificationBell() {
         )}
       </button>
 
+      {/* Phones: spans the navbar (its backdrop-filter makes it the containing block); sm+: anchored to the bell */}
       {open && (
-        <div className="absolute right-0 z-50 mt-3 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-lg dark:border-zinc-700/60 dark:bg-zinc-900">
-          <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-            <p className="text-sm font-semibold text-zinc-900 dark:text-white">Notifications</p>
+        <div className="glass-strong fixed inset-x-0 top-full z-50 mt-3 overflow-hidden rounded-2xl sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:w-80">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <p className="text-sm font-semibold text-fg">Notifications</p>
             {unread > 0 && (
               <button
                 onClick={markAllRead}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300"
               >
                 Mark all as read
               </button>
             )}
           </div>
-          <ul className="max-h-80 divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
+          <ul className="max-h-80 divide-y divide-line overflow-y-auto">
             {items.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-zinc-500">
+              <li className="px-4 py-8 text-center text-sm text-muted">
                 You&apos;re all caught up.
               </li>
             ) : (
@@ -109,12 +110,12 @@ export default function NotificationBell() {
                   <Link
                     href={n.task ? `/tasks?task=${n.task._id}` : "/notifications"}
                     onClick={() => openNotification(n)}
-                    className={`block px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/60 ${
-                      n.read ? "" : "bg-indigo-50/60 dark:bg-indigo-500/5"
+                    className={`block px-4 py-3 text-sm hover:bg-hover ${
+                      n.read ? "" : "bg-brand-50/60 dark:bg-brand-500/5"
                     }`}
                   >
-                    <p className="text-zinc-800 dark:text-zinc-200">{n.message}</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">{timeAgo(n.createdAt)}</p>
+                    <p className="text-slate-800 dark:text-slate-200">{n.message}</p>
+                    <p className="mt-0.5 text-xs text-muted">{timeAgo(n.createdAt)}</p>
                   </Link>
                 </li>
               ))
@@ -123,7 +124,7 @@ export default function NotificationBell() {
           <Link
             href="/notifications"
             onClick={close}
-            className="block border-t border-zinc-200 px-4 py-2.5 text-center text-sm font-medium text-indigo-600 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800"
+            className="block border-t border-line px-4 py-2.5 text-center text-sm font-medium text-brand-600 hover:bg-hover"
           >
             View all
           </Link>

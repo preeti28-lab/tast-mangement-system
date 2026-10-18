@@ -1,215 +1,103 @@
-import type { SVGProps } from "react";
+import type { ComponentType, ReactElement, SVGProps } from "react";
+import type { IconProps as PhosphorProps } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwise,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowsDownUp,
+  ArrowsClockwise,
+  Bell,
+  CaretDown,
+  CaretLeft,
+  CaretRight,
+  DownloadSimple,
+  ChartBar,
+  CheckCircle,
+  Clock,
+  EnvelopeSimple,
+  FileText,
+  Funnel,
+  GearSix,
+  House,
+  List,
+  ListChecks,
+  MagnifyingGlass,
+  Monitor,
+  Moon,
+  PencilSimpleLine,
+  Play,
+  Plus,
+  Pulse,
+  SignOut,
+  SquaresFour,
+  Sun,
+  Target,
+  Trash,
+  Tray,
+  TrendDown,
+  TrendUp,
+  Trophy,
+  UserCircle,
+  UsersThree,
+  X,
+} from "@phosphor-icons/react/ssr";
+
+// App-wide icon set: Phosphor icons in the duotone weight (a solid tinted layer
+// under a crisp outline). The `ssr` build has no React context, so these work in
+// both server and client components. Exports keep the old names and props, so
+// call sites don't change; sizing still comes from className (default h-5 w-5).
 
 type IconProps = SVGProps<SVGSVGElement>;
+type Weight = PhosphorProps["weight"];
 
-function Icon({ children, ...props }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="h-5 w-5"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
+function make(Glyph: ComponentType<PhosphorProps>, weight: Weight = "duotone"): (props: IconProps) => ReactElement {
+  function AppIcon({ strokeWidth, className = "h-5 w-5", ...props }: IconProps) {
+    // Old icons were stroked; a heavy stroke request maps to the bold weight.
+    const w = strokeWidth !== undefined && Number(strokeWidth) >= 2.2 ? "bold" : weight;
+    return <Glyph weight={w} aria-hidden="true" className={`shrink-0 ${className}`} {...(props as PhosphorProps)} />;
+  }
+  AppIcon.displayName = `${Glyph.displayName ?? "Phosphor"}Icon`;
+  return AppIcon;
 }
 
-export const HomeIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
-  </Icon>
-);
-
-export const ListIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />
-  </Icon>
-);
-
-export const InboxIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3 13h5l1.5 3h5L16 13h5" />
-    <path d="M5 5h14l2 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z" />
-  </Icon>
-);
-
-export const PencilIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
-  </Icon>
-);
-
-export const ClockIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7v5l3 2" />
-  </Icon>
-);
-
-export const CheckCircleIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="m8 12 3 3 5-6" />
-  </Icon>
-);
-
-export const BellIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-  </Icon>
-);
-
-export const MenuIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M4 6h16M4 12h16M4 18h16" />
-  </Icon>
-);
-
-export const XIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M18 6 6 18M6 6l12 12" />
-  </Icon>
-);
-
-export const LogoutIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-  </Icon>
-);
-
-export const ChartIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-  </Icon>
-);
-
-export const ActivityIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3 12h4l3-8 4 16 3-8h4" />
-  </Icon>
-);
-
-export const UsersIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="9" cy="8" r="3.5" />
-    <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" />
-  </Icon>
-);
-
-export const SettingsIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
-  </Icon>
-);
-
-export const RepeatIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M17 2l4 4-4 4" />
-    <path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4" />
-    <path d="M21 13v1a4 4 0 0 1-4 4H3" />
-  </Icon>
-);
-
-export const UserIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="8" r="4" />
-    <path d="M4 21a8 8 0 0 1 16 0" />
-  </Icon>
-);
-
-export const DocumentIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-    <path d="M14 3v5h5M9 13h6M9 17h4" />
-  </Icon>
-);
-
-export const ArrowRightIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </Icon>
-);
-
-export const ChevronDownIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="m6 9 6 6 6-6" />
-  </Icon>
-);
-
-export const MailIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <rect x="3" y="5" width="18" height="14" rx="2" />
-    <path d="m3 7 9 6 9-6" />
-  </Icon>
-);
-
-export const TrophyIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" />
-    <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
-  </Icon>
-);
-
-export const PlayIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z" />
-  </Icon>
-);
-
-export const RestartIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-    <path d="M3 3v5h5" />
-  </Icon>
-);
-
-export const PlusIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M12 5v14M5 12h14" />
-  </Icon>
-);
-
-export const FilterIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M3 5h18l-7 8.5V19l-4 2v-7.5z" />
-  </Icon>
-);
-
-export const TrendingUpIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="m3 17 6-6 4 4 8-8" />
-    <path d="M14 7h7v7" />
-  </Icon>
-);
-
-export const TrendingDownIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="m3 7 6 6 4-4 8 8" />
-    <path d="M14 17h7v-7" />
-  </Icon>
-);
-
-export const TargetIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="5" />
-    <circle cx="12" cy="12" r="1" />
-  </Icon>
-);
-
-export const GridIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-  </Icon>
-);
+export const HomeIcon = make(House);
+export const ListIcon = make(ListChecks);
+export const InboxIcon = make(Tray);
+export const PencilIcon = make(PencilSimpleLine);
+export const ClockIcon = make(Clock);
+export const CheckCircleIcon = make(CheckCircle);
+export const BellIcon = make(Bell);
+export const MenuIcon = make(List, "bold");
+export const XIcon = make(X, "bold");
+export const LogoutIcon = make(SignOut);
+export const ChartIcon = make(ChartBar);
+export const ActivityIcon = make(Pulse);
+export const UsersIcon = make(UsersThree);
+export const SettingsIcon = make(GearSix);
+export const RepeatIcon = make(ArrowsClockwise);
+export const UserIcon = make(UserCircle);
+export const DocumentIcon = make(FileText);
+export const ArrowRightIcon = make(ArrowRight, "bold");
+export const ChevronDownIcon = make(CaretDown, "bold");
+export const MailIcon = make(EnvelopeSimple);
+export const TrophyIcon = make(Trophy);
+export const PlayIcon = make(Play);
+export const RestartIcon = make(ArrowCounterClockwise);
+export const PlusIcon = make(Plus, "bold");
+export const FilterIcon = make(Funnel);
+export const TrendingUpIcon = make(TrendUp, "bold");
+export const TrendingDownIcon = make(TrendDown, "bold");
+export const TargetIcon = make(Target);
+export const GridIcon = make(SquaresFour);
+export const SunIcon = make(Sun);
+export const MoonIcon = make(Moon);
+export const ArrowDownIcon = make(ArrowDown, "bold");
+export const ArrowUpIcon = make(ArrowUp, "bold");
+export const ChevronLeftIcon = make(CaretLeft, "bold");
+export const ChevronRightIcon = make(CaretRight, "bold");
+export const DownloadIcon = make(DownloadSimple);
+export const SearchIcon = make(MagnifyingGlass);
+export const SortIcon = make(ArrowsDownUp);
+export const TrashIcon = make(Trash);
+export const MonitorIcon = make(Monitor);

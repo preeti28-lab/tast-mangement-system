@@ -42,6 +42,14 @@ export type DashboardData = {
   };
   recentTasks: Task[];
   overdueTasks: Task[];
+  /** Team top 3 by completed assigned tasks. */
+  topPerformers: { user: UserRef; assigned: number; completed: number; onTime: number; completionRate: number }[];
+  /** Not-completed tasks due in the next 7 days, soonest first. */
+  upcomingTasks?: Task[];
+  /** The user's created/completed tasks per week, last 8 weeks (oldest first). */
+  trend?: { weekStart: string; created: number; completed: number }[];
+  byStatus?: Record<TaskStatus, number>;
+  byPriority?: Record<TaskPriority, number>;
 };
 
 export type Notification = {

@@ -157,8 +157,8 @@ function TaskForm({
       />
 
       <div className="space-y-1.5">
-        <label htmlFor="description" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Description <span className="font-normal text-zinc-400">(optional)</span>
+        <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          Description <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <textarea
           id="description"
@@ -172,13 +172,13 @@ function TaskForm({
         />
         <div className="flex justify-between text-xs">
           <span className="text-red-600 dark:text-red-400">{errors.description}</span>
-          <span className="text-zinc-400">{values.description.length}/2000</span>
+          <span className="text-slate-400">{values.description.length}/2000</span>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <label htmlFor="dueDate" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label htmlFor="dueDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Due date
           </label>
           <input
@@ -195,7 +195,7 @@ function TaskForm({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="assignedTo" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label htmlFor="assignedTo" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Assign to
           </label>
           <select
@@ -219,7 +219,7 @@ function TaskForm({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="priority" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label htmlFor="priority" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Priority
           </label>
           <select id="priority" name="priority" value={values.priority} onChange={onChange} className={`${selectClass} block w-full`}>
@@ -232,7 +232,7 @@ function TaskForm({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="status" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label htmlFor="status" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Status
           </label>
           <select id="status" name="status" value={values.status} onChange={onChange} className={`${selectClass} block w-full`}>
@@ -245,7 +245,7 @@ function TaskForm({
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <label htmlFor="recurrence" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <label htmlFor="recurrence" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Repeat
           </label>
           <select
@@ -262,7 +262,7 @@ function TaskForm({
             ))}
           </select>
           {values.recurrence !== "none" && (
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted">
               When this task is completed, the next one is created automatically with the due date
               moved forward.
             </p>
@@ -274,7 +274,7 @@ function TaskForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-hover dark:border-slate-700 dark:text-slate-200"
         >
           Cancel
         </button>

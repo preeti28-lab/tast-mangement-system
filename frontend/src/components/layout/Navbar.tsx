@@ -4,28 +4,36 @@ import { usePathname } from "next/navigation";
 import { MenuIcon } from "@/components/icons";
 import { getPageTitle } from "./navigation";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 
 // Floating glass "pill" navbar: rounded-full, translucent with backdrop blur,
-// soft shadow and a gap from the top of the page.
+// soft shadow and a gap from the top of the page, over a frosted strip.
 export default function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-20 px-4 pt-4 sm:px-6 lg:px-10">
-      <div className="flex h-16 items-center gap-2 rounded-full border border-zinc-200/80 bg-white/70 px-2 shadow-lg shadow-zinc-900/5 backdrop-blur-md sm:gap-3 sm:pl-6 dark:border-zinc-700/60 dark:bg-zinc-900/70 dark:shadow-black/20">
+    <header className="sticky top-0 z-20 isolate px-4 pt-4 pb-3 sm:px-6 lg:px-10">
+      {/* Frosted backdrop behind the pill so scrolled content doesn't show in the
+          gap above it or through it; fades out at the bottom edge. */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 bg-app/90 backdrop-blur-xl [mask-image:linear-gradient(to_bottom,black_85%,transparent)]"
+        aria-hidden="true"
+      />
+      <div className="flex h-16 items-center gap-2 glass-strong rounded-full px-2 sm:gap-3 sm:pl-6">
         <button
           onClick={onMenuClick}
-          className="inline-flex items-center justify-center rounded-full p-2.5 text-zinc-600 transition-all duration-200 ease-out hover:scale-105 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-95 lg:hidden dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-900"
+          className="inline-flex items-center justify-center rounded-full p-2.5 text-slate-600 transition-all duration-200 ease-out hover:scale-105 hover:bg-hover hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 active:scale-95 lg:hidden dark:text-slate-300 dark:focus-visible:ring-offset-slate-900"
           aria-label="Open menu"
         >
           <MenuIcon />
         </button>
-        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
+        <h1 className="flex-1 truncate text-lg font-bold tracking-tight text-fg">
           {getPageTitle(pathname)}
         </h1>
+        <ThemeToggle />
         <NotificationBell />
-        <span className="hidden h-7 w-px bg-zinc-200 sm:block dark:bg-zinc-700" aria-hidden="true" />
+        <span className="hidden h-7 w-px bg-line sm:block" aria-hidden="true" />
         <UserMenu />
       </div>
     </header>

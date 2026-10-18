@@ -1,41 +1,469 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* `dark:` utilities follow the `.dark` class on <html> (set by the inline script
+   in app/layout.tsx and by lib/theme.ts), not the OS setting directly. */
+@custom-variant dark (&:where(.dark, .dark *));
 
-  /* Chart tokens (validated categorical slots 1–2; see README > Analytics) */
-  --chart-surface: #ffffff;
-  --chart-grid: #e7e5e4;
-  --chart-axis: #71717a;
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
+/* ---- Theme tokens -------------------------------------------------------
+   Semantic colors used across the app. Components use the Tailwind utilities
+   generated below (bg-app, bg-surface, bg-sidebar, text-fg, text-muted,
+   border-line, bg-hover, brand-*) instead of hardcoded light/dark pairs. */
+:root {
+  color-scheme: light;
+
+  --app-bg: #f8fafc;
+  --surface: #ffffff;
+  --sidebar: #ffffff;
+  --fg: #0f172a;
+  --fg-muted: #64748b;
+  --line: #e2e8f0;
+  --hover: #f1f5f9;
+
+  --brand: #16a34a;
+  --brand-hover: #15803d;
+  --brand-bright: #22c55e;
+  --brand-soft: #dcfce7;
+
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  /* Card shadow: a hairline plus a soft neutral drop. */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --shadow-card-hover: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 32px -12px rgba(15, 23, 42, 0.18);
+
+  /* Glass surfaces (see `glass` utilities below): translucent fill, light rim,
+     inner top highlight. --glass-solid is for faces that can't blur (3D flips). */
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-solid: rgba(255, 255, 255, 0.82);
+  --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0.18));
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-row: rgba(255, 255, 255, 0.35);
+  --glass-head: rgba(248, 250, 252, 0.7);
+
+  /* Chart tokens (see README > Analytics) */
+  --chart-surface: var(--surface);
+  --chart-grid: var(--line);
+  --chart-axis: var(--fg-muted);
+  /* Same in both themes: these mid-tone hues read on light and dark surfaces.
+     Single source for chart colors (SERIES_COLORS in premium-charts.tsx uses them). */
+  --series-1: #16a34a;
+  --series-2: #3b82f6;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --app-bg: #0b1220;
+  --surface: #151f2e;
+  --sidebar: #0f172a;
+  --fg: #f1f5f9;
+  --fg-muted: #94a3b8;
+  --line: #293548;
+  --hover: #1e293b;
+
+  --brand: #22c55e;
+  --brand-hover: #16a34a;
+  --brand-bright: #22c55e;
+  --brand-soft: rgba(34, 197, 94, 0.12);
+
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.6);
+
+  --glass-bg: rgba(21, 31, 46, 0.55);
+  --glass-bg-strong: rgba(21, 31, 46, 0.82);
+  --glass-solid: rgba(21, 31, 46, 0.9);
+  --glass-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.03));
+  --glass-border: rgba(148, 163, 184, 0.16);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-row: rgba(255, 255, 255, 0.015);
+  --glass-head: rgba(30, 41, 59, 0.65);
+
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--app-bg);
+  --color-foreground: var(--fg);
+
+  --color-app: var(--app-bg);
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-hover: var(--hover);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+
+  --font-sans: var(--font-app-sans);
+  --font-mono: var(--font-app-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Emerald brand scale (brand-600 = primary, 700 = hover, 500 = bright, 100 = soft). */
+@theme {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+  --color-brand-950: #052e16;
+}
 
-    --chart-surface: #18181b;
-    --chart-grid: #2e2e33;
-    --chart-axis: #a1a1aa;
-    --series-1: #3987e5;
-    --series-2: #d95926;
+/* ---- Glassmorphism ------------------------------------------------------
+   `glass` for cards and tables, `glass-strong` for popovers/modals (more
+   opaque so text over busy content stays readable), `glass-flat` for faces
+   inside preserve-3d where backdrop-filter breaks backface hiding. */
+@utility glass {
+  background-color: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--shadow-card);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+@utility glass-strong {
+  background-color: var(--glass-bg-strong);
+  background-image: var(--glass-sheen);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), 0 24px 48px -16px rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+@utility glass-flat {
+  background-color: var(--glass-solid);
+  background-image: var(--glass-sheen);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--shadow-card);
+}
+
+/* Table chrome on glass: frosted sticky header, see-through rows. */
+@utility glass-head {
+  background-color: var(--glass-head);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@utility glass-row {
+  background-color: var(--glass-row);
+}
+
+/* Soft color blobs behind the app so the glass has something to frost. */
+.glass-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.glass-backdrop span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+.dark .glass-backdrop span {
+  opacity: 0.22;
+}
+/* Blobs drift slowly so the frosted cards feel alive. */
+.glass-backdrop span:nth-child(1) { animation: drift-a 26s ease-in-out infinite alternate; }
+.glass-backdrop span:nth-child(2) { animation: drift-b 32s ease-in-out infinite alternate; }
+.glass-backdrop span:nth-child(3) { animation: drift-c 38s ease-in-out infinite alternate; }
+/* Faint dot grid over the blobs for texture. */
+.glass-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 70%);
+}
+.dark .glass-backdrop::after {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+@keyframes drift-a { to { transform: translate(-6rem, 5rem) scale(1.15); } }
+@keyframes drift-b { to { transform: translate(7rem, -4rem) scale(0.9); } }
+@keyframes drift-c { to { transform: translate(-5rem, -6rem) scale(1.1); } }
+
+/* Interactive glass: lift plus a brand-tinted glow on hover. */
+@utility glass-hover {
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease-out, border-color 220ms ease-out;
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34, 197, 94, 0.35);
+    box-shadow: var(--glass-highlight), 0 0 0 1px rgba(34, 197, 94, 0.08), 0 20px 40px -18px rgba(22, 163, 74, 0.35), var(--shadow-card-hover);
+  }
+}
+
+/* Brand gradient text for big headings. */
+@utility text-gradient {
+  background-image: linear-gradient(120deg, var(--fg) 30%, var(--brand) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Light sweep across primary buttons on hover. */
+@utility btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 700ms ease;
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* Page content fades up on navigation, children staggered. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.page-enter > * > * {
+  /* backwards, not both: a held final frame would pin transform and block card tilt. */
+  animation: rise 480ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.page-enter > * > :nth-child(2) { animation-delay: 60ms; }
+.page-enter > * > :nth-child(3) { animation-delay: 120ms; }
+.page-enter > * > :nth-child(4) { animation-delay: 180ms; }
+.page-enter > * > :nth-child(n + 5) { animation-delay: 240ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-backdrop span,
+  .page-enter > * > * {
+    animation: none !important;
+  }
+}
+
+/* Modals: bottom sheet slides up on phones, dialog scales in from sm. */
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+.modal-panel {
+  animation: sheet-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (min-width: 40rem) {
+  .modal-panel {
+    animation: dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel {
+    animation: none;
+  }
+}
+
+/* Slim scrollbars and brand text selection. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+}
+::selection {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+/* ---- 3D depth --------------------------------------------------------- */
+
+/* Pressable button: a solid "edge" under the face; lifts on hover, sinks on press.
+   Set --btn-edge for the edge color (defaults to a neutral one). */
+@utility btn-3d {
+  --btn-edge: rgba(15, 23, 42, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 3px 0 var(--btn-edge),
+    0 8px 16px -8px rgba(15, 23, 42, 0.35);
+  transition: transform 140ms ease-out, box-shadow 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out;
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 4px 0 var(--btn-edge),
+      0 14px 22px -10px rgba(15, 23, 42, 0.4);
+  }
+  &:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 1px 0 var(--btn-edge),
+      0 4px 8px -6px rgba(15, 23, 42, 0.35);
+  }
+}
+.dark .btn-3d {
+  --btn-edge: rgba(0, 0, 0, 0.5);
+}
+/* Brand-filled buttons get a dark green edge in both themes. */
+@utility btn-3d-brand {
+  --btn-edge: #166534 !important;
+}
+
+/* Recessed track for tab lists and switches. */
+@utility well-3d {
+  background-color: var(--hover);
+  box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.08), inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+.dark .well-3d {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* Raised pill (active tab, switch knob). */
+@utility raised-3d {
+  background-color: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(15, 23, 42, 0.12), 0 4px 10px -4px rgba(15, 23, 42, 0.18);
+}
+.dark .raised-3d {
+  background-color: #1e293b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.5), 0 6px 12px -6px rgba(0, 0, 0, 0.6);
+}
+
+/* Cards that tilt toward the pointer. components/ui/TiltController.tsx sets
+   --tilt-x / --tilt-y / --glare-x / --glare-y while the mouse is over one. */
+@utility tilt-3d {
+  /* No transform at rest: a resting card must not become a stacking context, or
+     dropdowns inside it would slide under the next card. */
+  position: relative;
+  transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 300ms ease-out, border-color 300ms ease-out;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(500px circle at var(--glare-x, 50%) var(--glare-y, 0%), rgba(255, 255, 255, 0.16), transparent 45%);
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+  }
+  &[data-tilting] {
+    z-index: 1;
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 90ms linear, box-shadow 300ms ease-out, border-color 300ms ease-out;
+    box-shadow: var(--glass-highlight, 0 0 0 transparent), 0 26px 48px -24px rgba(15, 23, 42, 0.35), var(--shadow-card-hover);
+  }
+  &[data-tilting]::after {
+    opacity: 1;
+  }
+  /* Never transform a card that holds an open dialog: it would trap the fixed overlay. */
+  &:has([aria-modal="true"]) {
+    transform: none !important;
+  }
+}
+.dark .tilt-3d::after {
+  background: radial-gradient(500px circle at var(--glare-x, 50%) var(--glare-y, 0%), rgba(34, 197, 94, 0.1), transparent 45%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-3d,
+  .btn-3d {
+    transform: none !important;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--fg);
+  font-family: var(--font-app-sans), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  letter-spacing: -0.005em;
+}
+
+/* Visible keyboard focus everywhere, in the brand color. Components that draw
+   their own focus ring keep it; this covers the ones that don't. Layered so
+   utilities like `outline-none` still win. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+/* Pointer cursor on everything clickable (Tailwind's preflight resets buttons to
+   the default arrow). Text fields keep the I-beam; disabled controls show
+   not-allowed. In the base layer so a `cursor-*` utility can still override. */
+@layer base {
+  a[href],
+  button,
+  summary,
+  select,
+  label[for],
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="color"],
+  input[type="range"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  [role="button"],
+  [role="tab"],
+  [role="switch"],
+  [role="radio"],
+  [role="checkbox"],
+  [role="menuitem"],
+  [role="option"],
+  ::-webkit-calendar-picker-indicator,
+  ::file-selector-button {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+/* Cross-fade colors while switching theme (class added briefly by lib/theme.ts). */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+  transition-duration: 250ms !important;
+  transition-timing-function: ease-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition: none !important;
+  }
 }
 
 /* Greeting emoji on the dashboard */

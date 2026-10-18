@@ -2,23 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { analyticsApi, type Analytics, type ApiError } from "@/lib/api";
-import { initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { useTasksChanged } from "@/lib/taskEvents";
-import DataGrid, { Highlight, type GridColumn } from "./DataGrid";
+import DataGrid, { Highlight, type GridColumn } from "@/components/ui/DataGrid";
 import WorkloadMap from "./WorkloadMap";
+import Avatar from "@/components/ui/Avatar";
 
 type Row = Analytics["perUser"][number];
 
 const ROLE_PILL: Record<string, string> = {
   admin: "bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-400/20",
   manager: "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-400/20",
-  user: "bg-zinc-100 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-700/40 dark:text-zinc-300 dark:ring-zinc-500/30",
+  user: "bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-slate-700/40 dark:text-slate-300 dark:ring-slate-500/30",
 };
 
 const roleLabel = (row: Row) => (row.user.role ? ROLE_LABELS[row.user.role] : "Member");
 
-const COLUMNS: GridColumn<Row>[] = [
+/** Per-member columns, shared by the Team report and the Analytics per-user table. */
+export const teamReportColumns: GridColumn<Row>[] = [
   {
     key: "name",
     label: "Member",
@@ -27,10 +28,8 @@ const COLUMNS: GridColumn<Row>[] = [
     searchable: true,
     render: (r, q) => (
       <span className="flex items-center gap-2.5">
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-[10px] font-semibold text-white">
-          {initials(r.user.name)}
-        </span>
-        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+        <Avatar name={r.user.name} size="xs" />
+        <span className="font-medium text-fg">
           <Highlight text={r.user.name} query={q} />
         </span>
       </span>
@@ -72,10 +71,10 @@ const COLUMNS: GridColumn<Row>[] = [
     align: "right",
     render: (r) => (
       <span className="inline-flex items-center gap-2">
-        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
           <span className="block h-full rounded-full bg-emerald-500" style={{ width: `${r.completionRate}%` }} />
         </span>
-        <span className="w-11 text-right font-medium tabular-nums text-zinc-800 dark:text-zinc-100">{r.completionRate}%</span>
+        <span className="w-11 text-right font-medium tabular-nums text-slate-800 dark:text-fg">{r.completionRate}%</span>
       </span>
     ),
   },
@@ -96,7 +95,7 @@ export default function TeamInsights() {
   }, [refresh]);
 
   if (error) return null; // the rest of the Team page still works without it
-  if (!perUser) return <div className="h-64 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800/60" />;
+  if (!perUser) return <div className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800/60" />;
 
   return (
     <div className="space-y-6">
@@ -104,7 +103,7 @@ export default function TeamInsights() {
       <DataGrid
         title="Team report"
         subtitle="Workload and delivery per member"
-        columns={COLUMNS}
+        columns={teamReportColumns}
         rows={perUser}
         rowKey={(r) => r.user._id}
         exportName="team-report"

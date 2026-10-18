@@ -60,3 +60,14 @@ export function initials(name: string) {
     .map((part) => part[0]!.toUpperCase())
     .join("");
 }
+
+/** "17 Oct 2026, 2:30 pm" — for tables where both date and time matter. */
+export function formatDateTime(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

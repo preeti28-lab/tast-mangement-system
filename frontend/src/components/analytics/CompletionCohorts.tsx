@@ -6,8 +6,8 @@ const weekLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, {
 
 /** Green scale by completion %, light + dark. */
 function cellStyle(v: number | null) {
-  if (v == null) return "bg-zinc-50 text-zinc-300 dark:bg-zinc-800/40 dark:text-zinc-600";
-  if (v >= 90) return "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white";
+  if (v == null) return "bg-slate-50 text-slate-300 dark:bg-slate-800/40 dark:text-slate-600";
+  if (v >= 90) return "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-fg";
   if (v >= 70) return "bg-emerald-400 text-emerald-950 dark:bg-emerald-500/70 dark:text-emerald-50";
   if (v >= 50) return "bg-emerald-300 text-emerald-900 dark:bg-emerald-500/50 dark:text-emerald-50";
   if (v >= 30) return "bg-emerald-200 text-emerald-900 dark:bg-emerald-500/30 dark:text-emerald-100";
@@ -30,7 +30,7 @@ export default function CompletionCohorts({ cohorts }: { cohorts: Analytics["coh
         title="Completion cohorts"
         subtitle="% of each week's new tasks completed, week by week"
         action={
-          <div className="hidden items-center gap-1.5 text-[11px] text-zinc-500 sm:flex dark:text-zinc-400">
+          <div className="hidden items-center gap-1.5 text-[11px] text-muted sm:flex">
             <span>Low</span>
             <span className="flex overflow-hidden rounded-md ring-1 ring-black/5 dark:ring-white/10">
               <span className="h-3 w-4 bg-emerald-100 dark:bg-emerald-500/20" />
@@ -47,12 +47,12 @@ export default function CompletionCohorts({ cohorts }: { cohorts: Analytics["coh
         <table className="w-full border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-white px-2 py-1.5 text-left text-xs font-semibold text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+              <th className="glass-head sticky left-0 z-10 rounded-md px-2 py-1.5 text-left text-xs font-semibold text-muted">
                 Created week
               </th>
-              <th className="px-2 py-1.5 text-right text-xs font-semibold text-zinc-500 dark:text-zinc-400">Tasks</th>
+              <th className="px-2 py-1.5 text-right text-xs font-semibold text-muted">Tasks</th>
               {cols.map((c) => (
-                <th key={c} className="px-2 py-1.5 text-center text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                <th key={c} className="px-2 py-1.5 text-center text-xs font-semibold text-muted">
                   {c}
                 </th>
               ))}
@@ -63,11 +63,11 @@ export default function CompletionCohorts({ cohorts }: { cohorts: Analytics["coh
               <tr key={c.weekStart}>
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5 text-left text-xs font-medium text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                  className="glass-head sticky left-0 z-10 whitespace-nowrap rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-700 dark:text-slate-200"
                 >
                   {weekLabel(c.weekStart)}
                 </th>
-                <td className="whitespace-nowrap px-2 py-1.5 text-right text-xs tabular-nums text-zinc-500 dark:text-zinc-400">{c.size}</td>
+                <td className="whitespace-nowrap px-2 py-1.5 text-right text-xs tabular-nums text-muted">{c.size}</td>
                 {c.values.map((v, i) => (
                   <td key={i} className="p-0">
                     <div
@@ -90,7 +90,7 @@ export default function CompletionCohorts({ cohorts }: { cohorts: Analytics["coh
         </table>
       </div>
 
-      <p className="mt-3 text-[11px] text-zinc-400 dark:text-zinc-500">
+      <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
         W0 is the week the tasks were created. Blank cells are weeks that haven&apos;t happened yet, or weeks with no new tasks.
       </p>
     </section>

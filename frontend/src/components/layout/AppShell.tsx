@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { authApi, type ApiError, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
 import Navbar from "./Navbar";
+import TiltController from "@/components/ui/TiltController";
 import OfflineSync from "./OfflineSync";
 import Sidebar from "./Sidebar";
 import { UserContext } from "./UserContext";
@@ -13,7 +14,7 @@ import { UserContext } from "./UserContext";
 export function Spinner() {
   return (
     <div className="flex flex-1 items-center justify-center py-20">
-      <span className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
+      <span className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
     </div>
   );
 }
@@ -21,6 +22,7 @@ export function Spinner() {
 // Loads the current user once and renders the sidebar + navbar around every app page.
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -57,13 +59,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <UserContext.Provider value={ctx}>
       <ToastProvider>
         <OfflineSync />
-        <div className="flex min-h-screen flex-1 bg-[#f7f7fc] bg-[radial-gradient(ellipse_80%_50%_at_100%_0%,rgba(129,140,248,0.10),transparent),radial-gradient(ellipse_60%_40%_at_0%_100%,rgba(167,139,250,0.06),transparent)] dark:bg-zinc-950 dark:bg-none">
+        <TiltController />
+        <div className="relative isolate flex min-h-screen flex-1 bg-app">
+          {/* Color blobs the glass cards frost over */}
+          <div className="glass-backdrop" aria-hidden="true">
+            <span className="-top-32 right-[-8rem] h-[28rem] w-[28rem] bg-emerald-300 dark:bg-emerald-500" />
+            <span className="top-1/3 -left-40 h-[26rem] w-[26rem] bg-sky-300 dark:bg-sky-600" />
+            <span className="right-1/4 -bottom-40 h-[24rem] w-[24rem] bg-violet-300 dark:bg-violet-600" />
+          </div>
           <Suspense>
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
             <Navbar onMenuClick={() => setSidebarOpen(true)} />
-            <main className="flex-1 px-4 py-7 sm:px-6 lg:px-10">{children}</main>
+            <main key={pathname} className="page-enter flex-1 px-4 pt-4 pb-7 sm:px-6 lg:px-10">{children}</main>
           </div>
         </div>
       </ToastProvider>

@@ -3,25 +3,18 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
-import { ListIcon, PlusIcon } from "@/components/icons";
+import { PlusIcon } from "@/components/icons";
 import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import DeleteTaskDialog from "@/components/tasks/DeleteTaskDialog";
+import ExportTasksDialog, { filterTasksByDate, rangeFileSuffix, type ExportRange } from "@/components/tasks/ExportTasksDialog";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
-import TaskFilters, { type FilterValues } from "@/components/tasks/TaskFilters";
 import TaskFormModal, { type SaveResult } from "@/components/tasks/TaskFormModal";
 import { useTasksChanged } from "@/lib/taskEvents";
-import TaskList from "@/components/tasks/TaskList";
+import TasksTable, { PER_PAGE_OPTIONS, type TableFilters } from "@/components/tasks/TasksTable";
 import { VIEW_OPTIONS } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
-import {
-  EmptyState,
-  PageHeader,
-  primaryButtonClass,
-  secondaryButtonClass,
-  tabClass,
-  tabListClass,
-} from "@/components/ui/Surface";
+import { PageHeader, primaryButtonClass, tabClass, tabListClass } from "@/components/ui/Surface";
 import {
   OfflineQueuedError,
   taskApi,
@@ -35,10 +28,11 @@ import {
   type TaskView,
   type UserRef,
 } from "@/lib/api";
-import { dateInputToIso } from "@/lib/format";
+import { dateInputToIso, toDateInput } from "@/lib/format";
+import { downloadCsv } from "@/lib/csv";
 import { isStaff } from "@/lib/permissions";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PER_PAGE = 10;
 
 const VIEW_HEADINGS: Record<TaskView, { title: string; subtitle: string }> = {
   all: { title: "My tasks", subtitle: "Everything you created or are assigned to." },
@@ -59,15 +53,17 @@ export default function TasksView() {
 
   // ---- URL is the source of truth for filters, so they survive refresh and can be shared.
   const view = (searchParams.get("view") as TaskView) || "all";
-  const filters: FilterValues = {
+  const filters: TableFilters = {
     search: searchParams.get("search") ?? "",
-    status: (searchParams.get("status") as FilterValues["status"]) ?? "",
-    priority: (searchParams.get("priority") as FilterValues["priority"]) ?? "",
+    status: (searchParams.get("status") as TableFilters["status"]) ?? "",
+    priority: (searchParams.get("priority") as TableFilters["priority"]) ?? "",
     dueFrom: searchParams.get("dueFrom") ?? "",
     dueTo: searchParams.get("dueTo") ?? "",
     sort: (searchParams.get("sort") as TaskSort) || "newest",
   };
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const limitParam = Number(searchParams.get("limit"));
+  const perPage = PER_PAGE_OPTIONS.includes(limitParam) ? limitParam : DEFAULT_PER_PAGE;
   const creating = searchParams.get("new") === "1";
   const detailId = searchParams.get("task");
 
@@ -101,9 +97,9 @@ export default function TasksView() {
       dueTo: filters.dueTo ? dateInputToIso(filters.dueTo, "end") : undefined,
       sort: filters.sort,
       page,
-      limit: PAGE_SIZE,
+      limit: perPage,
     }),
-    [view, filters.search, filters.status, filters.priority, filters.dueFrom, filters.dueTo, filters.sort, page]
+    [view, filters.search, filters.status, filters.priority, filters.dueFrom, filters.dueTo, filters.sort, page, perPage]
   );
   const key = `${JSON.stringify(query)}#${refresh}`;
 
@@ -142,6 +138,50 @@ export default function TasksView() {
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [detailVersion, setDetailVersion] = useState(0);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  /** Exports every task matching the current view + filters (all pages), not just this page,
+      narrowed to the chosen date range and sorted by that date. */
+  const exportTasks = async (range: ExportRange) => {
+    setExporting(true);
+    try {
+      const all: Task[] = [];
+      for (let p = 1, pages = 1; p <= pages; p++) {
+        const res = await taskApi.list({ ...query, page: p, limit: 50 });
+        all.push(...res.tasks);
+        pages = res.pages;
+      }
+      const rows = filterTasksByDate(all, range);
+      if (rows.length === 0) {
+        toast("No tasks in that date range", "error");
+        return;
+      }
+      const suffix = rangeFileSuffix(range);
+      const label = { todo: "To do", in_progress: "In progress", completed: "Completed" } as const;
+      downloadCsv(
+        suffix ? `tasks-${view}-${suffix}` : `tasks-${view}`,
+        ["Title", "Description", "Status", "Priority", "Due date", "Assignee", "Created by", "Created", "Repeats"],
+        rows.map((t) => [
+          t.title,
+          t.description,
+          label[t.status],
+          t.priority,
+          t.dueDate ? toDateInput(t.dueDate) : "",
+          t.assignedTo?.name ?? "Unassigned",
+          t.createdBy.name,
+          toDateInput(t.createdAt),
+          t.recurrence === "none" ? "" : t.recurrence,
+        ])
+      );
+      toast(`Exported ${rows.length} task${rows.length === 1 ? "" : "s"}`);
+      setExportOpen(false);
+    } catch (err) {
+      toast((err as ApiError).message, "error");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const closeForm = () => {
     setEditing(null);
@@ -195,11 +235,13 @@ export default function TasksView() {
     }
   };
 
-  const hasFilters =
-    !!filters.search || !!filters.status || !!filters.priority || !!filters.dueFrom || !!filters.dueTo;
-
   const onFilterChange = useCallback(
-    (patch: Partial<FilterValues>) => updateParams(patch as Record<string, string>),
+    (patch: Partial<TableFilters>) =>
+      updateParams(
+        Object.fromEntries(
+          Object.entries(patch).map(([k, v]) => [k, k === "sort" && v === "newest" ? null : (v as string)])
+        )
+      ),
     [updateParams]
   );
   const clearFilters = useCallback(
@@ -236,81 +278,45 @@ export default function TasksView() {
         </div>
       </div>
 
-      <TaskFilters values={filters} onChange={onFilterChange} onClear={clearFilters} />
-
       {result?.error ? (
         <FormAlert message={result.error} />
       ) : !data ? (
         <Spinner />
-      ) : data.tasks.length === 0 ? (
-        <EmptyState
-          icon={ListIcon}
-          title={hasFilters ? "No tasks match your filters" : view === "overdue" ? "Nothing overdue" : "No tasks yet"}
-        >
-          <p>
-            {hasFilters
-              ? "Try a different search term or clear the filters."
-              : view === "assigned"
-                ? "Tasks other people assign to you will show up here."
-                : view === "overdue"
-                  ? "You're on top of everything."
-                  : "Create a task to start tracking your work."}
-          </p>
-          {hasFilters ? (
-            <button onClick={clearFilters} className={`mt-5 ${secondaryButtonClass}`}>
-              Clear filters
-            </button>
-          ) : (
+      ) : (
+        <TasksTable
+          title={VIEW_HEADINGS[view]?.title ?? "My tasks"}
+          tasks={data.tasks}
+          total={data.total}
+          page={data.page}
+          pages={data.pages}
+          perPage={perPage}
+          loading={loading}
+          filters={filters}
+          currentUser={user}
+          updatingId={updatingId}
+          exporting={exporting}
+          onFilterChange={onFilterChange}
+          onClearFilters={clearFilters}
+          onPageChange={(p) => updateParams({ page: p }, { resetPage: false })}
+          onPerPageChange={(n) => updateParams({ limit: n === DEFAULT_PER_PAGE ? null : n })}
+          onExport={() => setExportOpen(true)}
+          onOpen={(t) => updateParams({ task: t._id }, { resetPage: false })}
+          onEdit={setEditing}
+          onDelete={setDeleting}
+          onStatusChange={changeStatus}
+          emptyAction={
             view !== "overdue" && (
               <button
+                type="button"
                 onClick={() => updateParams({ new: "1" }, { resetPage: false })}
-                className={`mt-5 ${primaryButtonClass}`}
+                className={`mt-2 ${primaryButtonClass}`}
               >
                 <PlusIcon className="h-4 w-4" />
                 New task
               </button>
             )
-          )}
-        </EmptyState>
-      ) : (
-        <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
-          <TaskList
-            tasks={data.tasks}
-            currentUser={user}
-            updatingId={updatingId}
-            onOpen={(t) => updateParams({ task: t._id }, { resetPage: false })}
-            onEdit={setEditing}
-            onDelete={setDeleting}
-            onStatusChange={changeStatus}
-          />
-          <div className="flex flex-col items-center justify-between gap-3 text-sm text-zinc-500 sm:flex-row">
-            <span>
-              Showing {(data.page - 1) * PAGE_SIZE + 1}–{(data.page - 1) * PAGE_SIZE + data.tasks.length} of{" "}
-              {data.total} task{data.total === 1 ? "" : "s"}
-            </span>
-            {data.pages > 1 && (
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={page <= 1}
-                  onClick={() => updateParams({ page: page - 1 }, { resetPage: false })}
-                  className={secondaryButtonClass}
-                >
-                  Previous
-                </button>
-                <span>
-                  Page {data.page} of {data.pages}
-                </span>
-                <button
-                  disabled={page >= data.pages}
-                  onClick={() => updateParams({ page: page + 1 }, { resetPage: false })}
-                  className={secondaryButtonClass}
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+          }
+        />
       )}
 
       <TaskDetailModal
@@ -329,6 +335,7 @@ export default function TasksView() {
         onSaved={onSaved}
       />
       <DeleteTaskDialog task={deleting} onClose={() => setDeleting(null)} onDeleted={onDeleted} />
+      <ExportTasksDialog open={exportOpen} busy={exporting} onClose={() => setExportOpen(false)} onExport={exportTasks} />
     </div>
   );
 }

@@ -2,10 +2,10 @@
 
 import { useCallback, useRef, useState } from "react";
 import { ChevronDownIcon, LogoutIcon } from "@/components/icons";
-import { initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { useClickOutside } from "./useClickOutside";
 import { useUser } from "./UserContext";
+import Avatar from "@/components/ui/Avatar";
 
 export default function UserMenu() {
   const { user, logout } = useUser();
@@ -18,28 +18,26 @@ export default function UserMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 rounded-full p-1 transition-all duration-200 ease-out hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 sm:pr-4 dark:hover:bg-zinc-800 dark:focus-visible:ring-offset-zinc-900"
+        className="flex items-center gap-3 rounded-full p-1 transition-all duration-200 ease-out hover:bg-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:pr-4 dark:focus-visible:ring-offset-slate-900"
         aria-expanded={open}
         aria-label="Account menu"
       >
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-sm font-semibold text-white">
-          {initials(user.name)}
-        </span>
+        <Avatar name={user.name} size="md" />
         <span className="hidden text-left sm:block">
-          <span className="block text-sm font-semibold leading-tight text-zinc-900 dark:text-white">
+          <span className="block text-sm font-semibold leading-tight text-fg">
             {user.name}
           </span>
-          <span className="mt-0.5 block text-xs leading-tight text-zinc-500">{user.email}</span>
+          <span className="mt-0.5 block text-xs leading-tight text-muted">{user.email}</span>
         </span>
-        <ChevronDownIcon className={`hidden h-4 w-4 text-zinc-500 transition-transform sm:block ${open ? "rotate-180" : ""}`} />
+        <ChevronDownIcon className={`hidden h-4 w-4 text-muted transition-transform sm:block ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-3 w-60 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-            <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">{user.name}</p>
-            <p className="truncate text-xs text-zinc-500">{user.email}</p>
-            <span className="mt-1.5 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+        <div className="absolute right-0 z-50 mt-3 w-60 overflow-hidden glass-strong rounded-2xl">
+          <div className="border-b border-line px-4 py-3">
+            <p className="truncate text-sm font-medium text-fg">{user.name}</p>
+            <p className="truncate text-xs text-muted">{user.email}</p>
+            <span className="mt-1.5 inline-flex rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
               {ROLE_LABELS[user.role]}
             </span>
           </div>

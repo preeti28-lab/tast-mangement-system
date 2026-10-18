@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import StatCard from "@/components/dashboard/StatCard";
+import KpiTile from "@/components/analytics/KpiTile";
+import { AreaChart, ChartLegend, DonutChart, SERIES_COLORS } from "@/components/analytics/premium-charts";
+import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
 import TaskListCard from "@/components/dashboard/TaskListCard";
 import FocusDeck from "@/components/dashboard/FocusDeck";
+import TopPerformerCard from "@/components/dashboard/TopPerformerCard";
 import FormAlert from "@/components/auth/FormAlert";
 import WireframeTerrain3D from "@/components/ui/WireframeTerrain3D";
 import {
+  ChartIcon,
   CheckCircleIcon,
   ClockIcon,
   DocumentIcon,
@@ -15,10 +19,12 @@ import {
   PlusIcon,
   UserIcon,
 } from "@/components/icons";
+import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { dashboardApi, type DashboardData } from "@/lib/api";
+import { isStaff } from "@/lib/permissions";
 
 export default function DashboardView() {
   const { user } = useUser();
@@ -37,28 +43,24 @@ export default function DashboardView() {
 
   const firstName = user.name.split(" ")[0];
 
-  /** Back-of-card copy: a big share-of-total figure plus a one-line nudge. */
-  const share = (count: number, text: string) => {
-    const total = data?.stats.total ?? 0;
-    const pct = total ? Math.round((count / total) * 100) : 0;
-    return (
-      <>
-        <span className="block text-3xl font-bold leading-none tracking-tight tabular-nums text-white">
-          {pct}%
-        </span>
-        <span className="mt-1.5 block">
-          of {total} task{total === 1 ? "" : "s"} &middot; {text}
-        </span>
-      </>
-    );
-  };
+  const weekLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const trend = data?.trend ?? [];
+  const created = trend.map((t) => t.created);
+  const completedWeekly = trend.map((t) => t.completed);
+  const thisWeek = trend.at(-1);
+  const lastWeek = trend.at(-2);
+  const completionRate = data?.stats.total ? Math.round((data.stats.completed / data.stats.total) * 100) : 0;
+  const activity = [
+    { key: "created", label: "Created", color: SERIES_COLORS.created, values: created },
+    { key: "completed", label: "Completed", color: SERIES_COLORS.completed, values: completedWeekly },
+  ];
 
   return (
     <div className="w-full space-y-7">
       <WireframeTerrain3D className="min-h-56 sm:min-h-64">
-        <div className="flex h-full min-h-56 flex-col justify-end gap-5 bg-gradient-to-r from-white/85 via-white/40 to-transparent p-6 sm:min-h-64 sm:flex-row sm:items-end sm:justify-between sm:p-8 dark:from-zinc-950/85 dark:via-zinc-950/40">
+        <div className="flex h-full min-h-56 flex-col justify-end gap-5 bg-gradient-to-r from-app/85 via-app/40 to-transparent p-6 sm:min-h-64 sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
+            <h2 className="text-3xl font-bold tracking-tight text-fg sm:text-4xl">
               Hello, {firstName}{" "}
               <span
                 role="img"
@@ -68,13 +70,13 @@ export default function DashboardView() {
                 👋
               </span>
             </h2>
-            <p className="mt-2 text-base text-zinc-500 sm:text-lg dark:text-zinc-400">
+            <p className="mt-2 text-base text-muted sm:text-lg">
               Here&apos;s what&apos;s happening with your tasks today.
             </p>
           </div>
           <Link
             href="/tasks?new=1"
-            className="pointer-events-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-indigo-600/35"
+            className="btn-3d btn-3d-brand pointer-events-auto inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white hover:bg-brand-700"
           >
             <PlusIcon className="h-5 w-5" />
             New task
@@ -88,67 +90,97 @@ export default function DashboardView() {
         <Spinner />
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
-              label="Assigned to me"
-              value={data.stats.assignedToMe}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile
               href="/tasks?view=assigned"
               icon={UserIcon}
-              tone="indigo"
-              back={share(data.stats.assignedToMe, "on your plate right now.")}
-              backLinkLabel="Open my tasks"
+              tone="brand"
+              label="Assigned to me"
+              value={data.stats.assignedToMe}
+              hint="On your plate right now"
+              trend={created.length ? created : undefined}
+              trendColor={SERIES_COLORS.created}
             />
-            <StatCard
-              label="Created by me"
-              value={data.stats.createdByMe}
+            <KpiTile
               href="/tasks?view=created"
               icon={PencilIcon}
               tone="sky"
-              back={share(
-                data.stats.createdByMe,
-                "that you created and handed out.",
-              )}
-              backLinkLabel="See tasks I created"
+              label="Created by me"
+              value={data.stats.createdByMe}
+              hint={`${data.stats.total} tasks you're involved in`}
             />
-            <StatCard
-              label="Overdue"
-              value={data.stats.overdue}
+            <KpiTile
               href="/tasks?view=overdue"
               icon={ClockIcon}
               tone="red"
-              back={share(
-                data.stats.overdue,
-                data.stats.overdue
-                  ? "are past due — tackle these first."
-                  : "overdue. You are all caught up!",
-              )}
-              backLinkLabel="Review overdue"
+              label="Overdue"
+              value={data.stats.overdue}
+              hint={data.stats.overdue ? "Past due, tackle these first" : "All caught up"}
+              meter={data.stats.total ? (data.stats.overdue / data.stats.total) * 100 : 0}
+              meterColor={SERIES_COLORS.overdue}
             />
-            <StatCard
-              label="Completed"
-              value={data.stats.completed}
+            <KpiTile
               href="/tasks?status=completed"
               icon={CheckCircleIcon}
               tone="emerald"
-              back={share(data.stats.completed, "done and dusted. Keep it up!")}
-              backLinkLabel="See completed"
+              label="Completed"
+              value={data.stats.completed}
+              hint={`${completionRate}% of your tasks`}
+              trend={completedWeekly.length ? completedWeekly : undefined}
+              trendColor={SERIES_COLORS.completed}
+              delta={
+                thisWeek && lastWeek
+                  ? { value: thisWeek.completed - lastWeek.completed, label: "vs last wk", upIsGood: true }
+                  : undefined
+              }
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
-            <div>
+          {trend.length > 0 && data.byStatus && (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <section className={`min-w-0 p-5 sm:p-6 xl:col-span-2 ${cardClass}`}>
+                <SectionHeader
+                  icon={ChartIcon}
+                  tone="brand"
+                  title="My activity"
+                  subtitle="Tasks created vs. completed per week"
+                  action={<ChartLegend series={activity} />}
+                />
+                <div className="mt-5">
+                  <AreaChart ariaLabel="Your tasks created and completed per week" labels={trend.map((t) => weekLabel(t.weekStart))} series={activity} height={250} />
+                </div>
+              </section>
+              <section className={`min-w-0 p-5 sm:p-6 ${cardClass}`}>
+                <SectionHeader icon={CheckCircleIcon} tone="emerald" title="My status mix" subtitle="Where your tasks stand" />
+                <div className="mt-6">
+                  <DonutChart
+                    ariaLabel="Your tasks by status"
+                    centerLabel="your tasks"
+                    slices={[
+                      { key: "todo", label: "To do", value: data.byStatus.todo, color: "#94a3b8" },
+                      { key: "in_progress", label: "In progress", value: data.byStatus.in_progress, color: "#0ea5e9" },
+                      { key: "completed", label: "Completed", value: data.byStatus.completed, color: SERIES_COLORS.completed },
+                    ]}
+                  />
+                </div>
+              </section>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="min-w-0">
               <TaskListCard
                 title="Recent tasks"
                 subtitle="Your most recent task activity."
                 icon={DocumentIcon}
-                tone="indigo"
+                tone="brand"
                 tasks={data.recentTasks}
                 emptyText="No tasks yet. Create your first task to get started."
                 viewAllHref="/tasks"
                 currentUserId={user._id}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <TaskListCard
                 title="Overdue tasks"
                 subtitle="Tasks that need your attention."
@@ -160,11 +192,16 @@ export default function DashboardView() {
                 currentUserId={user._id}
               />
             </div>
-            <div className="lg:col-span-2 2xl:col-span-1">
-              <FocusDeck currentUserId={user._id} />
+            <div className="min-w-0 lg:col-span-2 2xl:col-span-1">
+              <UpcomingDeadlines tasks={data.upcomingTasks ?? []} />
             </div>
           </div>
 
+          <FocusDeck currentUserId={user._id} />
+
+          {data.topPerformers && (
+            <TopPerformerCard rows={data.topPerformers} currentUserId={user._id} showAnalyticsLink={isStaff(user)} />
+          )}
         </>
       )}
     </div>

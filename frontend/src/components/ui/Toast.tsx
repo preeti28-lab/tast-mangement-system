@@ -29,7 +29,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={`w-full max-w-sm rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ${
-              t.tone === "success" ? "bg-zinc-900 dark:bg-zinc-700" : "bg-red-600"
+              t.tone === "success" ? "bg-slate-900 ring-1 ring-brand-500/40 dark:bg-slate-800" : "bg-red-600"
             }`}
           >
             {t.message}

@@ -31,28 +31,30 @@ export default function Modal({ open, title, onClose, children, size = "lg" }: P
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-zinc-900/50" onClick={onClose} aria-hidden="true" />
+      <div className="animate-[fade-in_200ms_ease-out] absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={`relative flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-white shadow-2xl outline-none sm:rounded-2xl dark:bg-zinc-900 ${
+        className={`modal-panel glass-strong relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl pb-[env(safe-area-inset-bottom)] outline-none sm:rounded-2xl sm:pb-0 ${
           size === "sm" ? "sm:max-w-md" : "sm:max-w-xl"
         }`}
       >
-        <header className="flex items-center justify-between border-b border-zinc-200/70 px-6 py-4 dark:border-zinc-800">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{title}</h2>
+        {/* Grab handle on the phone bottom sheet */}
+        <span className="mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full bg-slate-300/80 sm:hidden dark:bg-slate-600" aria-hidden="true" />
+        <header className="flex items-center justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
+          <h2 className="truncate text-lg font-bold text-fg">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-hover hover:text-fg"
             aria-label="Close"
           >
             <XIcon />
           </button>
         </header>
-        <div className="overflow-y-auto px-6 py-5">{children}</div>
+        <div className="overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
       </div>
     </div>
   );
