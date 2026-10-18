@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ComponentType, type SVGProps } from "react";
+import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { DataTable } from "@/components/analytics/charts";
 import { AreaChart, ChartLegend, DonutChart, SERIES_COLORS } from "@/components/analytics/premium-charts";
@@ -15,7 +15,7 @@ import BreakdownCard from "@/components/analytics/BreakdownCard";
 import InsightsStrip from "@/components/analytics/InsightsStrip";
 import NeonGrid3D from "@/components/ui/NeonGrid3D";
 import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon, ListIcon } from "@/components/icons";
-import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone } from "@/components/ui/Surface";
+import { PageHeader, SectionCard, tabClass, tabListClass } from "@/components/ui/Surface";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { analyticsApi, type Analytics } from "@/lib/api";
@@ -26,31 +26,6 @@ type Scope = "me" | "team";
 
 const weekLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-
-function Card({
-  title,
-  subtitle,
-  icon,
-  tone,
-  action,
-  className = "",
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-  tone: Tone;
-  action?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={`p-5 sm:p-6 ${cardClass} ${className}`}>
-      <SectionHeader icon={icon} tone={tone} title={title} subtitle={subtitle} action={action} />
-      <div className="mt-5">{children}</div>
-    </section>
-  );
-}
 
 export default function AnalyticsView() {
   const { user } = useUser();
@@ -121,7 +96,7 @@ export default function AnalyticsView() {
         <CardsSkeleton />
       ) : (
         <div className={`space-y-6 transition-opacity ${result?.key !== key ? "opacity-60" : ""}`}>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
             <KpiTile
               icon={ChartIcon}
               tone="brand"
@@ -165,7 +140,7 @@ export default function AnalyticsView() {
           <InsightsStrip data={data} />
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <Card
+            <SectionCard bodyClassName="mt-5"
               icon={ChartIcon}
               tone="brand"
               title="Throughput"
@@ -178,9 +153,9 @@ export default function AnalyticsView() {
                 columns={["Week of", "Created", "Completed"]}
                 rows={data.trend.map((t) => [weekLabel(t.weekStart), t.created, t.completed])}
               />
-            </Card>
+            </SectionCard>
 
-            <Card icon={CheckCircleIcon} tone="emerald" title="Status mix" subtitle="Where every task stands today">
+            <SectionCard bodyClassName="mt-5" icon={CheckCircleIcon} tone="emerald" title="Status mix" subtitle="Where every task stands today">
               <DonutChart
                 ariaLabel="Tasks by status"
                 centerLabel="total tasks"
@@ -190,11 +165,11 @@ export default function AnalyticsView() {
                   { key: "completed", label: "Completed", value: data.byStatus.completed, color: SERIES_COLORS.completed },
                 ]}
               />
-            </Card>
+            </SectionCard>
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <Card
+            <SectionCard bodyClassName="mt-5"
               icon={ClockIcon}
               tone="red"
               title="Overdue trend"
@@ -208,7 +183,7 @@ export default function AnalyticsView() {
                 height={240}
               />
               <DataTable columns={["Week of", "Overdue"]} rows={data.trend.map((t) => [weekLabel(t.weekStart), t.overdue])} />
-            </Card>
+            </SectionCard>
 
             <BreakdownCard
               icon={ListIcon}

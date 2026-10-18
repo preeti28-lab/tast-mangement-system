@@ -21,7 +21,7 @@ import {
   PlusIcon,
   UserIcon,
 } from "@/components/icons";
-import { SectionHeader, cardClass } from "@/components/ui/Surface";
+import { SectionHeader, cardClass, SectionCard } from "@/components/ui/Surface";
 import { useUser } from "@/components/layout/UserContext";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { dashboardApi, type DashboardData, type TaskPriority } from "@/lib/api";
@@ -149,7 +149,7 @@ export default function DashboardView() {
       ) : (
         <>
           {/* Key numbers: 2 per row on tablets, 3 on laptops, all 6 in one row on wide screens */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-6">
             <KpiTile
               href="/tasks"
               icon={ListIcon}
@@ -228,8 +228,7 @@ export default function DashboardView() {
                   <AreaChart ariaLabel="Your tasks created and completed per week" labels={trend.map((t) => weekLabel(t.weekStart))} series={activity} height={280} />
                 </div>
               </section>
-              <section className={`flex min-w-0 flex-col p-5 sm:p-6 ${cardClass}`}>
-                <SectionHeader icon={CheckCircleIcon} tone="emerald" title="Task breakdown" subtitle="By status and priority" />
+              <SectionCard className="flex min-w-0 flex-col" icon={CheckCircleIcon} tone="emerald" title="Task breakdown" subtitle="By status and priority">
                 <div className="mt-5">
                   <DonutChart
                     ariaLabel="Your tasks by status"
@@ -247,7 +246,7 @@ export default function DashboardView() {
                     <PriorityBars counts={data.byPriority} />
                   </div>
                 )}
-              </section>
+              </SectionCard>
             </div>
           )}
 

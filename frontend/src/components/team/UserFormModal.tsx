@@ -3,9 +3,10 @@
 import { useState, type FormEvent } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import FormField from "@/components/auth/FormField";
-import { selectClass } from "@/components/tasks/options";
 import Modal from "@/components/ui/Modal";
-import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Surface";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Button } from "@/components/ui/Button";
+import { SelectField } from "@/components/ui/Field";
 import { userApi, type ApiError, type FieldErrors, type Role, type User, type UserRef } from "@/lib/api";
 import { ROLE_LABELS } from "@/lib/permissions";
 
@@ -103,20 +104,17 @@ function UserForm({
       <FormField label="Full name" name="name" value={values.name} maxLength={50} onChange={set("name")} error={errors.name} autoComplete="off" />
       <FormField label="Email" name="email" type="email" value={values.email} onChange={set("email")} error={errors.email} autoComplete="off" />
 
-      <div className="space-y-1.5">
-        <label htmlFor="member-role" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Role
-        </label>
-        <select id="member-role" value={values.role} onChange={set("role")} disabled={isSelf} className={`${selectClass} w-full`}>
-          {roles.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABELS[r]}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted">{isSelf ? "You can't change your own role." : ROLE_HINT[values.role]}</p>
-        {errors.role && <p className="text-xs text-red-600 dark:text-red-400">{errors.role}</p>}
-      </div>
+      <SelectField
+        id="member-role"
+        name="role"
+        label="Role"
+        value={values.role}
+        onChange={set("role")}
+        disabled={isSelf}
+        options={roles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+        error={errors.role}
+        hint={isSelf ? "You can't change your own role." : ROLE_HINT[values.role]}
+      />
 
       <FormField
         label={editing ? "New password (optional)" : "Temporary password"}
@@ -131,13 +129,12 @@ function UserForm({
       {!editing && <p className="-mt-2 text-xs text-muted">Share it with them; they can change it on their profile page.</p>}
 
       <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onClose} className={secondaryButtonClass}>
+        <Button variant="secondary" onClick={onClose}>
           Cancel
-        </button>
-        <button type="submit" disabled={saving} className={primaryButtonClass}>
-          {saving && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+        </Button>
+        <Button type="submit" loading={saving}>
           {editing ? "Save changes" : "Add member"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -153,50 +150,20 @@ export function DeleteUserDialog({
   onClose: () => void;
   onDeleted: (member: Member, result: { unassignedTasks: number; movedTasks: number }) => void;
 }) {
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState("");
-
-  const close = () => {
-    setError("");
-    onClose();
-  };
-
   const confirm = async () => {
     if (!member) return;
-    setDeleting(true);
-    setError("");
-    try {
-      const result = await userApi.remove(member._id);
-      onDeleted(member, result);
-    } catch (err) {
-      setError((err as ApiError).message);
-    } finally {
-      setDeleting(false);
-    }
+    onDeleted(member, await userApi.remove(member._id));
   };
 
   return (
-    <Modal open={!!member} title="Remove member" onClose={close} size="sm">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+    <ConfirmDialog open={!!member} title="Remove member" confirmLabel="Remove member" busyLabel="Removing…" onConfirm={confirm} onClose={onClose}>
+      <p>
         Remove <span className="font-semibold text-fg">{member?.name}</span> ({member?.email}) from the team? They won&apos;t be able to log in.
       </p>
-      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
+      <ul className="list-disc space-y-1 pl-5 text-muted">
         <li>Tasks assigned to them become unassigned.</li>
         <li>Tasks they created are handed over to you.</li>
       </ul>
-      {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
-      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button onClick={close} className={secondaryButtonClass}>
-          Cancel
-        </button>
-        <button
-          onClick={confirm}
-          disabled={deleting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60"
-        >
-          {deleting ? "Removing…" : "Remove member"}
-        </button>
-      </div>
-    </Modal>
+    </ConfirmDialog>
   );
 }

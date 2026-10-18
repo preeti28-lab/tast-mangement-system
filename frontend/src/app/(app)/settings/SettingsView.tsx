@@ -8,46 +8,12 @@ import { useUser } from "@/components/layout/UserContext";
 import { useToast } from "@/components/ui/Toast";
 import { BellIcon, CheckCircleIcon, InboxIcon, MailIcon, MonitorIcon, MoonIcon, SettingsIcon, SunIcon, UsersIcon } from "@/components/icons";
 import { Skeleton } from "@/components/ui/Loader";
-import { PageHeader, SectionHeader, cardClass } from "@/components/ui/Surface";
+import Switch from "@/components/ui/Switch";
+import { PageHeader, SectionHeader, cardClass, SectionCard } from "@/components/ui/Surface";
 import { settingsApi, userApi, type ApiError, type NotificationPrefs, type PermissionKey, type RoleAccess } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { setThemePreference, type ThemePreference } from "@/lib/theme";
-
-/** 3D switch: recessed track, raised knob. */
-function Switch({
-  label,
-  checked,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50 ${
-        checked
-          ? "bg-gradient-to-b from-brand-600 to-brand-500 shadow-[inset_0_2px_4px_rgba(5,46,22,0.35)]"
-          : "well-3d bg-slate-300! dark:bg-slate-700!"
-      }`}
-    >
-      <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-gradient-to-b from-white to-slate-100 shadow-[0_2px_4px_rgba(15,23,42,0.3),inset_0_-1px_0_rgba(15,23,42,0.08)] transition-all duration-200 ease-out ${
-          checked ? "left-6" : "left-1"
-        }`}
-      />
-    </button>
-  );
-}
 
 // Fixed colors: each preview shows the theme it stands for, whatever theme is active.
 const PREVIEW = {
@@ -91,8 +57,7 @@ function AppearanceCard() {
   const preference = useThemePreference();
 
   return (
-    <section className={`p-5 sm:p-6 ${cardClass}`}>
-      <SectionHeader icon={SunIcon} tone="emerald" title="Appearance" subtitle="Pick how NexTask looks on this device." />
+    <SectionCard icon={SunIcon} tone="emerald" title="Appearance" subtitle="Pick how NexTask looks on this device.">
       <div role="radiogroup" aria-label="Theme" className="mt-5 grid gap-4 sm:grid-cols-3">
         {THEME_OPTIONS.map(({ value, label, hint, icon: Icon }) => {
           const selected = preference === value;
@@ -140,7 +105,7 @@ function AppearanceCard() {
           );
         })}
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -215,7 +180,8 @@ function RoleAccessCard() {
   };
 
   const roles = ["manager", "user"] as const;
-  const grid = "grid grid-cols-[minmax(0,1fr)_3.5rem_3.5rem_3.5rem] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_5.5rem]";
+  // Phones: permission text gets its own full-width row, the three role columns sit beneath it.
+  const grid = "grid grid-cols-3 items-center gap-x-2 gap-y-3 sm:grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_5.5rem]";
 
   return (
     <section className={`p-5 sm:p-6 ${cardClass}`}>
@@ -238,7 +204,7 @@ function RoleAccessCard() {
       ) : (
         <div className="mt-5 overflow-hidden rounded-2xl border border-line">
           <div className={`${grid} bg-hover/70 px-4 py-2.5 text-xs font-semibold tracking-wide text-muted uppercase`}>
-            <span>Permission</span>
+            <span className="hidden sm:block">Permission</span>
             <span className="text-center">Admin</span>
             {roles.map((r) => (
               <span key={r} className="text-center">
@@ -249,7 +215,7 @@ function RoleAccessCard() {
           <ul className="divide-y divide-line">
             {data.permissions.map((p) => (
               <li key={p.key} className={`${grid} px-4 py-3.5 transition-colors hover:bg-hover/50`}>
-                <span className="min-w-0">
+                <span className="col-span-3 min-w-0 sm:col-span-1">
                   <span className="block text-sm font-medium text-fg">{p.label}</span>
                   <span className="mt-0.5 block text-xs text-muted">{p.description}</span>
                 </span>
@@ -339,8 +305,7 @@ export default function SettingsView() {
         <Spinner />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className={`p-5 sm:p-6 ${cardClass}`}>
-            <SectionHeader icon={BellIcon} title="Notifications" subtitle="Choose where each alert reaches you." />
+          <SectionCard icon={BellIcon} title="Notifications" subtitle="Choose where each alert reaches you.">
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-line">
               <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_4.5rem] items-center gap-2 bg-hover/70 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted sm:grid-cols-[minmax(0,1fr)_6rem_6rem]">
@@ -389,7 +354,7 @@ export default function SettingsView() {
                 ? "Emails go to your account address."
                 : "Email delivery isn't configured on this server yet. Your choice is saved and will apply once it is."}
             </p>
-          </section>
+          </SectionCard>
 
           <section
             className={`flex flex-col p-5 sm:p-6 ${cardClass} ${

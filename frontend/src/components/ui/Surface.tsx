@@ -87,6 +87,37 @@ export function SectionHeader({
   );
 }
 
+/** Card with the standard padding and a SectionHeader on top. */
+export function SectionCard({
+  icon,
+  tone,
+  title,
+  subtitle,
+  action,
+  id,
+  className = "",
+  bodyClassName,
+  children,
+}: {
+  icon: IconType;
+  tone?: Tone;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  action?: ReactNode;
+  id?: string;
+  className?: string;
+  /** Wraps the content in a div with these classes (e.g. "mt-5"). */
+  bodyClassName?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className={`p-5 sm:p-6 ${cardClass} ${className}`}>
+      <SectionHeader icon={icon} tone={tone} title={title} subtitle={subtitle} action={action} />
+      {bodyClassName ? <div className={bodyClassName}>{children}</div> : children}
+    </section>
+  );
+}
+
 /** Friendly empty state inside a card. */
 export function EmptyState({ icon, title, children }: { icon: IconType; title: string; children?: ReactNode }) {
   return (

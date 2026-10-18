@@ -9,11 +9,13 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   /** Leading icon; email and password fields get one by default. Pass `null` for none. */
   icon?: ComponentType<{ className?: string }> | null;
+  /** Shown at the right of the label row (e.g. a "Forgot password?" link). */
+  labelAction?: React.ReactNode;
 };
 
 const DEFAULT_ICON: Record<string, ComponentType<{ className?: string }>> = { email: MailIcon, password: LockIcon };
 
-export default function FormField({ label, name, error, type = "text", icon, ...rest }: Props) {
+export default function FormField({ label, name, error, type = "text", icon, labelAction, ...rest }: Props) {
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
   const errorId = `${name}-error`;
@@ -21,9 +23,12 @@ export default function FormField({ label, name, error, type = "text", icon, ...
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={name} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-        {label}
-      </label>
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={name} className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
+          {label}
+        </label>
+        {labelAction}
+      </div>
       <div className="group relative">
         {Icon && (
           <Icon
@@ -38,12 +43,12 @@ export default function FormField({ label, name, error, type = "text", icon, ...
           type={isPassword && show ? "text" : type}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
-          className={`block h-12 w-full rounded-xl border bg-surface/80 text-sm text-fg shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:bg-surface focus:ring-4 dark:bg-white/[0.03] dark:hover:border-slate-600 dark:focus:bg-white/[0.05] ${
+          className={`block h-11 w-full rounded-lg border bg-surface text-sm text-fg shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition placeholder:text-slate-400 hover:border-slate-400/70 focus:ring-[3px] dark:bg-white/[0.03] dark:hover:border-slate-500 ${
             Icon ? "pl-11" : "pl-4"
           } ${isPassword ? "pr-12" : "pr-4"} ${
             error
               ? "border-red-500 focus:border-red-500 focus:ring-red-500/15"
-              : "border-slate-200 focus:border-brand-500 focus:ring-brand-500/15 dark:border-slate-700 dark:focus:border-brand-500"
+              : "border-slate-300/80 focus:border-brand-500 focus:ring-brand-500/15 dark:border-slate-700 dark:focus:border-brand-500"
           }`}
           {...rest}
         />
@@ -60,7 +65,7 @@ export default function FormField({ label, name, error, type = "text", icon, ...
         )}
       </div>
       {error && (
-        <p id={errorId} className="text-xs text-red-600 dark:text-red-400">
+        <p id={errorId} className="text-xs font-medium text-red-600 dark:text-red-400">
           {error}
         </p>
       )}

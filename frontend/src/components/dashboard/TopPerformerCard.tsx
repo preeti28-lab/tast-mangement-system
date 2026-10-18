@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { ArrowRightIcon, ChartIcon, CheckCircleIcon, ClockIcon, TrophyIcon } from "@/components/icons";
 import Avatar from "@/components/ui/Avatar";
 import { EmptyNote } from "@/components/ui/Tile";
-import { SectionHeader, cardClass } from "@/components/ui/Surface";
+import { SectionCard } from "@/components/ui/Surface";
 import type { DashboardData } from "@/lib/api";
 import { initials } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/permissions";
@@ -198,10 +198,9 @@ export default function TopPerformerCard({
 
   if (!top) {
     return (
-      <section className={`p-5 sm:p-6 ${cardClass}`}>
-        <SectionHeader icon={TrophyIcon} tone="amber" title="Top performer" subtitle="Who's completed the most tasks across the team" />
+      <SectionCard icon={TrophyIcon} tone="amber" title="Top performer" subtitle="Who's completed the most tasks across the team">
         <EmptyNote>No completed tasks yet. The top performer shows up here once someone finishes an assigned task.</EmptyNote>
-      </section>
+      </SectionCard>
     );
   }
 

@@ -15,6 +15,7 @@ import {
   XIcon,
 } from "@/components/icons";
 import { useFloating } from "./floating";
+import { Spinner } from "./Button";
 
 // Shared building blocks for the glass data tables (DataGrid, TasksTable).
 
@@ -127,7 +128,7 @@ export function SearchField({
 export function ExportButton({ onClick, busy = false, disabled = false, label = "Export" }: { onClick: () => void; busy?: boolean; disabled?: boolean; label?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={busy || disabled} aria-label={busy ? "Exporting…" : label} title={label} className={toolbarButtonClass}>
-      {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" /> : <DownloadIcon className="h-4 w-4" />}
+      {busy ? <Spinner light={false} /> : <DownloadIcon className="h-4 w-4" />}
       <span className="hidden sm:inline">{busy ? "Exporting…" : label}</span>
     </button>
   );

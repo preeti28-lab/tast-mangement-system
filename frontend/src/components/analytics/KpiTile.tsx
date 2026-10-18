@@ -49,11 +49,11 @@ export default function KpiTile({
   return (
     <Box
       href={href as string}
-      className={`group relative flex min-w-0 flex-col gap-4 overflow-hidden p-5 ${cardClass} ${href ? "transition-shadow hover:shadow-[var(--shadow-card-hover)]" : ""}`}
+      className={`group relative flex min-w-0 flex-col gap-3 overflow-hidden p-4 sm:gap-4 sm:p-5 ${cardClass} ${href ? "transition-shadow hover:shadow-[var(--shadow-card-hover)]" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${TONE_BADGE[tone]}`}>
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <span className={`grid h-9 w-9 shrink-0 sm:h-10 sm:w-10 place-items-center rounded-xl ${TONE_BADGE[tone]}`}>
             <Icon className="h-5 w-5" />
           </span>
           <p className="text-sm font-medium leading-tight text-muted">{label}</p>
@@ -62,7 +62,7 @@ export default function KpiTile({
 
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[2rem] font-bold leading-none tracking-tight text-fg">{value}</p>
+          <p className="text-[1.75rem] font-bold leading-none sm:text-[2rem] tracking-tight text-fg">{value}</p>
           {delta && (
             <span className={`mt-2.5 inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${pill}`}>
               {delta.value >= 0 ? <TrendingUpIcon className="h-3 w-3" /> : <TrendingDownIcon className="h-3 w-3" />}
@@ -72,7 +72,7 @@ export default function KpiTile({
           )}
           {hint && <p className="mt-2 truncate text-xs text-muted">{hint}</p>}
         </div>
-        {trend && trendColor && <Sparkline values={trend} color={trendColor} className="h-10 w-24 shrink-0" />}
+        {trend && trendColor && <Sparkline values={trend} color={trendColor} className="hidden h-10 w-24 shrink-0 sm:block" />}
       </div>
 
       {meter !== undefined && (

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRightIcon, ClockIcon } from "@/components/icons";
 import { SectionHeader, cardClass } from "@/components/ui/Surface";
 import type { Task } from "@/lib/api";
+import { EmptyNote } from "@/components/ui/Tile";
 
 const PRIORITY_DOT: Record<Task["priority"], string> = {
   high: "bg-red-500",
@@ -32,9 +33,7 @@ export default function UpcomingDeadlines({ tasks }: { tasks: Task[] }) {
         }
       />
       {tasks.length === 0 ? (
-        <p className="mt-5 grid flex-1 place-items-center rounded-xl border border-dashed border-line px-5 py-10 text-center text-sm text-muted">
-          Nothing due this week. Enjoy the breathing room.
-        </p>
+        <EmptyNote className="mt-5 grid flex-1 place-items-center">Nothing due this week. Enjoy the breathing room.</EmptyNote>
       ) : (
         <ol className="relative mt-5 space-y-3 before:absolute before:top-2 before:bottom-2 before:left-[1.4rem] before:w-px before:bg-line">
           {tasks.map((task) => {

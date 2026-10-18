@@ -1,6 +1,6 @@
 import type { ComponentType, SVGProps } from "react";
 import { CheckCircleIcon, FilterIcon, TargetIcon, TrendingDownIcon } from "@/components/icons";
-import { SectionHeader, cardClass } from "@/components/ui/Surface";
+import { SectionCard } from "@/components/ui/Surface";
 import type { Analytics } from "@/lib/api";
 
 const BAR_TONES = [
@@ -33,8 +33,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
   const overall = top > 0 ? (summary.completed / top) * 100 : 0;
 
   return (
-    <section className={`p-5 sm:p-6 ${cardClass}`}>
-      <SectionHeader icon={FilterIcon} tone="sky" title="Task funnel" subtitle="Where tasks stall on the way to done" />
+    <SectionCard icon={FilterIcon} tone="sky" title="Task funnel" subtitle="Where tasks stall on the way to done">
 
       <div className="mt-5 space-y-1">
         {stages.map((s, i) => {
@@ -93,7 +92,7 @@ export default function TaskFunnel({ data }: { data: Analytics }) {
         />
         <SummaryStat icon={CheckCircleIcon} label="Done on time" value={summary.completedOnTime ?? 0} tone="text-brand-600 dark:text-brand-400" />
       </div>
-    </section>
+    </SectionCard>
   );
 }
 

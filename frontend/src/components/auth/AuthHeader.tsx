@@ -1,19 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
 
-/** Title block at the top of the auth card: brand mark with an eyebrow, heading, subtitle. */
+/** Title block at the top of the auth card: small eyebrow, heading, subtitle. */
 export function AuthHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: React.ReactNode }) {
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2.5">
-        <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain drop-shadow-[0_6px_12px_rgba(34,197,94,0.35)]" />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-brand-700 uppercase ring-1 ring-brand-600/15 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-400/20">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-          {eyebrow}
-        </span>
-      </div>
-      <h1 className="mt-5 text-[1.9rem] leading-tight font-bold tracking-tight text-fg">{title}</h1>
-      <p className="mt-1.5 text-sm text-muted">{subtitle}</p>
+    <div className="mb-7">
+      <p className="text-xs font-semibold tracking-[0.12em] text-brand-600 uppercase dark:text-brand-400">{eyebrow}</p>
+      <h1 className="mt-2 text-[1.75rem] leading-tight font-semibold tracking-tight text-fg">{title}</h1>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted">{subtitle}</p>
     </div>
   );
 }
@@ -21,7 +14,7 @@ export function AuthHeader({ eyebrow, title, subtitle }: { eyebrow: string; titl
 /** "Don't have an account? Sign up" row under a hairline divider. */
 export function AuthSwitch({ text, href, label }: { text: string; href: string; label: string }) {
   return (
-    <div className="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
+    <p className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
       {text}{" "}
       <Link
         href={href}
@@ -29,6 +22,35 @@ export function AuthSwitch({ text, href, label }: { text: string; href: string; 
       >
         {label}
       </Link>
-    </div>
+    </p>
+  );
+}
+
+const ROLE_TABS = [
+  { href: "/login", label: "Member", portal: undefined },
+  { href: "/manager/login", label: "Manager", portal: "manager" },
+  { href: "/admin/login", label: "Admin", portal: "admin" },
+] as const;
+
+/** Segmented "sign in as" switcher between the member, manager and admin logins. */
+export function RoleTabs({ active }: { active?: "manager" | "admin" }) {
+  return (
+    <nav aria-label="Sign in as" className="mb-7 grid grid-cols-3 gap-1 rounded-xl border border-line bg-hover/60 p-1 text-sm">
+      {ROLE_TABS.map((t) => {
+        const isActive = t.portal === active;
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            aria-current={isActive ? "page" : undefined}
+            className={`rounded-lg px-3 py-2 text-center font-medium transition-colors ${
+              isActive ? "bg-surface text-fg shadow-sm ring-1 ring-line dark:bg-white/10" : "text-muted hover:text-fg"
+            }`}
+          >
+            {t.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

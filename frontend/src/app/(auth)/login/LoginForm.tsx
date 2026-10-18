@@ -5,23 +5,21 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import FormField from "@/components/auth/FormField";
 import FormAlert from "@/components/auth/FormAlert";
-import { AuthHeader, AuthSwitch } from "@/components/auth/AuthHeader";
+import { AuthHeader, AuthSwitch, RoleTabs } from "@/components/auth/AuthHeader";
 import SubmitButton from "@/components/auth/SubmitButton";
 import { ApiError, authApi, type FieldErrors, type Portal } from "@/lib/api";
 import { validateLogin, type LoginValues } from "@/lib/validation";
 
-const PORTAL_COPY: Record<Portal, { eyebrow: string; title: string; subtitle: string; link: string }> = {
+const PORTAL_COPY: Record<Portal, { eyebrow: string; title: string; subtitle: string }> = {
   admin: {
-    eyebrow: "Admin portal",
+    eyebrow: "Admin sign in",
     title: "Admin login",
     subtitle: "Manage members, roles and what each role can access.",
-    link: "bg-violet-50 text-violet-700 ring-violet-600/20 hover:bg-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-400/20",
   },
   manager: {
-    eyebrow: "Manager portal",
+    eyebrow: "Manager sign in",
     title: "Manager login",
     subtitle: "Plan and assign your team's work and see how it's going.",
-    link: "bg-sky-50 text-sky-700 ring-sky-600/20 hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-400/20",
   },
 };
 
@@ -33,6 +31,8 @@ export default function LoginForm({ passwordReset = false, portal }: { passwordR
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Signed in, waiting for the dashboard: say so, so nobody reloads mid-way.
+  const [redirecting, setRedirecting] = useState(false);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,8 +50,8 @@ export default function LoginForm({ passwordReset = false, portal }: { passwordR
     setLoading(true);
     try {
       await authApi.login({ email: values.email.trim(), password: values.password, ...(portal ? { portal } : {}) });
+      setRedirecting(true);
       router.replace("/dashboard");
-      router.refresh();
     } catch (err) {
       const apiErr = err as ApiError;
       setErrors(apiErr.errors ?? {});
@@ -62,6 +62,7 @@ export default function LoginForm({ passwordReset = false, portal }: { passwordR
 
   return (
     <>
+      <RoleTabs active={portal} />
       <AuthHeader
         eyebrow={copy?.eyebrow ?? "Sign in"}
         title={copy?.title ?? "Welcome back"}
@@ -93,47 +94,33 @@ export default function LoginForm({ passwordReset = false, portal }: { passwordR
           name="password"
           type="password"
           autoComplete="current-password"
-          placeholder="Your password"
+          placeholder="Enter your password"
           value={values.password}
           onChange={onChange}
           error={errors.password}
+          labelAction={
+            <Link
+              href="/forgot-password"
+              className="text-[13px] font-medium text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline dark:text-brand-400 dark:hover:text-brand-300"
+            >
+              Forgot password?
+            </Link>
+          }
         />
-        <div className="-mt-1 flex justify-end">
-          <Link
-            href="/forgot-password"
-            className="text-sm font-medium text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline dark:text-brand-400 dark:hover:text-brand-300"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <div className="pt-1">
+        <div className="pt-2">
           <SubmitButton loading={loading} arrow>
-            {loading ? "Logging in..." : "Log in"}
+            {redirecting ? "Signed in! Opening your dashboard…" : loading ? "Checking your details…" : "Log in"}
           </SubmitButton>
         </div>
       </form>
 
       {portal ? (
-        <AuthSwitch text={`Not ${portal === "admin" ? "an admin" : "a manager"}?`} href="/login" label="Use the regular login" />
+        <p className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
+          Staff accounts are created by an admin from the Team page.
+        </p>
       ) : (
         <AuthSwitch text="New to NexTask?" href="/register" label="Create an account" />
       )}
-
-      {/* Role portals: only that role can sign in through them */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-        <span className="text-muted">Staff login:</span>
-        {(["admin", "manager"] as Portal[])
-          .filter((p) => p !== portal)
-          .map((p) => (
-            <Link
-              key={p}
-              href={`/${p}/login`}
-              className={`rounded-full px-3 py-1 font-semibold ring-1 ring-inset transition hover:-translate-y-px ${PORTAL_COPY[p].link}`}
-            >
-              {PORTAL_COPY[p].title}
-            </Link>
-          ))}
-      </div>
     </>
   );
 }

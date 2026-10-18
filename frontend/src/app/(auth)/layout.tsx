@@ -37,7 +37,8 @@ function Check() {
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-1 flex-col lg:flex-row">
+    // One screen tall on desktop: both panels fit the viewport, so the page never scrolls.
+    <div className="flex min-h-dvh flex-1 flex-col lg:h-dvh lg:flex-row lg:overflow-hidden">
       {/* Visual panel (desktop): team photo under a green wash, hologram and social proof */}
       <aside className="relative hidden overflow-hidden text-white lg:flex lg:w-[52%] xl:w-[55%]">
         <Image src={PHOTO} alt="" fill sizes="(min-width: 1280px) 55vw, 52vw" className="object-cover" />
@@ -50,7 +51,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-400/15 blur-3xl" aria-hidden="true" />
         <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-emerald-500/15 blur-3xl" aria-hidden="true" />
 
-        <div className="relative flex w-full flex-col justify-between gap-8 p-10 xl:p-14">
+        <div className="relative flex w-full flex-col justify-between gap-6 p-10 xl:px-14 [@media(max-height:860px)]:py-7">
           <div className="flex items-center justify-between">
             <Logo inverted />
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-brand-100 ring-1 ring-white/15 backdrop-blur-md">
@@ -62,10 +63,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </span>
           </div>
 
-          <div className="mx-auto w-full max-w-lg space-y-7">
-            <HologramProjector3D className="[@media(max-height:720px)]:hidden" />
+          <div className="mx-auto w-full max-w-lg space-y-6">
+            {/* Shrinks on shorter screens and drops out on very short ones, so the panel always fits */}
+            <HologramProjector3D className="[@media(max-height:900px)]:h-[230px] [@media(max-height:760px)]:hidden" />
             <div className="space-y-4">
-              <h2 className="text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
+              <h2 className="text-4xl leading-[1.1] font-bold tracking-tight xl:text-5xl [@media(max-height:860px)]:text-4xl">
                 Organize your work,{" "}
                 <span className="bg-gradient-to-r from-brand-200 via-emerald-100 to-brand-300 bg-clip-text text-transparent">
                   one task at a time.
@@ -121,13 +123,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* Form side */}
-      <main className="relative flex flex-1 flex-col overflow-hidden bg-app">
+      <main className="relative flex flex-1 flex-col overflow-x-hidden bg-app lg:overflow-y-auto">
         <ThemeToggle className="absolute right-4 top-4 z-20 bg-surface/80 text-fg shadow-sm ring-1 ring-line backdrop-blur-md sm:right-6 sm:top-6 lg:bg-transparent lg:text-muted lg:shadow-none lg:ring-0" />
         {/* Mobile / tablet hero banner with the same photo */}
-        <div className="relative h-56 shrink-0 overflow-hidden sm:h-64 lg:hidden">
+        <div className="relative h-44 shrink-0 overflow-hidden sm:h-52 lg:hidden">
           <Image src={PHOTO} alt="" fill sizes="100vw" className="object-cover object-[50%_35%]" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-brand-950/80 to-slate-900/90" aria-hidden="true" />
-          <div className="relative mx-auto flex h-full max-w-md flex-col justify-center px-5 pb-12 text-white sm:px-6">
+          <div className="relative mx-auto flex h-full max-w-md flex-col justify-center px-5 pb-10 text-white sm:px-6">
             <Logo inverted />
             <p className="mt-3 text-lg font-semibold leading-snug sm:text-xl">
               Organize your work,{" "}
@@ -136,24 +138,22 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        {/* soft background accents: aurora blobs, a glow behind the card and a dot grid */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        {/* Soft background blobs. Clipped: one sits past the bottom edge and would otherwise
+            make the form side scroll by ~160px. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full bg-brand-300/25 blur-3xl dark:bg-brand-600/15" />
           <div className="absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-emerald-200/30 blur-3xl dark:bg-emerald-700/10" />
-          <div className="absolute top-1/2 left-1/2 hidden h-[30rem] w-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-400/10 blur-[100px] lg:block dark:bg-brand-500/15" />
-          <div className="absolute inset-0 hidden bg-[radial-gradient(rgba(22,163,74,0.12)_1px,transparent_1px)] bg-[size:22px_22px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] lg:block dark:bg-[radial-gradient(rgba(34,197,94,0.10)_1px,transparent_1px)]" />
         </div>
 
-        <div className="relative z-10 -mt-10 flex flex-1 items-start justify-center px-4 pb-10 sm:px-6 lg:mt-0 lg:items-center lg:py-12">
+        <div className="relative z-10 -mt-8 flex flex-1 items-start justify-center px-4 pb-8 sm:px-6 lg:mt-0 lg:items-center lg:py-8">
           <div className="w-full max-w-md">
-            {/* Glass card: gradient hairline border, brand accent along the top edge, green-tinted lift */}
-            <div className="relative rounded-[1.75rem] bg-gradient-to-b from-brand-300/70 via-slate-200/50 to-slate-200/30 p-px shadow-[0_30px_70px_-30px_rgba(22,163,74,0.35),0_12px_30px_-18px_rgba(15,23,42,0.25)] dark:from-brand-400/40 dark:via-white/10 dark:to-white/5 dark:shadow-[0_30px_80px_-30px_rgba(34,197,94,0.35),0_20px_40px_-20px_rgba(0,0,0,0.6)]">
-              <span className="pointer-events-none absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent dark:via-brand-400" aria-hidden="true" />
-              <div className="rounded-[calc(1.75rem-1px)] bg-surface/90 p-6 backdrop-blur-2xl sm:p-9 dark:bg-slate-900/70">{children}</div>
+            {/* Card: solid surface, hairline border, soft neutral shadow */}
+            <div className="rounded-2xl border border-slate-200/80 bg-surface p-6 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_24px_48px_-28px_rgba(15,23,42,0.22)] sm:p-10 lg:[@media(max-height:820px)]:p-8 dark:border-white/10 dark:bg-slate-900/80 dark:shadow-[0_24px_48px_-24px_rgba(0,0,0,0.7)]">
+              {children}
             </div>
 
-            <div className="mt-6 flex flex-col items-center gap-2 text-xs text-muted">
-              <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-1.5 backdrop-blur-md">
+            <div className="mt-5 flex flex-col items-center gap-1.5 text-xs text-muted lg:[@media(max-height:760px)]:hidden">
+              <p className="inline-flex items-center gap-2">
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <rect x="4" y="10" width="16" height="11" rx="2" />
                   <path d="M8 10V7a4 4 0 0 1 8 0v3" />
@@ -161,25 +161,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 Secured with encrypted, httpOnly sessions
               </p>
               <p>NexTask &middot; Task Management System</p>
-            </div>
-
-            {/* Mobile / tablet: the desktop panel's highlights, below the form */}
-            <div className="mt-8 space-y-4 lg:hidden">
-              <HologramProjector3D tone="auto" className="h-[260px]" />
-              <dl className="grid grid-cols-3 gap-2.5">
-                {STATS.map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-xl border border-line bg-surface px-3 py-2.5 shadow-sm"
-                  >
-                    <dt className="sr-only">{s.label}</dt>
-                    <dd className="bg-gradient-to-r from-brand-600 to-emerald-700 bg-clip-text text-lg font-bold tracking-tight text-transparent dark:from-brand-300 dark:to-emerald-300">
-                      {s.value}
-                    </dd>
-                    <dd className="text-[11px] leading-tight text-muted">{s.label}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </div>
         </div>

@@ -17,8 +17,10 @@ import {
   UserIcon,
 } from "@/components/icons";
 import { useUser } from "@/components/layout/UserContext";
-import { Skeleton } from "@/components/ui/Loader";
-import { PageHeader, SectionHeader, TONE_BADGE, cardClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Surface";
+import { ListRowSkeletons, StatTileSkeletons } from "@/components/ui/Loader";
+import { Button } from "@/components/ui/Button";
+import { EmptyNote } from "@/components/ui/Tile";
+import { PageHeader, SectionCard, SectionHeader, TONE_BADGE, cardClass } from "@/components/ui/Surface";
 import { useToast } from "@/components/ui/Toast";
 import {
   analyticsApi,
@@ -167,8 +169,7 @@ function EditProfileCard() {
   };
 
   return (
-    <section id="edit-profile" className={`scroll-mt-28 p-5 sm:p-6 ${cardClass}`}>
-      <SectionHeader icon={PencilIcon} tone="sky" title="Personal details" subtitle="How your name appears on tasks and to the team." />
+    <SectionCard id="edit-profile" className="scroll-mt-28" icon={PencilIcon} tone="sky" title="Personal details" subtitle="How your name appears on tasks and to the team.">
       <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
         {formError && <FormAlert message={formError} />}
         <FormField label="Full name" name="name" value={name} maxLength={50} autoComplete="name" onChange={(e) => setName(e.target.value)} error={errors.name} />
@@ -178,16 +179,15 @@ function EditProfileCard() {
         </div>
         <p className="text-xs text-muted">Email is your login and can&apos;t be changed here. Roles are managed by an admin on the Team page.</p>
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
-          <button type="button" disabled={!dirty || saving} onClick={() => setName(user.name)} className={secondaryButtonClass}>
+          <Button variant="secondary" disabled={!dirty || saving} onClick={() => setName(user.name)}>
             Reset
-          </button>
-          <button type="submit" disabled={!dirty || saving} className={primaryButtonClass}>
-            {saving && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+          </Button>
+          <Button type="submit" disabled={!dirty} loading={saving}>
             Save changes
-          </button>
+          </Button>
         </div>
       </form>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -224,8 +224,7 @@ function PasswordCard() {
   };
 
   return (
-    <section className={`p-5 sm:p-6 ${cardClass}`}>
-      <SectionHeader icon={SettingsIcon} tone="violet" title="Password" subtitle="Use at least 8 characters you don't use elsewhere." />
+    <SectionCard icon={SettingsIcon} tone="violet" title="Password" subtitle="Use at least 8 characters you don't use elsewhere.">
       <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
         {formError && <FormAlert message={formError} />}
         <FormField
@@ -257,13 +256,12 @@ function PasswordCard() {
           error={errors.confirm}
         />
         <div className="flex justify-end pt-1">
-          <button type="submit" disabled={saving} className={`w-full sm:w-auto ${primaryButtonClass}`}>
-            {saving && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+          <Button type="submit" loading={saving} className="w-full sm:w-auto">
             Update password
-          </button>
+          </Button>
         </div>
       </form>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -283,9 +281,7 @@ function ActivityCard({ logs, users }: { logs: AuditLog[]; users: UserDirectory 
         }
       />
       {logs.length === 0 ? (
-        <p className="mt-5 rounded-xl border border-dashed border-line px-5 py-10 text-center text-sm text-muted">
-          Nothing yet. Create or update a task and it will show up here.
-        </p>
+        <EmptyNote>Nothing yet. Create or update a task and it will show up here.</EmptyNote>
       ) : (
         <ol className="relative mt-5 space-y-4 before:absolute before:top-2 before:bottom-2 before:left-[1.1rem] before:w-px before:bg-line">
           {logs.map((log) => {
@@ -393,7 +389,7 @@ export default function ProfileView() {
       {error && <FormAlert message={error} />}
 
       {/* Work stats */}
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
         {stats ? (
           <>
             <StatCard label="Assigned to me" value={stats.assignedToMe} href="/tasks?view=assigned" icon={UserIcon} tone="brand" />
@@ -402,21 +398,12 @@ export default function ProfileView() {
             <StatCard label="Overdue" value={stats.overdue} href="/tasks?view=overdue" icon={ClockIcon} tone="red" />
           </>
         ) : (
-          Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className={`flex items-start gap-4 p-6 ${cardClass}`}>
-              <Skeleton className="h-14 w-14 shrink-0 rounded-2xl" />
-              <div className="flex-1 space-y-3 pt-1">
-                <Skeleton className="h-3.5 w-2/3" />
-                <Skeleton className="h-8 w-1/2" />
-              </div>
-            </div>
-          ))
+          <StatTileSkeletons />
         )}
       </div>
 
       {/* Performance */}
-      <section className={`p-5 sm:p-6 ${cardClass}`}>
-        <SectionHeader icon={CheckCircleIcon} tone="emerald" title="Your performance" subtitle="Across tasks you created or are assigned to." />
+      <SectionCard icon={CheckCircleIcon} tone="emerald" title="Your performance" subtitle="Across tasks you created or are assigned to.">
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {s ? (
             <>
@@ -435,18 +422,12 @@ export default function ProfileView() {
               </div>
             </>
           ) : (
-            Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-20 w-20 shrink-0 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-3 w-3/4" />
-                </div>
-              </div>
-            ))
+            <div className="sm:col-span-2 lg:col-span-3">
+              <ListRowSkeletons rows={3} size="h-20 w-20" />
+            </div>
           )}
         </div>
-      </section>
+      </SectionCard>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <EditProfileCard />
@@ -456,16 +437,8 @@ export default function ProfileView() {
       {data ? (
         <ActivityCard logs={data.activity} users={data.users} />
       ) : (
-        <div className={`space-y-4 p-6 ${cardClass}`}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3.5 w-2/3" />
-                <Skeleton className="h-3 w-1/4" />
-              </div>
-            </div>
-          ))}
+        <div className={`p-6 ${cardClass}`}>
+          <ListRowSkeletons />
         </div>
       )}
     </div>

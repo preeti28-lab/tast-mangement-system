@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import FormField from "@/components/auth/FormField";
-import SubmitButton from "@/components/auth/SubmitButton";
+import { Button } from "@/components/ui/Button";
+import { Field, SelectField, fieldControlClass } from "@/components/ui/Field";
 import Modal from "@/components/ui/Modal";
 import { useUser } from "@/components/layout/UserContext";
 import { can } from "@/lib/permissions";
@@ -20,7 +21,7 @@ import {
   type UserRef,
 } from "@/lib/api";
 import { dueToIso, toDateInput, toTimeInput, todayInput } from "@/lib/format";
-import { PRIORITY_OPTIONS, RECURRENCE_OPTIONS, STATUS_OPTIONS, selectClass } from "./options";
+import { PRIORITY_OPTIONS, RECURRENCE_OPTIONS, STATUS_OPTIONS } from "./options";
 
 export type SaveResult =
   | { mode: "created" | "updated"; task: Task; nextOccurrence?: Task }
@@ -171,10 +172,13 @@ function TaskForm({
         autoFocus
       />
 
-      <div className="space-y-1.5">
-        <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Description <span className="font-normal text-slate-400">(optional)</span>
-        </label>
+      <Field
+        id="description"
+        label="Description"
+        optional
+        error={errors.description}
+        hint={<span className="block text-right">{values.description.length}/2000</span>}
+      >
         <textarea
           id="description"
           name="description"
@@ -183,19 +187,12 @@ function TaskForm({
           value={values.description}
           onChange={onChange}
           placeholder="Add details, links or acceptance criteria"
-          className={`${selectClass} block w-full resize-y py-2.5`}
+          className={`${fieldControlClass(errors.description)} resize-y py-2.5`}
         />
-        <div className="flex justify-between text-xs">
-          <span className="text-red-600 dark:text-red-400">{errors.description}</span>
-          <span className="text-slate-400">{values.description.length}/2000</span>
-        </div>
-      </div>
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="dueDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Due date
-          </label>
+        <Field id="dueDate" label="Due date" error={errors.dueDate}>
           <input
             id="dueDate"
             name="dueDate"
@@ -204,15 +201,17 @@ function TaskForm({
             value={values.dueDate}
             onChange={onChange}
             aria-invalid={!!errors.dueDate}
-            className={`${selectClass} block w-full ${errors.dueDate ? "border-red-500" : ""}`}
+            className={fieldControlClass(errors.dueDate)}
           />
-          {errors.dueDate && <p className="text-xs text-red-600 dark:text-red-400">{errors.dueDate}</p>}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <label htmlFor="dueTime" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Due time <span className="font-normal text-slate-400">(optional)</span>
-          </label>
+        <Field
+          id="dueTime"
+          label="Due time"
+          optional
+          error={errors.dueTime}
+          hint={values.dueDate ? "Blank = end of day. You'll get a reminder 1 hour before." : "Pick a due date first."}
+        >
           <input
             id="dueTime"
             name="dueTime"
@@ -222,109 +221,49 @@ function TaskForm({
             disabled={!values.dueDate}
             aria-invalid={!!errors.dueTime}
             aria-describedby="dueTime-hint"
-            className={`${selectClass} block w-full disabled:opacity-50 ${errors.dueTime ? "border-red-500" : ""}`}
+            className={fieldControlClass(errors.dueTime)}
           />
-          {errors.dueTime ? (
-            <p className="text-xs text-red-600 dark:text-red-400">{errors.dueTime}</p>
-          ) : (
-            <p id="dueTime-hint" className="text-xs text-slate-400">
-              {values.dueDate ? "Blank = end of day. You'll get a reminder 1 hour before." : "Pick a due date first."}
-            </p>
-          )}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <label htmlFor="assignedTo" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Assign to
-          </label>
-          <select
-            id="assignedTo"
-            name="assignedTo"
-            value={values.assignedTo}
-            onChange={onChange}
-            className={`${selectClass} block w-full`}
-          >
-            <option value="">Unassigned</option>
-            <option value={user._id}>Me ({user.name})</option>
-            {others.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name} ({u.email})
-              </option>
-            ))}
-          </select>
-          {errors.assignedTo && (
-            <p className="text-xs text-red-600 dark:text-red-400">{errors.assignedTo}</p>
-          )}
-          {!mayAssignOthers && !errors.assignedTo && (
-            <p className="text-xs text-muted">Your role can assign tasks only to yourself.</p>
-          )}
-        </div>
+        <SelectField
+          id="assignedTo"
+          label="Assign to"
+          value={values.assignedTo}
+          onChange={onChange}
+          error={errors.assignedTo}
+          hint={!mayAssignOthers ? "Your role can assign tasks only to yourself." : undefined}
+          options={[
+            { value: "", label: "Unassigned" },
+            { value: user._id, label: `Me (${user.name})` },
+            ...others.map((u) => ({ value: u._id, label: `${u.name} (${u.email})` })),
+          ]}
+        />
 
-        <div className="space-y-1.5">
-          <label htmlFor="priority" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Priority
-          </label>
-          <select id="priority" name="priority" value={values.priority} onChange={onChange} className={`${selectClass} block w-full`}>
-            {PRIORITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectField id="priority" label="Priority" value={values.priority} onChange={onChange} options={PRIORITY_OPTIONS} />
 
-        <div className="space-y-1.5">
-          <label htmlFor="status" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Status
-          </label>
-          <select id="status" name="status" value={values.status} onChange={onChange} className={`${selectClass} block w-full`}>
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectField id="status" label="Status" value={values.status} onChange={onChange} options={STATUS_OPTIONS} />
 
-        <div className="space-y-1.5">
-          <label htmlFor="recurrence" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Repeat
-          </label>
-          <select
-            id="recurrence"
-            name="recurrence"
-            value={values.recurrence}
-            onChange={onChange}
-            className={`${selectClass} block w-full`}
-          >
-            {RECURRENCE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {values.recurrence !== "none" && (
-            <p className="text-xs text-muted">
-              When this task is completed, the next one is created automatically with the due date
-              moved forward.
-            </p>
-          )}
-        </div>
+        <SelectField
+          id="recurrence"
+          label="Repeat"
+          value={values.recurrence}
+          onChange={onChange}
+          options={RECURRENCE_OPTIONS}
+          hint={
+            values.recurrence !== "none"
+              ? "When this task is completed, the next one is created automatically with the due date moved forward."
+              : undefined
+          }
+        />
       </div>
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-hover dark:border-slate-700 dark:text-slate-200"
-        >
+        <Button variant="secondary" onClick={onCancel}>
           Cancel
-        </button>
-        <div className="sm:w-40">
-          <SubmitButton loading={saving}>
-            {saving ? "Saving..." : task ? "Save changes" : "Create task"}
-          </SubmitButton>
-        </div>
+        </Button>
+        <Button type="submit" loading={saving} className="sm:min-w-40">
+          {saving ? "Saving…" : task ? "Save changes" : "Create task"}
+        </Button>
       </div>
     </form>
   );

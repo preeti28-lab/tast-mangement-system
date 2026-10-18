@@ -5,6 +5,7 @@ import { PencilIcon, RepeatIcon, SortIcon, TrashIcon, XIcon } from "@/components
 import { Highlight } from "@/components/ui/DataGrid";
 import DateRangeFilter, { describeRange } from "@/components/ui/DateRangeFilter";
 import Dropdown from "@/components/ui/Dropdown";
+import { IconButton } from "@/components/ui/Button";
 import {
   ExportButton,
   SearchField,
@@ -183,24 +184,10 @@ export default function TasksTable({
   const actions = (task: Task) => (
     <span className="inline-flex gap-1">
       {canEditTask(currentUser, task) && (
-        <button
-          onClick={() => onEdit(task)}
-          className="rounded-lg p-2 text-slate-500 transition hover:bg-hover hover:text-brand-600 xl:p-1.5"
-          aria-label={`Edit ${task.title}`}
-          title="Edit"
-        >
-          <PencilIcon className="h-4 w-4" />
-        </button>
+        <IconButton icon={PencilIcon} label={`Edit ${task.title}`} onClick={() => onEdit(task)} />
       )}
       {canDeleteTask(currentUser, task) && (
-        <button
-          onClick={() => onDelete(task)}
-          className="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600 xl:p-1.5 dark:hover:bg-red-500/10"
-          aria-label={`Delete ${task.title}`}
-          title="Delete"
-        >
-          <TrashIcon className="h-4 w-4" />
-        </button>
+        <IconButton icon={TrashIcon} tone="danger" label={`Delete ${task.title}`} onClick={() => onDelete(task)} />
       )}
     </span>
   );

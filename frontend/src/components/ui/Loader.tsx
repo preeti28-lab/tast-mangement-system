@@ -70,20 +70,46 @@ export function Skeleton({ className = "", style }: { className?: string; style?
   return <span className={`skeleton block ${radius} ${className}`} style={style} aria-hidden="true" />;
 }
 
+/** `count` stat-tile placeholders (put them in your own grid). */
+export function StatTileSkeletons({ count = 4 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className={`flex items-start gap-4 p-6 ${cardFlatClass}`}>
+          <Skeleton className="h-14 w-14 shrink-0 rounded-2xl" />
+          <div className="flex-1 space-y-3 pt-1">
+            <Skeleton className="h-3.5 w-2/3" />
+            <Skeleton className="h-8 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** Rows of avatar/icon + two text lines (activity, lists). */
+export function ListRowSkeletons({ rows = 4, size = "h-9 w-9" }: { rows?: number; size?: string }) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <Skeleton className={`${size} shrink-0 rounded-full`} />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3.5" style={{ width: `${66 - ((i * 11) % 24)}%` }} />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Placeholder for a page of stat tiles and chart cards (dashboard, analytics). */
 export function CardsSkeleton({ tiles = 4, cards = 2 }: { tiles?: number; cards?: number }) {
   return (
     <div role="status" aria-label="Loading" className="space-y-6">
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: tiles }, (_, i) => (
-          <div key={i} className={`flex items-start gap-4 p-6 ${cardFlatClass}`}>
-            <Skeleton className="h-14 w-14 shrink-0 rounded-2xl" />
-            <div className="flex-1 space-y-3 pt-1">
-              <Skeleton className="h-3.5 w-2/3" />
-              <Skeleton className="h-8 w-1/2" />
-            </div>
-          </div>
-        ))}
+        <StatTileSkeletons count={tiles} />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         {Array.from({ length: cards }, (_, i) => (

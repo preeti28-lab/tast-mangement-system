@@ -7,22 +7,14 @@ import { selectClass } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
 import FlipCard3D from "@/components/ui/FlipCard3D";
 import { PencilIcon, PlusIcon, SettingsIcon, TrashIcon, UserIcon, UsersIcon } from "@/components/icons";
-import {
-  IconBadge,
-  PageHeader,
-  SectionHeader,
-  TONE_BADGE,
-  cardClass,
-  cardFlatClass,
-  primaryButtonClass,
-  type Tone,
-} from "@/components/ui/Surface";
+import { IconBadge, PageHeader, TONE_BADGE, cardFlatClass, primaryButtonClass, type Tone, SectionCard } from "@/components/ui/Surface";
 import { userApi, type ApiError, type Role } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
 import { ROLE_LABELS, can } from "@/lib/permissions";
 import UserFormModal, { DeleteUserDialog, type Member } from "@/components/team/UserFormModal";
 import TeamInsights from "@/components/team/TeamInsights";
 import Avatar from "@/components/ui/Avatar";
+import { IconButton } from "@/components/ui/Button";
 import { tileInteractiveClass } from "@/components/ui/Tile";
 import { TableSkeleton } from "@/components/ui/Loader";
 
@@ -167,8 +159,7 @@ export default function TeamView() {
 
       {can(user, "analytics.team") && <TeamInsights />}
 
-      <section className={`p-5 sm:p-6 ${cardClass}`}>
-        <SectionHeader icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks." />
+      <SectionCard icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks.">
         <ul className="mt-5 grid gap-3 2xl:grid-cols-2">
           {members.map((m) => {
             const isMe = m._id === user._id;
@@ -213,25 +204,9 @@ export default function TeamView() {
                 )}
                 {manages(m) && (
                   <span className="flex shrink-0 gap-1 self-end sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={() => setForm({ open: true, member: m })}
-                      aria-label={`Edit ${m.name}`}
-                      title="Edit"
-                      className="rounded-lg p-2 text-slate-500 transition hover:bg-hover hover:text-brand-600"
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
+                    <IconButton icon={PencilIcon} label={`Edit ${m.name}`} onClick={() => setForm({ open: true, member: m })} />
                     {!isMe && (
-                      <button
-                        type="button"
-                        onClick={() => setDeleting(m)}
-                        aria-label={`Remove ${m.name}`}
-                        title="Remove"
-                        className="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
+                      <IconButton icon={TrashIcon} tone="danger" label={`Remove ${m.name}`} onClick={() => setDeleting(m)} />
                     )}
                   </span>
                 )}
@@ -239,7 +214,7 @@ export default function TeamView() {
             );
           })}
         </ul>
-      </section>
+      </SectionCard>
 
       <UserFormModal
         open={form.open}

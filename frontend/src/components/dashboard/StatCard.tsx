@@ -47,7 +47,7 @@ const surfaceClass = "glass";
 /** KPI tile: tinted icon on the left, label and big value, soft decorative wave. */
 export default function StatCard({ label, value, hint, href, icon: Icon, tone = "brand", back, backLinkLabel }: Props) {
   const colors = TONES[tone];
-  const layoutClass = "group relative isolate flex min-w-0 items-start gap-4 overflow-hidden rounded-2xl p-6";
+  const layoutClass = "group relative isolate flex min-w-0 flex-col items-start gap-3 overflow-hidden rounded-2xl p-4 sm:flex-row sm:gap-4 sm:p-6";
   const className = `${layoutClass} ${surfaceClass} glass-hover`;
 
   const content = (
@@ -65,14 +65,14 @@ export default function StatCard({ label, value, hint, href, icon: Icon, tone = 
 
       {Icon && (
         <span
-          className={`grid h-16 w-16 shrink-0 place-items-center rounded-2xl transition-transform duration-200 ease-out group-hover:scale-105 ${colors.icon}`}
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl sm:h-16 sm:w-16 sm:rounded-2xl transition-transform duration-200 ease-out group-hover:scale-105 ${colors.icon}`}
         >
-          <Icon className="h-7 w-7" />
+          <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
         </span>
       )}
-      <div className="min-w-0 pt-1.5">
-        <p className="text-base font-medium leading-snug text-slate-600 dark:text-muted">{label}</p>
-        <p className="mt-3 text-4xl font-bold leading-none tracking-tight tabular-nums text-fg">
+      <div className="min-w-0 sm:pt-1.5">
+        <p className="text-sm font-medium sm:text-base leading-snug text-slate-600 dark:text-muted">{label}</p>
+        <p className="mt-2 text-3xl sm:mt-3 sm:text-4xl font-bold leading-none tracking-tight tabular-nums text-fg">
           {value}
         </p>
         {hint && <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">{hint}</p>}
