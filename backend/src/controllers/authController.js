@@ -5,6 +5,7 @@ import { logAudit } from "../services/auditService.js";
 import { sendEmail, isEmailEnabled } from "../services/mailer.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const PORTALS = ["admin", "manager"];
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_RESEND_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -58,6 +59,14 @@ export const login = async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ message: "Invalid email or password" });
   }
+  // Role portals (/admin/login, /manager/login) only let that role in.
+  const portal = req.body.portal;
+  if (portal !== undefined && portal !== null && portal !== "") {
+    if (!PORTALS.includes(portal)) return res.status(400).json({ message: "Unknown login portal" });
+    if (user.role !== portal) {
+      return res.status(403).json({ message: `This login is for ${portal}s only. Use the regular login page.` });
+    }
+  }
 
   sendAuth(res, 200, user);
 };
@@ -69,8 +78,9 @@ export const logout = (req, res) => {
 };
 
 // GET /api/auth/me
+// Includes the role's effective permissions so the UI can show or hide features.
 export const me = (req, res) => {
-  res.json({ user: req.user });
+  res.json({ user: { ...req.user.toJSON(), permissions: req.user.$locals.permissions } });
 };
 
 

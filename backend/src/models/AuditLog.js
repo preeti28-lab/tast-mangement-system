@@ -9,6 +9,10 @@ export const AUDIT_ACTIONS = [
   "task.recurred",
   "user.registered",
   "user.role_changed",
+  "user.created",
+  "user.updated",
+  "user.deleted",
+  "settings.access_changed",
 ];
 
 const auditLogSchema = new mongoose.Schema(

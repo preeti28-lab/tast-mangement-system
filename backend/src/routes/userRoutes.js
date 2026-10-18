@@ -6,8 +6,11 @@ import {
   updatePreferences,
   updateProfile,
   changePassword,
+  createUser,
+  updateUser,
+  deleteUser,
 } from "../controllers/userController.js";
-import { protect, authorize } from "../middleware/auth.js";
+import { protect, requirePermission } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -17,6 +20,9 @@ router.get("/me/preferences", getPreferences);
 router.put("/me/preferences", updatePreferences);
 router.patch("/me", updateProfile);
 router.put("/me/password", changePassword);
-router.patch("/:id/role", authorize("admin"), updateRole);
+router.post("/", requirePermission("users.manage"), createUser);
+router.patch("/:id/role", requirePermission("users.manage"), updateRole);
+router.patch("/:id", requirePermission("users.manage"), updateUser);
+router.delete("/:id", requirePermission("users.manage"), deleteUser);
 
 export default router;

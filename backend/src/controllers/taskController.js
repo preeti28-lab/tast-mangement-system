@@ -10,7 +10,7 @@ import {
   canEditTask,
   canViewTask,
   isSameId,
-  isStaff,
+  can,
 } from "../utils/permissions.js";
 import { diffTask, logAudit } from "../services/auditService.js";
 import { notifyUser } from "../services/notificationService.js";
@@ -95,6 +95,12 @@ async function parseTaskInput(body, { partial = false } = {}) {
   return { data, errors };
 }
 
+/** Error for the assignee field when the role may not hand tasks to teammates. */
+function assignError(user, assignedTo, current = null) {
+  if (!assignedTo || isSameId(assignedTo, user._id) || isSameId(assignedTo, current)) return null;
+  return can(user, "tasks.assignOthers") ? null : "Your role can only assign tasks to yourself";
+}
+
 /** Loads a task the current user is allowed to see. */
 async function findAccessibleTask(id, user) {
   if (!mongoose.isValidObjectId(id)) throw httpError(400, "Invalid task id");
@@ -155,7 +161,7 @@ export const listTasks = async (req, res) => {
       conditions.push({ createdBy: userId });
       break;
     case "overdue":
-      conditions.push(isStaff(user) ? {} : involvedFilter(userId), {
+      conditions.push(can(user, "tasks.viewAll") ? {} : involvedFilter(userId), {
         dueDate: { $lt: new Date() },
         status: { $ne: "completed" },
       });
@@ -164,7 +170,7 @@ export const listTasks = async (req, res) => {
       conditions.push(involvedFilter(userId));
       break;
     case "team":
-      if (!isStaff(user)) return res.status(403).json({ message: "Only managers and admins can view all team tasks" });
+      if (!can(user, "tasks.viewAll")) return res.status(403).json({ message: "Your role doesn't have access to all team tasks" });
       conditions.push({});
       break;
     default:
@@ -230,6 +236,8 @@ export const createTask = async (req, res) => {
   if (data.recurrence && data.recurrence !== "none" && !data.dueDate && !errors.dueDate) {
     errors.dueDate = "Recurring tasks need a due date";
   }
+  const assignErr = !errors.assignedTo && assignError(req.user, data.assignedTo);
+  if (assignErr) errors.assignedTo = assignErr;
   if (Object.keys(errors).length) {
     return res.status(400).json({ message: "Validation failed", errors });
   }
@@ -273,6 +281,8 @@ export const updateTask = async (req, res) => {
   if (recurrence !== "none" && !dueDate && !errors.dueDate) {
     errors.dueDate = "Recurring tasks need a due date";
   }
+  const assignErr = !errors.assignedTo && "assignedTo" in data && assignError(user, data.assignedTo, task.assignedTo);
+  if (assignErr) errors.assignedTo = assignErr;
   if (Object.keys(errors).length) {
     return res.status(400).json({ message: "Validation failed", errors });
   }

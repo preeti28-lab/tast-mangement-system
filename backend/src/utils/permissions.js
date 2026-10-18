@@ -1,27 +1,29 @@
 // Role-based access control rules, kept in one place.
 //
-//  admin   – everything: sees and edits every task, deletes any task, manages roles,
-//            sees the full audit log and team analytics.
-//  manager – sees and edits every task (incl. reassigning), sees the audit log and
-//            team analytics; can only delete tasks they created.
-//  user    – sees tasks they created or are assigned to; edits/deletes tasks they
-//            created; can only change the status of tasks assigned to them.
+// What each role may do is configurable by the admin (Settings → Role access, see
+// services/accessService.js). `protect` puts the effective switches on
+// `user.$locals.permissions`; admins always have all of them.
+//
+// Everyone can always see, edit and delete tasks they created, and see and change
+// the status of tasks assigned to them.
 
 export const isSameId = (a, b) => !!a && !!b && a.toString() === b.toString();
 
 const idOf = (ref) => ref?._id ?? ref;
 
 export const isAdmin = (user) => user.role === "admin";
-export const isStaff = (user) => user.role === "admin" || user.role === "manager";
+
+/** True when the user's role has this permission (admins: always). */
+export const can = (user, key) => isAdmin(user) || !!user.$locals?.permissions?.[key];
 
 export const isCreator = (user, task) => isSameId(idOf(task.createdBy), user._id);
 export const isAssignee = (user, task) => isSameId(idOf(task.assignedTo), user._id);
 
 export const canViewTask = (user, task) =>
-  isStaff(user) || isCreator(user, task) || isAssignee(user, task);
+  can(user, "tasks.viewAll") || isCreator(user, task) || isAssignee(user, task);
 
-export const canEditTask = (user, task) => isStaff(user) || isCreator(user, task);
+export const canEditTask = (user, task) => can(user, "tasks.editAny") || isCreator(user, task);
 
 export const canChangeStatus = (user, task) => canEditTask(user, task) || isAssignee(user, task);
 
-export const canDeleteTask = (user, task) => isAdmin(user) || isCreator(user, task);
+export const canDeleteTask = (user, task) => can(user, "tasks.deleteAny") || isCreator(user, task);

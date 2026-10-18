@@ -1,6 +1,6 @@
 import Task from "../models/Task.js";
 import User from "../models/User.js";
-import { isStaff } from "../utils/permissions.js";
+import { can } from "../utils/permissions.js";
 
 const WEEKS = 8;
 const COHORT_WEEKS = 6;
@@ -24,8 +24,8 @@ function startOfWeek(date) {
 export const getAnalytics = async (req, res) => {
   const user = req.user;
   const scope = req.query.scope === "team" ? "team" : "me";
-  if (scope === "team" && !isStaff(user)) {
-    return res.status(403).json({ message: "Only managers and admins can view team analytics" });
+  if (scope === "team" && !can(user, "analytics.team")) {
+    return res.status(403).json({ message: "Your role doesn't have access to team analytics" });
   }
 
   const filter = scope === "team" ? {} : { $or: [{ createdBy: user._id }, { assignedTo: user._id }] };

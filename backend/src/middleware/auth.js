@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { getRoleAccess, permissionsFor } from "../services/accessService.js";
 import { COOKIE_NAME, clearAuthCookie } from "../utils/token.js";
 
 export const protect = async (req, res, next) => {
@@ -27,7 +28,17 @@ export const protect = async (req, res, next) => {
     clearAuthCookie(res);
     return res.status(401).json({ message: "User no longer exists" });
   }
+  // Role permissions are read per request so an admin's change applies at once.
+  user.$locals.permissions = permissionsFor(user.role, await getRoleAccess());
   req.user = user;
+  next();
+};
+
+// Allows the request only when the user has the given permission (see accessService).
+export const requirePermission = (key) => (req, res, next) => {
+  if (!req.user.$locals.permissions?.[key]) {
+    return res.status(403).json({ message: "You don't have permission to do this" });
+  }
   next();
 };
 

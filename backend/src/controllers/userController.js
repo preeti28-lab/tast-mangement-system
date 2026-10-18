@@ -3,6 +3,8 @@ import User, { ROLES } from "../models/User.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { isSameId } from "../utils/permissions.js";
 import { logAudit } from "../services/auditService.js";
+import Task from "../models/Task.js";
+import Notification from "../models/Notification.js";
 import { isEmailEnabled } from "../services/mailer.js";
 
 // GET /api/users?search=
@@ -18,35 +20,113 @@ export const listUsers = async (req, res) => {
   res.json({ users });
 };
 
-// PATCH /api/users/:id/role   (admin only)
-export const updateRole = async (req, res) => {
-  const { role } = req.body;
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: "Invalid user id" });
-  }
-  if (!ROLES.includes(role)) {
-    return res.status(400).json({ message: "Role must be admin, manager or user" });
-  }
-  // Admins can't change their own role, so there is always at least one admin.
-  if (isSameId(req.params.id, req.user._id)) {
-    return res.status(400).json({ message: "You can't change your own role" });
-  }
+// ---- user management (admins, or roles granted "users.manage") -------------
 
-  const user = await User.findById(req.params.id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-  if (user.role === role) return res.json({ user });
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-  const previous = user.role;
-  user.role = role;
+/** Loads the target user and checks the actor may manage them. Returns [user, error]. */
+async function manageable(req, id) {
+  if (!mongoose.isValidObjectId(id)) return [null, [400, "Invalid user id"]];
+  const target = await User.findById(id);
+  if (!target) return [null, [404, "User not found"]];
+  // Only an admin may touch an admin account.
+  if (target.role === "admin" && req.user.role !== "admin") return [null, [403, "Only an admin can manage admin accounts"]];
+  return [target, null];
+}
+
+const fail = (res, [status, message]) => res.status(status).json({ message });
+
+/** Validates name/email/role/password fields present in the body. */
+async function parseUserInput(req, { partial, targetId = null }) {
+  const body = req.body ?? {};
+  const data = {};
+  const errors = {};
+  const has = (k) => body[k] !== undefined;
+
+  if (!partial || has("name")) {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (name.length < 2 || name.length > 50) errors.name = "Name must be 2–50 characters";
+    else data.name = name;
+  }
+  if (!partial || has("email")) {
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!EMAIL_RE.test(email)) errors.email = "Please enter a valid email";
+    else if (await User.exists({ email, ...(targetId ? { _id: { $ne: targetId } } : {}) })) errors.email = "An account with this email already exists";
+    else data.email = email;
+  }
+  if (!partial || has("role")) {
+    const role = body.role ?? "user";
+    if (!ROLES.includes(role)) errors.role = "Role must be admin, manager or user";
+    else if (role === "admin" && req.user.role !== "admin") errors.role = "Only an admin can create or promote admins";
+    else data.role = role;
+  }
+  if (!partial || has("password")) {
+    if (typeof body.password !== "string" || body.password.length < 8) errors.password = "Password must be at least 8 characters";
+    else data.password = body.password;
+  }
+  return { data, errors };
+}
+
+// POST /api/users   { name, email, password, role }
+export const createUser = async (req, res) => {
+  const { data, errors } = await parseUserInput(req, { partial: false });
+  if (Object.keys(errors).length) return res.status(400).json({ message: "Please fix the errors below", errors });
+  const user = await User.create(data);
+  await logAudit({ actor: req.user, action: "user.created", targetUser: user._id, extraInvolved: [user._id], changes: [{ field: "role", from: null, to: user.role }] });
+  res.status(201).json({ user });
+};
+
+// PATCH /api/users/:id   { name?, email?, role?, password? }
+export const updateUser = async (req, res) => {
+  const [user, err] = await manageable(req, req.params.id);
+  if (err) return fail(res, err);
+  const { data, errors } = await parseUserInput(req, { partial: true, targetId: user._id });
+  // You can't change your own role here, so there is always at least one admin.
+  if ("role" in data && isSameId(user._id, req.user._id) && data.role !== user.role) errors.role = "You can't change your own role";
+  if (Object.keys(errors).length) return res.status(400).json({ message: "Please fix the errors below", errors });
+  if (!Object.keys(data).length) return res.status(400).json({ message: "Nothing to update" });
+
+  const changes = ["name", "email", "role"]
+    .filter((f) => f in data && data[f] !== user[f])
+    .map((f) => ({ field: f, from: user[f], to: data[f] }));
+  if ("password" in data) changes.push({ field: "password", from: null, to: "reset" });
+  user.set(data);
   await user.save();
+  if (changes.length) {
+    const roleOnly = changes.length === 1 && changes[0].field === "role";
+    await logAudit({ actor: req.user, action: roleOnly ? "user.role_changed" : "user.updated", targetUser: user._id, extraInvolved: [user._id], changes });
+  }
+  res.json({ user });
+};
+
+// DELETE /api/users/:id
+// Their assigned tasks become unassigned; tasks they created move to the person deleting them.
+export const deleteUser = async (req, res) => {
+  const [user, err] = await manageable(req, req.params.id);
+  if (err) return fail(res, err);
+  if (isSameId(user._id, req.user._id)) return res.status(400).json({ message: "You can't delete your own account" });
+  if (user.role === "admin" && (await User.countDocuments({ role: "admin" })) <= 1) {
+    return res.status(400).json({ message: "Can't delete the last admin" });
+  }
+
+  const [unassigned, moved] = await Promise.all([
+    Task.updateMany({ assignedTo: user._id }, { assignedTo: null }),
+    Task.updateMany({ createdBy: user._id }, { createdBy: req.user._id }),
+    Notification.deleteMany({ recipient: user._id }),
+  ]);
+  await user.deleteOne();
   await logAudit({
     actor: req.user,
-    action: "user.role_changed",
-    targetUser: user._id,
-    extraInvolved: [user._id],
-    changes: [{ field: "role", from: previous, to: role }],
+    action: "user.deleted",
+    changes: [{ field: "user", from: `${user.name} <${user.email}>`, to: null }],
   });
-  res.json({ user });
+  res.json({ message: "User deleted", unassignedTasks: unassigned.modifiedCount, movedTasks: moved.modifiedCount });
+};
+
+// PATCH /api/users/:id/role   { role }  (kept for the Team page's role picker)
+export const updateRole = async (req, res) => {
+  req.body = { role: req.body?.role };
+  return updateUser(req, res);
 };
 
 const PREF_PATHS = [

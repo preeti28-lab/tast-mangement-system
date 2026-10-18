@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import AuditLog, { AUDIT_ACTIONS } from "../models/AuditLog.js";
 import Task from "../models/Task.js";
-import { canViewTask, isStaff } from "../utils/permissions.js";
+import { can, canViewTask } from "../utils/permissions.js";
 
 // GET /api/audit-logs?task=&action=&page=&limit=
 // Admins and managers see every entry; other users see entries for tasks they
@@ -24,7 +24,7 @@ export const listAuditLogs = async (req, res) => {
     }
     filter.action = req.query.action;
   }
-  if (!isStaff(user)) filter.involved = user._id;
+  if (!can(user, "audit.viewAll")) filter.involved = user._id;
 
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
