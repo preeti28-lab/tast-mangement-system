@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Chart tokens (validated categorical slots 1–2; see README > Analytics) */
+  --chart-surface: #ffffff;
+  --chart-grid: #e7e5e4;
+  --chart-axis: #71717a;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
 }
 
 @theme inline {
@@ -16,6 +23,12 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --chart-surface: #18181b;
+    --chart-grid: #2e2e33;
+    --chart-axis: #a1a1aa;
+    --series-1: #3987e5;
+    --series-2: #d95926;
   }
 }
 
