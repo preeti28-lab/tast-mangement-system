@@ -157,7 +157,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               Secured with encrypted, httpOnly sessions
             </p>
             <p className="mt-2 text-center text-xs text-muted">
-              TaskFlow &middot; Task Management System
+              NexTask &middot; Task Management System
             </p>
 
             {/* Mobile / tablet: the desktop panel's highlights, below the form */}

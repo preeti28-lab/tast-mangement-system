@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "TaskFlow – Task Management",
-    short_name: "TaskFlow",
+    name: "NexTask – Task Management",
+    short_name: "NexTask",
     description: "Create, assign and track your team's tasks.",
     start_url: "/dashboard",
     scope: "/",

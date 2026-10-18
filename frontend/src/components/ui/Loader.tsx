@@ -37,16 +37,19 @@ export function AppLoader({ steps = SPLASH_STEPS, overlay = false }: { steps?: s
         <div className="relative grid h-32 w-32 place-items-center">
           <span className="loader-orbit absolute inset-0 rounded-full" aria-hidden="true" />
           <span className="absolute inset-3 rounded-full bg-brand-500/15 blur-xl motion-safe:animate-pulse" aria-hidden="true" />
-          <span className="relative grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_18px_40px_-12px_rgba(22,163,74,0.6),inset_0_1px_0_rgba(255,255,255,0.35)]">
-            <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="currentColor" strokeWidth="2.75" aria-hidden="true">
-              <path className="loader-check" d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round" pathLength={1} />
-            </svg>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static brand mark, shown before the app hydrates */}
+          <img
+            src="/logo.png"
+            alt=""
+            width={80}
+            height={80}
+            className="relative h-20 w-20 object-contain drop-shadow-[0_18px_30px_rgba(22,163,74,0.45)] motion-safe:animate-[rise_500ms_ease-out_backwards]"
+          />
         </div>
 
         <p className="mt-7 text-3xl font-bold tracking-tight">
-          <span className="text-fg">Task</span>
-          <span className="text-brand-600 dark:text-brand-400">Flow</span>
+          <span className="text-fg">Nex</span>
+          <span className="text-brand-600 dark:text-brand-400">Task</span>
         </p>
         <p key={step} className="mt-2 h-5 animate-[rise_400ms_ease-out_backwards] text-sm text-muted">
           {steps[step]}

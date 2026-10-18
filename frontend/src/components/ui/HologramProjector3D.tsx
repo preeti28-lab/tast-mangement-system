@@ -3,11 +3,11 @@ const MOTES = [20, 45, 65, 80];
 
 /**
  * Hologram projector: a glowing emitter disc beams a flickering cyan hologram of
- * rotating TaskFlow data panels with scanlines and motes drifting up the light
+ * rotating NexTask data panels with scanlines and motes drifting up the light
  * cone. Pure CSS, decorative only; animation stops for reduced-motion users.
  */
 export default function HologramProjector3D({
-  title = "TASKFLOW",
+  title = "NEXTASK",
   stat = "▲ 3× on-time",
   caption = "live · workspace sync",
   bars = BARS,

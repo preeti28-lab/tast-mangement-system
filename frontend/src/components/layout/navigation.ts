@@ -52,5 +52,5 @@ export function getPageTitle(pathname: string) {
   const match = Object.keys(PAGE_TITLES).find(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
-  return match ? PAGE_TITLES[match] : "TaskFlow";
+  return match ? PAGE_TITLES[match] : "NexTask";
 }

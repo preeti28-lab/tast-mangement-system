@@ -23,7 +23,7 @@ export async function sendEmail({ to, subject, text }) {
   if (!isEmailEnabled()) return false;
   try {
     await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || "TaskFlow <no-reply@taskflow.app>",
+      from: process.env.SMTP_FROM || "NexTask <no-reply@nextask.app>",
       to,
       subject,
       text,

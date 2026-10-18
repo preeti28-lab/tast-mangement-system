@@ -5,7 +5,7 @@ import ThemeToggle from "@/components/layout/ThemeToggle";
 import HologramProjector3D from "@/components/ui/HologramProjector3D";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Surface";
 
-export const metadata: Metadata = { title: "Page not found · TaskFlow" };
+export const metadata: Metadata = { title: "Page not found · NexTask" };
 
 export default function NotFound() {
   return (
@@ -14,7 +14,7 @@ export default function NotFound() {
       <div className="pointer-events-none absolute -bottom-40 -left-24 h-[26rem] w-[26rem] rounded-full bg-cyan-300/15 blur-3xl" aria-hidden="true" />
 
       <header className="relative flex items-center justify-between px-4 py-5 sm:px-8">
-        <Link href="/" aria-label="TaskFlow home">
+        <Link href="/" aria-label="NexTask home">
           <Logo />
         </Link>
         <ThemeToggle />

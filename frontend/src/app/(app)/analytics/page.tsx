@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import AnalyticsView from "./AnalyticsView";
 
-export const metadata: Metadata = { title: "Analytics · TaskFlow" };
+export const metadata: Metadata = { title: "Analytics · NexTask" };
 
 export default function Page() {
   return <AnalyticsView />;

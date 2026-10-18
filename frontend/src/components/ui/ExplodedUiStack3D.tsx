@@ -5,7 +5,7 @@ import { useState, type ReactNode } from "react";
 const BARS = [40, 70, 52, 90, 64];
 
 /**
- * Exploded UI stack: a mini TaskFlow screen that pulls apart into its layers
+ * Exploded UI stack: a mini NexTask screen that pulls apart into its layers
  * (backdrop, task card, progress chart, header, new-task button) on hover,
  * keyboard focus or tap. Built for the indigo auth side panel.
  */
@@ -29,7 +29,7 @@ export default function ExplodedUiStack3D({ className = "" }: { className?: stri
   return (
     <div
       role="img"
-      aria-label="Layers of a TaskFlow screen: background, task card, progress chart, header and new-task button"
+      aria-label="Layers of a NexTask screen: background, task card, progress chart, header and new-task button"
       tabIndex={0}
       onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(true)}
       onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(false)}

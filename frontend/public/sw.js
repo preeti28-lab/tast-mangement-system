@@ -1,4 +1,4 @@
-// TaskFlow service worker – makes the app usable offline.
+// NexTask service worker – makes the app usable offline.
 //
 //  • Static assets (/_next/static, icons): cache-first (they are content-hashed).
 //  • Pages: network-first, falling back to the last cached copy, then /offline.html.
@@ -7,7 +7,7 @@
 //  Writes made while offline are queued by the app itself (src/lib/offlineQueue.ts)
 //  and replayed when the connection returns.
 
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `taskflow-static-${VERSION}`;
 const PAGE_CACHE = `taskflow-pages-${VERSION}`;
 const API_CACHE = `taskflow-api-${VERSION}`;

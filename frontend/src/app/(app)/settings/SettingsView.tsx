@@ -91,7 +91,7 @@ function AppearanceCard() {
 
   return (
     <section className={`p-5 sm:p-6 ${cardClass}`}>
-      <SectionHeader icon={SunIcon} tone="emerald" title="Appearance" subtitle="Pick how TaskFlow looks on this device." />
+      <SectionHeader icon={SunIcon} tone="emerald" title="Appearance" subtitle="Pick how NexTask looks on this device." />
       <div role="radiogroup" aria-label="Theme" className="mt-5 grid gap-4 sm:grid-cols-3">
         {THEME_OPTIONS.map(({ value, label, hint, icon: Icon }) => {
           const selected = preference === value;
@@ -226,7 +226,7 @@ export default function SettingsView() {
 
   return (
     <div className="w-full space-y-6">
-      <PageHeader title="Settings" subtitle="Your account, how TaskFlow looks, and when it notifies you." />
+      <PageHeader title="Settings" subtitle="Your account, how NexTask looks, and when it notifies you." />
 
       <ProfileCard />
       <AppearanceCard />

@@ -1,4 +1,4 @@
-# TaskFlow – Task Management System
+# NexTask – Task Management System
 
 A task management app for small teams. Users can create tasks, assign them to teammates, get notified when something is assigned to them, and keep track of what is due or overdue. Admins and managers also get team analytics and an audit log.
 

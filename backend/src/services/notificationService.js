@@ -28,7 +28,7 @@ export async function notifyUser({ recipient, actor, type, message, task }) {
     const appUrl = process.env.CLIENT_URL || "http://localhost:3000";
     await sendEmail({
       to: user.email,
-      subject: `TaskFlow: ${message}`,
+      subject: `NexTask: ${message}`,
       text: `${message}\n\nOpen the task: ${appUrl}/tasks?task=${task._id}`,
     });
   }

@@ -1,4 +1,4 @@
-# TaskFlow – Frontend
+# NexTask – Frontend
 
 Next.js 16 (App Router) + Tailwind CSS v4 client for the Task Management System.
 

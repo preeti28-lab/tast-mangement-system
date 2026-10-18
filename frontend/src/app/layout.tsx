@@ -19,10 +19,10 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskFlow",
+  title: "NexTask",
   description: "Task management system",
-  applicationName: "TaskFlow",
-  appleWebApp: { capable: true, title: "TaskFlow", statusBarStyle: "default" },
+  applicationName: "NexTask",
+  appleWebApp: { capable: true, title: "NexTask", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -110,9 +110,9 @@ export const forgotPassword = async (req, res) => {
   // folds every new OTP into the first one's thread and it looks like nothing arrived.
   const sent = await sendEmail({
     to: email,
-    subject: `${otp} is your TaskFlow password reset OTP`,
+    subject: `${otp} is your NexTask password reset OTP`,
     text:
-      `Hi ${user.name},\n\nYour OTP to reset your TaskFlow password is: ${otp}\n\n` +
+      `Hi ${user.name},\n\nYour OTP to reset your NexTask password is: ${otp}\n\n` +
       `It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
   });
   if (isEmailEnabled() && !sent) {

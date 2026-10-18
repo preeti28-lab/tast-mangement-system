@@ -275,7 +275,7 @@ function ActivityCard({ logs, users }: { logs: AuditLog[]; users: UserDirectory 
         icon={ActivityIcon}
         tone="emerald"
         title="Your recent activity"
-        subtitle="The latest things you did in TaskFlow."
+        subtitle="The latest things you did in NexTask."
         action={
           <Link href="/activity" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-500 dark:text-brand-400">
             View all <ArrowRightIcon className="h-4 w-4" />
