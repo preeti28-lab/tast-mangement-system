@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { BarList, DataTable, Legend, LineChart } from "@/components/analytics/charts";
+import StatCard from "@/components/dashboard/StatCard";
+import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon } from "@/components/icons";
 import { Spinner } from "@/components/layout/AppShell";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
@@ -22,16 +24,6 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
       {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
       <div className="mt-4">{children}</div>
     </section>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">{label}</p>
-      <p className="mt-1 text-3xl font-bold tabular-nums text-zinc-900 dark:text-white">{value}</p>
-      {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
-    </div>
   );
 }
 
@@ -94,17 +86,23 @@ export default function AnalyticsView() {
       ) : (
         <div className={`space-y-6 transition-opacity ${result?.key !== key ? "opacity-60" : ""}`}>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat
+            <StatCard
+              icon={ChartIcon}
+              tone="indigo"
               label="Completion rate"
               value={`${data.summary.completionRate}%`}
               hint={`${data.summary.completed} of ${data.summary.total} tasks completed`}
             />
-            <Stat
+            <StatCard
+              icon={CheckCircleIcon}
+              tone="emerald"
               label="Completed on time"
               value={`${data.summary.onTimeRate}%`}
               hint="Of completed tasks that had a due date"
             />
-            <Stat
+            <StatCard
+              icon={ActivityIcon}
+              tone="sky"
               label="Avg. time to complete"
               value={
                 data.summary.avgCompletionDays === null
@@ -115,7 +113,13 @@ export default function AnalyticsView() {
               }
               hint="From creation to completion"
             />
-            <Stat label="Overdue now" value={String(data.summary.overdue)} hint={`${data.summary.open} open tasks`} />
+            <StatCard
+              icon={ClockIcon}
+              tone="red"
+              label="Overdue now"
+              value={data.summary.overdue}
+              hint={`${data.summary.open} open tasks`}
+            />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
