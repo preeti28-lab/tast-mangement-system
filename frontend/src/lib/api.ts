@@ -98,8 +98,11 @@ export type Analytics = {
     user: UserRef;
     assigned: number;
     completed: number;
+    onTime: number;
     overdue: number;
     completionRate: number;
+    /** Completed per week, last 6 weeks (oldest first). */
+    weeklyCompleted: number[];
   }[];
 };
 
@@ -163,6 +166,16 @@ export const authApi = {
     }),
   login: (body: { email: string; password: string }) =>
     request<{ user: User }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  forgotPassword: (body: { email: string }) =>
+    request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  resetPassword: (body: { email: string; otp: string; password: string }) =>
+    request<{ message: string }>("/auth/reset-password", {
       method: "POST",
       body: JSON.stringify(body),
     }),

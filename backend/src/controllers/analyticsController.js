@@ -64,13 +64,21 @@ export const getAnalytics = async (req, res) => {
     perUser = users
       .map((u) => {
         const mine = tasks.filter((t) => t.assignedTo && t.assignedTo.toString() === u._id.toString());
-        const done = mine.filter((t) => t.status === "completed").length;
+        const doneTasks = mine.filter((t) => t.status === "completed");
+        const done = doneTasks.length;
         return {
           user: u,
           assigned: mine.length,
           completed: done,
+          onTime: doneTasks.filter((t) => t.dueDate && t.completedAt && t.completedAt <= t.dueDate).length,
           overdue: mine.filter((t) => wasOverdueAt(t, now)).length,
           completionRate: rate(done, mine.length),
+          // Tasks this person completed in each of the last 6 weeks (oldest first).
+          weeklyCompleted: trend.slice(-6).map(({ weekStart }) => {
+            const start = new Date(weekStart);
+            const end = new Date(start.getTime() + 7 * DAY);
+            return doneTasks.filter((t) => t.completedAt && t.completedAt >= start && t.completedAt < end).length;
+          }),
         };
       })
       .sort((a, b) => b.completed - a.completed || b.assigned - a.assigned);

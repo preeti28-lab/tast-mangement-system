@@ -97,6 +97,10 @@ describe("analytics", () => {
     await admin.agent.post("/api/tasks").send({ title: "B", assignedTo: bob.user._id });
     const { body } = await admin.agent.get("/api/analytics?scope=team").expect(200);
     const bobStats = body.perUser.find((p) => p.user._id === bob.user._id);
-    expect(bobStats).toMatchObject({ assigned: 2, completed: 1, completionRate: 50 });
+    expect(bobStats).toMatchObject({ assigned: 2, completed: 1, completionRate: 50, onTime: 0 });
+    expect(bobStats.weeklyCompleted).toHaveLength(6);
+    expect(bobStats.weeklyCompleted.at(-1)).toBe(1);
+    // Ranked by completed tasks, so Bob (the only one with a completion) is first.
+    expect(body.perUser[0].user._id).toBe(bob.user._id);
   });
 });
