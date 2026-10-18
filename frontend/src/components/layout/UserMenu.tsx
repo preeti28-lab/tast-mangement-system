@@ -18,7 +18,7 @@ export default function UserMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 rounded-full p-1 transition hover:bg-zinc-100 sm:rounded-xl sm:pr-2 dark:hover:bg-zinc-800"
+        className="flex items-center gap-3 rounded-full p-1 transition-all duration-200 ease-out hover:bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 sm:pr-4 dark:hover:bg-zinc-800 dark:focus-visible:ring-offset-zinc-900"
         aria-expanded={open}
         aria-label="Account menu"
       >
@@ -35,7 +35,7 @@ export default function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="absolute right-0 z-50 mt-3 w-60 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
           <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
             <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">{user.name}</p>
             <p className="truncate text-xs text-zinc-500">{user.email}</p>
