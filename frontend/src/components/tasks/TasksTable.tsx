@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PencilIcon, RepeatIcon, TrashIcon } from "@/components/icons";
 import { Highlight } from "@/components/ui/DataGrid";
+import Dropdown from "@/components/ui/Dropdown";
 import {
   ExportButton,
   FilterPopover,
@@ -60,6 +61,8 @@ type Props = {
 };
 
 const SEARCH_DEBOUNCE_MS = 350;
+const PRIORITY_DOT: Record<string, string> = { high: "bg-red-500", medium: "bg-amber-400", low: "bg-emerald-400" };
+const STATUS_DOT: Record<string, string> = { todo: "bg-slate-400", in_progress: "bg-sky-500", completed: "bg-brand-500" };
 /** Card styling for the task list from md up, where the cards sit in a grid. */
 const tileMdClass =
   "md:rounded-xl md:border md:border-line md:bg-white/40 md:transition-all md:duration-200 md:hover:-translate-y-px md:hover:border-brand-300/70 md:hover:shadow-md dark:md:bg-white/[0.03]";
@@ -235,39 +238,39 @@ export default function TasksTable({
     </FilterPopover>
   );
 
+  const priorityDropdown = (size: "sm" | "md") => (
+    <Dropdown
+      size={size}
+      label="Priority filter"
+      allLabel="All priorities"
+      value={filters.priority}
+      onChange={(v) => onFilterChange({ priority: v as TableFilters["priority"] })}
+      options={PRIORITY_OPTIONS.map((o) => ({ ...o, dot: PRIORITY_DOT[o.value] }))}
+      className="w-full"
+    />
+  );
+
+  const statusDropdown = (size: "sm" | "md") => (
+    <Dropdown
+      size={size}
+      label="Status filter"
+      allLabel="All statuses"
+      value={filters.status}
+      onChange={(v) => onFilterChange({ status: v as TableFilters["status"] })}
+      options={STATUS_OPTIONS.map((o) => ({ ...o, dot: STATUS_DOT[o.value] }))}
+      className="w-full"
+    />
+  );
+
   const priorityFilter = (
     <FilterPopover label="priority" active={!!filters.priority}>
-      <select
-        aria-label="Priority filter"
-        value={filters.priority}
-        onChange={(e) => onFilterChange({ priority: e.target.value as TableFilters["priority"] })}
-        className={popoverInputClass}
-      >
-        <option value="">All priorities</option>
-        {PRIORITY_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      {priorityDropdown("md")}
     </FilterPopover>
   );
 
   const statusFilter = (
     <FilterPopover label="status" active={!!filters.status}>
-      <select
-        aria-label="Status filter"
-        value={filters.status}
-        onChange={(e) => onFilterChange({ status: e.target.value as TableFilters["status"] })}
-        className={popoverInputClass}
-      >
-        <option value="">All statuses</option>
-        {STATUS_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      {statusDropdown("md")}
     </FilterPopover>
   );
 
@@ -280,18 +283,12 @@ export default function TasksTable({
 
       {/* Below xl: sort/filter strip, then one card per task (two columns from md) */}
       <div className={`transition-opacity xl:hidden ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line px-4 py-3 text-[11.5px] font-semibold tracking-[0.04em] text-muted uppercase">
-          <span className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3 text-[11.5px] font-semibold tracking-[0.04em] text-muted uppercase">
+          <span className="min-w-32 flex-1 sm:w-44 sm:flex-none">{statusDropdown("sm")}</span>
+          <span className="min-w-32 flex-1 sm:w-44 sm:flex-none">{priorityDropdown("sm")}</span>
+          <span className="ml-auto flex items-center gap-1.5">
             <ServerSort label="Due" asc="due_asc" desc="due_desc" sort={filters.sort} onChange={setSort} />
             {dueFilter}
-          </span>
-          <span className="flex items-center gap-1.5">
-            Priority
-            {priorityFilter}
-          </span>
-          <span className="flex items-center gap-1.5">
-            Status
-            {statusFilter}
           </span>
         </div>
         {tasks.length === 0 ? (

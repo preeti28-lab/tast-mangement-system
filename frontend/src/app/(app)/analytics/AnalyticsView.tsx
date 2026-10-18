@@ -16,11 +16,11 @@ import InsightsStrip from "@/components/analytics/InsightsStrip";
 import NeonGrid3D from "@/components/ui/NeonGrid3D";
 import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon, ListIcon } from "@/components/icons";
 import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone } from "@/components/ui/Surface";
-import { Spinner } from "@/components/layout/AppShell";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { analyticsApi, type Analytics } from "@/lib/api";
 import { isStaff } from "@/lib/permissions";
+import { CardsSkeleton } from "@/components/ui/Loader";
 
 type Scope = "me" | "team";
 
@@ -118,7 +118,7 @@ export default function AnalyticsView() {
       {result?.error ? (
         <FormAlert message={result.error} />
       ) : !data ? (
-        <Spinner />
+        <CardsSkeleton />
       ) : (
         <div className={`space-y-6 transition-opacity ${result?.key !== key ? "opacity-60" : ""}`}>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

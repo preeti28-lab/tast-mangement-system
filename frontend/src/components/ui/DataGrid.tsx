@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { downloadCsv } from "@/lib/csv";
+import Dropdown from "./Dropdown";
 import {
   ExportButton,
   FilterPopover,
@@ -33,6 +34,13 @@ export type GridColumn<T> = {
   exportable?: boolean;
   /** Heading of the phone card for each row (defaults to the first column). */
   primary?: boolean;
+  /** "select": filter with a dropdown of the column's distinct values (exact match)
+   *  instead of a text search. Use for short fixed sets (status, type, role). */
+  filter?: "select";
+  /** Color dot per value in the select filter (Tailwind bg class). */
+  filterDots?: Partial<Record<string, string>>;
+  /** Reset choice in the select filter (default "Any <label>"). */
+  filterAllLabel?: string;
 };
 
 type Props<T> = {
@@ -112,7 +120,9 @@ export default function DataGrid<T>({
       if (q && !columns.some((c) => c.searchable && String(c.value(row)).toLowerCase().includes(q))) return false;
       return columns.every((c) => {
         const f = (colFilters[c.key] ?? "").trim().toLowerCase();
-        return !f || String(c.value(row)).toLowerCase().includes(f);
+        if (!f) return true;
+        const v = String(c.value(row)).toLowerCase();
+        return c.filter === "select" ? v === f : v.includes(f);
       });
     });
   }, [rows, columns, query, colFilters]);
@@ -157,8 +167,24 @@ export default function DataGrid<T>({
   const align = (a?: GridColumn<T>["align"]) => (a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left");
   const justify = (a?: GridColumn<T>["align"]) => (a === "right" ? "justify-end" : a === "center" ? "justify-center" : "justify-start");
   const cell = (row: T, col: GridColumn<T>) => {
-    const q = col.searchable ? colFilters[col.key] || query : "";
+    // Highlight text-search matches only; a picked dropdown value would light up the whole cell.
+    const q = col.searchable ? (col.filter === "select" ? query : colFilters[col.key] || query) : "";
     return col.render ? col.render(row, q) : <Highlight text={String(col.value(row))} query={q} />;
+  };
+  const selectColumns = columns.filter((c) => c.searchable && c.filter === "select");
+  const selectFilter = (col: GridColumn<T>, size: "sm" | "md") => {
+    const values = [...new Set(rows.map((r) => String(col.value(r))))].filter(Boolean).sort((a, b) => a.localeCompare(b));
+    return (
+      <Dropdown
+        size={size}
+        label={`${col.label} filter`}
+        allLabel={col.filterAllLabel ?? `Any ${col.label.toLowerCase()}`}
+        value={values.find((v) => v.toLowerCase() === colFilters[col.key]) ?? ""}
+        onChange={(v) => setColFilter(col.key, v.toLowerCase())}
+        options={values.map((v) => ({ value: v, label: v, dot: col.filterDots?.[v] }))}
+        className="w-full"
+      />
+    );
   };
   const lead = columns.find((c) => c.primary) ?? columns[0];
   const rest = columns.filter((c) => c !== lead);
@@ -181,6 +207,17 @@ export default function DataGrid<T>({
         />
         <ExportButton onClick={exportCsv} disabled={sorted.length === 0} label="Export CSV" />
       </TableToolbar>
+
+      {/* Below xl the header filters are hidden, so dropdown filters get their own strip */}
+      {selectColumns.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3 xl:hidden">
+          {selectColumns.map((col) => (
+            <span key={col.key} className="min-w-36 flex-1 sm:w-48 sm:flex-none">
+              {selectFilter(col, "sm")}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Below xl: one tile per row with label/value pairs (two columns from md) */}
       <div className="xl:hidden">
@@ -231,7 +268,12 @@ export default function DataGrid<T>({
                   >
                     <div className={`flex items-center gap-1.5 ${justify(col.align)}`}>
                       {col.sortable ? <SortHeader label={col.label} dir={dir} onClick={() => toggleSort(col.key)} /> : <span>{col.label}</span>}
-                      {col.searchable && (
+                      {col.searchable && col.filter === "select" && (
+                        <FilterPopover label={col.label.toLowerCase()} active={Boolean(colFilters[col.key])}>
+                          {selectFilter(col, "md")}
+                        </FilterPopover>
+                      )}
+                      {col.searchable && col.filter !== "select" && (
                         <FilterPopover label={col.label.toLowerCase()} active={Boolean(colFilters[col.key]?.trim())}>
                           <input
                             type="text"

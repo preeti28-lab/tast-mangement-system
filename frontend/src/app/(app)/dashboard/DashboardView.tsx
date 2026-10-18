@@ -20,11 +20,11 @@ import {
   UserIcon,
 } from "@/components/icons";
 import { SectionHeader, cardClass } from "@/components/ui/Surface";
-import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { dashboardApi, type DashboardData } from "@/lib/api";
 import { isStaff } from "@/lib/permissions";
+import { CardsSkeleton } from "@/components/ui/Loader";
 
 export default function DashboardView() {
   const { user } = useUser();
@@ -87,7 +87,7 @@ export default function DashboardView() {
       {error ? (
         <FormAlert message={error} />
       ) : !data ? (
-        <Spinner />
+        <CardsSkeleton />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">

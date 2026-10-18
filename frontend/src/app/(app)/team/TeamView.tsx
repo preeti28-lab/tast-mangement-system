@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
-import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import { selectClass } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
@@ -23,6 +22,7 @@ import { ROLE_LABELS, isStaff } from "@/lib/permissions";
 import TeamInsights from "@/components/team/TeamInsights";
 import Avatar from "@/components/ui/Avatar";
 import { tileInteractiveClass } from "@/components/ui/Tile";
+import { TableSkeleton } from "@/components/ui/Loader";
 
 type Member = UserRef & { role: Role; createdAt: string };
 
@@ -67,7 +67,7 @@ export default function TeamView() {
   };
 
   if (error) return <FormAlert message={error} />;
-  if (!members) return <Spinner />;
+  if (!members) return <TableSkeleton />;
 
   return (
     <div className="w-full space-y-6">

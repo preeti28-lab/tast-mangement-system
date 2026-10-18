@@ -106,13 +106,20 @@ export const forgotPassword = async (req, res) => {
   if (!isEmailEnabled() && process.env.NODE_ENV === "development") {
     console.log(`[dev] SMTP not configured. Password reset OTP for ${email}: ${otp}`);
   }
-  await sendEmail({
+  // The code is in the subject so each OTP is its own email; with a fixed subject Gmail
+  // folds every new OTP into the first one's thread and it looks like nothing arrived.
+  const sent = await sendEmail({
     to: email,
-    subject: "Your TaskFlow password reset OTP",
+    subject: `${otp} is your TaskFlow password reset OTP`,
     text:
       `Hi ${user.name},\n\nYour OTP to reset your TaskFlow password is: ${otp}\n\n` +
       `It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
   });
+  if (isEmailEnabled() && !sent) {
+    // Don't claim the OTP was sent, and don't hold the user to the resend cooldown.
+    await User.updateOne({ _id: user._id }, { $unset: { "resetOtp.sentAt": "" } });
+    return res.status(503).json({ message: "Couldn't send the OTP email right now. Please try again." });
+  }
   reply();
 };
 

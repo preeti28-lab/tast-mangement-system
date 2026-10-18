@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -13,6 +14,7 @@ import {
   SortIcon,
   XIcon,
 } from "@/components/icons";
+import { useFloating } from "./floating";
 
 // Shared building blocks for the glass data tables (DataGrid, TasksTable).
 
@@ -153,15 +155,21 @@ export function SortHeader({ label, dir, onClick }: { label: string; dir: "asc" 
   );
 }
 
-/** Funnel button that opens a small glass popover; closes on outside click or Escape. */
+/** Funnel button that opens a small glass popover; closes on outside click or Escape.
+ *  The panel is portalled with fixed positioning so short tables don't clip it. */
 export function FilterPopover({ label, active, children }: { label: string; active: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const style = useFloating(buttonRef, open, { width: 256 });
 
   useEffect(() => {
     if (!open) return;
-    ref.current?.querySelector<HTMLElement>("input, select")?.focus();
-    const onDoc = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
+    panelRef.current?.querySelector<HTMLElement>("input, select, button")?.focus();
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!buttonRef.current?.contains(t) && !panelRef.current?.contains(t)) setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
@@ -172,25 +180,39 @@ export function FilterPopover({ label, active, children }: { label: string; acti
   }, [open]);
 
   return (
-    <span ref={ref} className="relative inline-flex">
+    <span className="relative inline-flex">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={`Filter by ${label}`}
         aria-expanded={open}
         title={`Filter ${label}`}
         className={`grid h-6 w-6 place-items-center rounded-md transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none ${
-          active ? "bg-brand-600 text-white shadow-sm dark:bg-brand-500" : "text-slate-400 hover:bg-hover hover:text-slate-600 dark:hover:text-slate-200"
+          active
+            ? "bg-brand-600 text-white shadow-sm shadow-brand-600/30 dark:bg-brand-500"
+            : open
+              ? "bg-hover text-fg"
+              : "text-slate-400 hover:bg-hover hover:text-slate-600 dark:hover:text-slate-200"
         }`}
       >
         <FilterIcon className="h-3.5 w-3.5" />
       </button>
-      {open && (
-        <div className="glass-strong absolute top-8 left-0 z-30 w-60 rounded-xl p-3 font-normal tracking-normal normal-case">
-          <p className="mb-2 text-[11px] font-semibold tracking-wide text-muted uppercase">Filter {label}</p>
-          {children}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={style}
+            className="glass-menu dropdown-in w-64 rounded-2xl p-3.5 text-left font-normal tracking-normal normal-case"
+          >
+            <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+              <FilterIcon className="h-3.5 w-3.5 text-brand-500" />
+              Filter {label}
+            </p>
+            {children}
+          </div>,
+          document.body
+        )}
     </span>
   );
 }

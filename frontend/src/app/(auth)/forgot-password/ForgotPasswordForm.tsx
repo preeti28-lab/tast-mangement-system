@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import FormField from "@/components/auth/FormField";
 import FormAlert from "@/components/auth/FormAlert";
 import SubmitButton from "@/components/auth/SubmitButton";
@@ -19,6 +19,14 @@ export default function ForgotPasswordForm() {
   const [formError, setFormError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
+  // Seconds until another OTP can be requested (the server allows one a minute).
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
 
   const fail = (err: unknown) => {
     const apiErr = err as ApiError;
@@ -38,6 +46,7 @@ export default function ForgotPasswordForm() {
       const { message } = await authApi.forgotPassword({ email: email.trim() });
       setInfo(message);
       setStep("reset");
+      setCooldown(60);
     } catch (err) {
       fail(err);
     } finally {
@@ -164,10 +173,10 @@ export default function ForgotPasswordForm() {
             <button
               type="button"
               onClick={sendOtp}
-              disabled={loading}
+              disabled={loading || cooldown > 0}
               className="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 disabled:opacity-60"
             >
-              Resend OTP
+              {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
             </button>
           </div>
         </form>

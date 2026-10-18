@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { AppLoader, InlineLoader } from "@/components/ui/Loader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { authApi, type ApiError, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
@@ -11,12 +12,9 @@ import OfflineSync from "./OfflineSync";
 import Sidebar from "./Sidebar";
 import { UserContext } from "./UserContext";
 
+/** Inline loader, kept under its old name for existing call sites. */
 export function Spinner() {
-  return (
-    <div className="flex flex-1 items-center justify-center py-20">
-      <span className="h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" />
-    </div>
-  );
+  return <InlineLoader />;
 }
 
 // Loads the current user once and renders the sidebar + navbar around every app page.
@@ -53,7 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const ctx = useMemo(() => (user ? { user, logout } : null), [user, logout]);
 
-  if (!ctx) return <Spinner />;
+  if (!ctx) return <AppLoader />;
 
   return (
     <UserContext.Provider value={ctx}>

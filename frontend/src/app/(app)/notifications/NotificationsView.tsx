@@ -6,9 +6,9 @@ import FormAlert from "@/components/auth/FormAlert";
 import { BellIcon, CheckCircleIcon } from "@/components/icons";
 import { EmptyState, PageHeader, secondaryButtonClass } from "@/components/ui/Surface";
 import DataGrid, { Highlight, type GridColumn } from "@/components/ui/DataGrid";
-import { Spinner } from "@/components/layout/AppShell";
 import { notificationApi, type Notification } from "@/lib/api";
 import { formatDateTime, timeAgo } from "@/lib/format";
+import { TableSkeleton } from "@/components/ui/Loader";
 
 const TYPE_LABEL: Record<Notification["type"], string> = {
   task_assigned: "Assigned",
@@ -72,6 +72,8 @@ export default function NotificationsView() {
         value: (n) => TYPE_LABEL[n.type],
         sortable: true,
         searchable: true,
+        filter: "select",
+        filterDots: { Assigned: "bg-brand-500", "Status update": "bg-emerald-400" },
         align: "center",
         render: (n) => <span className={`${pill} ${TYPE_PILL[n.type]}`}>{TYPE_LABEL[n.type]}</span>,
       },
@@ -93,6 +95,8 @@ export default function NotificationsView() {
         value: (n) => (n.read ? "Read" : "Unread"),
         sortable: true,
         searchable: true,
+        filter: "select",
+        filterDots: { Read: "bg-slate-400", Unread: "bg-amber-400" },
         align: "center",
         render: (n) => (
           <span
@@ -129,7 +133,7 @@ export default function NotificationsView() {
   );
 
   if (error) return <FormAlert message={error} />;
-  if (!items) return <Spinner />;
+  if (!items) return <TableSkeleton />;
 
   const unreadCount = items.filter((n) => !n.read).length;
 

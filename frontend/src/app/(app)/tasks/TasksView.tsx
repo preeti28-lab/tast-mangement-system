@@ -4,7 +4,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { PlusIcon } from "@/components/icons";
-import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import DeleteTaskDialog from "@/components/tasks/DeleteTaskDialog";
 import ExportTasksDialog, { filterTasksByDate, rangeFileSuffix, type ExportRange } from "@/components/tasks/ExportTasksDialog";
@@ -31,6 +30,7 @@ import {
 import { dateInputToIso, toDateInput } from "@/lib/format";
 import { downloadCsv } from "@/lib/csv";
 import { isStaff } from "@/lib/permissions";
+import { TableSkeleton } from "@/components/ui/Loader";
 
 const DEFAULT_PER_PAGE = 10;
 
@@ -281,7 +281,7 @@ export default function TasksView() {
       {result?.error ? (
         <FormAlert message={result.error} />
       ) : !data ? (
-        <Spinner />
+        <TableSkeleton rows={8} />
       ) : (
         <TasksTable
           title={VIEW_HEADINGS[view]?.title ?? "My tasks"}

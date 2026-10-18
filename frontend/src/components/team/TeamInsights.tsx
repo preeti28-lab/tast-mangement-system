@@ -42,6 +42,8 @@ export const teamReportColumns: GridColumn<Row>[] = [
     value: roleLabel,
     sortable: true,
     searchable: true,
+    filter: "select",
+    filterDots: { Admin: "bg-violet-500", Manager: "bg-sky-500", Member: "bg-brand-500" },
     align: "center",
     render: (r) => (
       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ring-1 ring-inset ${ROLE_PILL[r.user.role ?? "user"]}`}>

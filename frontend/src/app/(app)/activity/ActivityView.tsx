@@ -16,13 +16,13 @@ import {
 import { EmptyState, PageHeader, TONE_BADGE, type Tone } from "@/components/ui/Surface";
 import DataGrid, { Highlight, type GridColumn } from "@/components/ui/DataGrid";
 import FormAlert from "@/components/auth/FormAlert";
-import { Spinner } from "@/components/layout/AppShell";
 import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { auditApi, type AuditAction, type AuditLog } from "@/lib/api";
 import { describeAudit, getUserDirectory, type UserDirectory } from "@/lib/audit";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import { isStaff } from "@/lib/permissions";
+import { TableSkeleton } from "@/components/ui/Loader";
 
 const ACTION_STYLE: Record<AuditAction, { label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; tone: Tone }> = {
   "task.created": { label: "Created", icon: PlusIcon, tone: "emerald" },
@@ -34,6 +34,17 @@ const ACTION_STYLE: Record<AuditAction, { label: string; icon: ComponentType<SVG
   "user.registered": { label: "Joined", icon: UsersIcon, tone: "brand" },
   "user.role_changed": { label: "Role changed", icon: SettingsIcon, tone: "amber" },
 };
+
+const TONE_DOT: Record<Tone, string> = {
+  brand: "bg-brand-500",
+  sky: "bg-sky-500",
+  red: "bg-red-500",
+  emerald: "bg-emerald-400",
+  amber: "bg-amber-400",
+  violet: "bg-violet-500",
+};
+/** Dropdown dots for the Action filter, keyed by label. */
+const ACTION_DOTS = Object.fromEntries(Object.values(ACTION_STYLE).map((s) => [s.label, TONE_DOT[s.tone]]));
 
 // The table searches/sorts in the browser, so load the most recent entries up front.
 const PAGES_TO_LOAD = 3;
@@ -89,6 +100,8 @@ export default function ActivityView() {
         value: (log) => ACTION_STYLE[log.action]?.label ?? log.action,
         sortable: true,
         searchable: true,
+        filter: "select",
+        filterDots: ACTION_DOTS,
         render: (log) => {
           const style = ACTION_STYLE[log.action] ?? { label: log.action, icon: ActivityIcon, tone: "brand" as Tone };
           const Icon = style.icon;
@@ -106,6 +119,8 @@ export default function ActivityView() {
         value: (log) => (log.actor ? log.actor.name : "System"),
         sortable: true,
         searchable: true,
+        filter: "select",
+        filterAllLabel: "Anyone",
       },
       {
         key: "task",
@@ -144,7 +159,7 @@ export default function ActivityView() {
   }, [data, user._id]);
 
   if (error) return <FormAlert message={error} />;
-  if (!data) return <Spinner />;
+  if (!data) return <TableSkeleton rows={8} />;
 
   return (
     <div className="w-full space-y-6">
