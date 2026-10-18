@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
+import FlipCard3D from "@/components/ui/FlipCard3D";
 
 type Tone = "indigo" | "sky" | "red" | "emerald";
 
@@ -12,32 +13,43 @@ type Props = {
   href?: string;
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
   tone?: Tone;
+  /** When set, the tile becomes a 3D flip card with this on its back (plus the `href` link). */
+  back?: ReactNode;
+  /** Label for the back-face link, e.g. "View overdue tasks". */
+  backLinkLabel?: string;
 };
 
-const TONES: Record<Tone, { icon: string; wave: string }> = {
+const TONES: Record<Tone, { icon: string; wave: string; back: string }> = {
   indigo: {
     icon: "bg-indigo-50 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400",
     wave: "text-indigo-400",
+    back: "from-indigo-500 to-violet-600 shadow-indigo-500/30 dark:from-indigo-600 dark:to-violet-700",
   },
   sky: {
     icon: "bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400",
     wave: "text-sky-400",
+    back: "from-sky-500 to-indigo-500 shadow-sky-500/30 dark:from-sky-600 dark:to-indigo-600",
   },
   red: {
     icon: "bg-red-50 text-red-600 dark:bg-red-400/10 dark:text-red-400",
     wave: "text-red-400",
+    back: "from-rose-500 to-red-600 shadow-red-500/30 dark:from-rose-600 dark:to-red-700",
   },
   emerald: {
     icon: "bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400",
     wave: "text-emerald-400",
+    back: "from-emerald-500 to-teal-600 shadow-emerald-500/30 dark:from-emerald-600 dark:to-teal-700",
   },
 };
 
+const surfaceClass =
+  "border border-zinc-200/70 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(79,70,229,0.18)] dark:border-zinc-800 dark:bg-zinc-900";
+
 /** KPI tile: tinted icon on the left, label and big value, soft decorative wave. */
-export default function StatCard({ label, value, hint, href, icon: Icon, tone = "indigo" }: Props) {
+export default function StatCard({ label, value, hint, href, icon: Icon, tone = "indigo", back, backLinkLabel }: Props) {
   const colors = TONES[tone];
-  const className =
-    "group relative isolate flex min-w-0 items-start gap-4 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(79,70,229,0.18)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_32px_-12px_rgba(79,70,229,0.28)] dark:border-zinc-800 dark:bg-zinc-900";
+  const layoutClass = "group relative isolate flex min-w-0 items-start gap-4 overflow-hidden rounded-2xl p-6";
+  const className = `${layoutClass} ${surfaceClass} transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_32px_-12px_rgba(79,70,229,0.28)]`;
 
   const content = (
     <>
@@ -68,6 +80,32 @@ export default function StatCard({ label, value, hint, href, icon: Icon, tone = 
       </div>
     </>
   );
+
+  if (back) {
+    return (
+      <FlipCard3D
+        height={152}
+        className="transition-transform duration-200 ease-out hover:-translate-y-0.5"
+        frontClassName={`${layoutClass} ${surfaceClass}`}
+        backClassName={`flex flex-col justify-between bg-gradient-to-br p-5 text-white shadow-xl ring-1 ring-white/20 ${colors.back}`}
+        front={content}
+        back={
+          <>
+            <div className="text-sm leading-snug text-white/90">{back}</div>
+            {href && (
+              <Link
+                href={href}
+                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                {backLinkLabel ?? `View ${label.toLowerCase()}`}
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            )}
+          </>
+        }
+      />
+    );
+  }
 
   return href ? (
     <Link href={href} className={className}>

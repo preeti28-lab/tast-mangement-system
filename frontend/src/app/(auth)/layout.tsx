@@ -1,4 +1,5 @@
 import Logo from "@/components/Logo";
+import ExplodedUiStack3D from "@/components/ui/ExplodedUiStack3D";
 
 const HIGHLIGHTS = [
   "Create, assign and track tasks in one place",
@@ -16,6 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <Logo inverted />
         <div className="relative max-w-md space-y-6">
+          <ExplodedUiStack3D className="[@media(max-height:820px)]:hidden" />
           <h2 className="text-4xl font-bold leading-tight tracking-tight">Organize your work, one task at a time.</h2>
           <ul className="space-y-3 text-indigo-100">
             {HIGHLIGHTS.map((item) => (

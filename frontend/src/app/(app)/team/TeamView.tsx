@@ -6,6 +6,7 @@ import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
 import { selectClass } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
+import FlipCard3D from "@/components/ui/FlipCard3D";
 import { SettingsIcon, UserIcon, UsersIcon } from "@/components/icons";
 import {
   IconBadge,
@@ -27,10 +28,10 @@ const ROLE_HELP: Record<Role, string> = {
   user: "Works on tasks they created or are assigned to",
 };
 
-const ROLE_STYLE: Record<Role, { icon: typeof UserIcon; tone: Tone }> = {
-  admin: { icon: SettingsIcon, tone: "violet" },
-  manager: { icon: UsersIcon, tone: "sky" },
-  user: { icon: UserIcon, tone: "indigo" },
+const ROLE_STYLE: Record<Role, { icon: typeof UserIcon; tone: Tone; back: string }> = {
+  admin: { icon: SettingsIcon, tone: "violet", back: "from-violet-500 to-fuchsia-600 shadow-violet-500/30" },
+  manager: { icon: UsersIcon, tone: "sky", back: "from-sky-500 to-indigo-500 shadow-sky-500/30" },
+  user: { icon: UserIcon, tone: "indigo", back: "from-indigo-500 to-violet-600 shadow-indigo-500/30" },
 };
 
 export default function TeamView() {
@@ -73,17 +74,63 @@ export default function TeamView() {
         }`}
       />
 
-      <dl className="grid gap-5 sm:grid-cols-3">
-        {(Object.keys(ROLE_HELP) as Role[]).map((role) => (
-          <div key={role} className={`flex items-start gap-4 p-5 ${cardClass}`}>
-            <IconBadge icon={ROLE_STYLE[role].icon} tone={ROLE_STYLE[role].tone} />
-            <div className="min-w-0 pt-0.5">
-              <dt className="font-bold text-zinc-900 dark:text-white">{ROLE_LABELS[role]}</dt>
-              <dd className="mt-1 text-sm text-zinc-500">{ROLE_HELP[role]}</dd>
-            </div>
-          </div>
-        ))}
-      </dl>
+      <div className="grid gap-5 sm:grid-cols-3">
+        {(Object.keys(ROLE_HELP) as Role[]).map((role) => {
+          const inRole = members.filter((m) => m.role === role);
+          return (
+            <FlipCard3D
+              key={role}
+              direction="vertical"
+              focusable
+              height={176}
+              frontClassName={`flex flex-col justify-between p-5 ${cardClass}`}
+              backClassName={`flex flex-col justify-between bg-gradient-to-br p-5 text-white shadow-xl ring-1 ring-white/20 ${ROLE_STYLE[role].back}`}
+              front={
+                <>
+                  <div className="flex items-start gap-4">
+                    <IconBadge icon={ROLE_STYLE[role].icon} tone={ROLE_STYLE[role].tone} />
+                    <div className="min-w-0 pt-0.5">
+                      <h3 className="font-bold text-zinc-900 dark:text-white">{ROLE_LABELS[role]}</h3>
+                      <p className="mt-1 text-3xl font-bold leading-none tabular-nums text-zinc-900 dark:text-white">
+                        {inRole.length}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-zinc-400">
+                    member{inRole.length === 1 ? "" : "s"} &middot; hover or tap to see access
+                  </p>
+                </>
+              }
+              back={
+                <>
+                  <div>
+                    <p className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">{ROLE_LABELS[role]} access</p>
+                    <p className="mt-1.5 text-sm leading-snug text-white/95">{ROLE_HELP[role]}</p>
+                  </div>
+                  {inRole.length > 0 ? (
+                    <div className="flex items-center">
+                      {inRole.slice(0, 5).map((m) => (
+                        <span
+                          key={m._id}
+                          title={m.name}
+                          className="-ml-2 grid h-8 w-8 place-items-center rounded-full bg-white/25 text-[11px] font-semibold text-white ring-2 ring-white/40 backdrop-blur-sm first:ml-0"
+                        >
+                          {initials(m.name)}
+                        </span>
+                      ))}
+                      {inRole.length > 5 && (
+                        <span className="ml-2 text-xs font-semibold text-white/80">+{inRole.length - 5} more</span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/75">No one has this role yet.</p>
+                  )}
+                </>
+              }
+            />
+          );
+        })}
+      </div>
 
       <section className={`p-5 sm:p-6 ${cardClass}`}>
         <SectionHeader icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks." />

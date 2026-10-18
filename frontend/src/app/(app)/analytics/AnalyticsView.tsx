@@ -4,6 +4,8 @@ import { useEffect, useState, type ComponentType, type SVGProps } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { BarList, DataTable, Legend, LineChart } from "@/components/analytics/charts";
 import StatCard from "@/components/dashboard/StatCard";
+import TopPerformer from "@/components/analytics/TopPerformer";
+import NeonGrid3D from "@/components/ui/NeonGrid3D";
 import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon, ListIcon, UsersIcon } from "@/components/icons";
 import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone } from "@/components/ui/Surface";
 import { Spinner } from "@/components/layout/AppShell";
@@ -63,27 +65,31 @@ export default function AnalyticsView() {
 
   return (
     <div className="w-full space-y-6">
-      <PageHeader
-        title="Analytics"
-        subtitle={scope === "team" ? "Everyone's tasks across the team." : "Tasks you created or are assigned to."}
-        actions={
-          staff && (
-            <div role="tablist" aria-label="Analytics scope" className={tabListClass}>
-              {(["team", "me"] as Scope[]).map((s) => (
-                <button
-                  key={s}
-                  role="tab"
-                  aria-selected={scope === s}
-                  onClick={() => setScope(s)}
-                  className={tabClass(scope === s)}
-                >
-                  {s === "team" ? "Team" : "Just me"}
-                </button>
-              ))}
-            </div>
-          )
-        }
-      />
+      <NeonGrid3D className="min-h-44 sm:min-h-48">
+        <div className="flex h-full min-h-44 flex-col justify-end bg-gradient-to-r from-white/85 via-white/40 to-transparent p-6 sm:min-h-48 sm:p-8 dark:from-zinc-950/85 dark:via-zinc-950/40">
+          <PageHeader
+            title="Analytics"
+            subtitle={scope === "team" ? "Everyone's tasks across the team." : "Tasks you created or are assigned to."}
+            actions={
+              staff && (
+                <div role="tablist" aria-label="Analytics scope" className={`pointer-events-auto ${tabListClass}`}>
+                  {(["team", "me"] as Scope[]).map((s) => (
+                    <button
+                      key={s}
+                      role="tab"
+                      aria-selected={scope === s}
+                      onClick={() => setScope(s)}
+                      className={tabClass(scope === s)}
+                    >
+                      {s === "team" ? "Team" : "Just me"}
+                    </button>
+                  ))}
+                </div>
+              )
+            }
+          />
+        </div>
+      </NeonGrid3D>
 
       {result?.error ? (
         <FormAlert message={result.error} />
@@ -127,6 +133,8 @@ export default function AnalyticsView() {
               hint={`${data.summary.open} open tasks`}
             />
           </div>
+
+          {scope === "team" && <TopPerformer perUser={data.perUser} />}
 
           <div className="grid gap-6 xl:grid-cols-2">
             <Card icon={ChartIcon} tone="indigo" title="Created vs. completed" subtitle="Tasks per week, last 8 weeks">
