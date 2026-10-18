@@ -6,8 +6,8 @@ Built for the *Software Developer Take-Home Assignment*.
 
 | | |
 |---|---|
-| **Live app** | _add your Vercel URL here after deploying_ |
-| **API** | _add your Render URL here_ (health check: `/api/health`) |
+| **Live app** | https://taskflow-nu-lake.vercel.app |
+| **API** | https://taskflow-backend-bay.vercel.app (health check: [`/api/health`](https://taskflow-backend-bay.vercel.app/api/health)) |
 | **Stack** | Next.js 16 · Tailwind CSS v4 · Node.js · Express 5 · MongoDB (Mongoose) |
 
 ---
@@ -36,7 +36,7 @@ Built for the *Software Developer Take-Home Assignment*.
 Browser ──► Next.js (Vercel)
               ├─ pages: /login /register /dashboard /tasks /notifications
               ├─ proxy.ts   – redirects based on whether the auth cookie exists
-              └─ rewrite /api/*  ─────────►  Express API (Render)
+              └─ rewrite /api/*  ─────────►  Express API (Vercel Function)
                                                ├─ auth   (JWT cookie)
                                                ├─ tasks  (CRUD, search, filters)
                                                ├─ users  (assignee list)
@@ -74,7 +74,7 @@ frontend/
     components/ui/         Modal, Toast
     lib/                   typed API client, validation, date helpers
     proxy.ts               auth redirects
-render.yaml                Render blueprint for the backend
+render.yaml                optional Render blueprint (alternative backend host)
 ```
 
 ---
@@ -110,7 +110,7 @@ Open http://localhost:3000, create an account and start adding tasks. To try ass
 | backend | `JWT_SECRET` | Long random string used to sign tokens. Generate one with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | backend | `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
 | backend | `CLIENT_URL` | Frontend origin allowed by CORS (default `http://localhost:3000`) |
-| backend | `PORT` | Port to listen on (default `5000`; Render sets this for you) |
+| backend | `PORT` | Port for the local server (default `5000`; not used on Vercel) |
 | backend | `NODE_ENV` | `production` turns on `Secure` cookies and hides error details |
 | frontend | `BACKEND_URL` | Where `/api/*` is forwarded to. **Read at build time**, so redeploy after changing it |
 
@@ -118,24 +118,46 @@ Open http://localhost:3000, create an account and start adding tasks. To try ass
 
 ## Deployment
 
-The backend goes on **Render** and the frontend on **Vercel**. Both have free tiers.
+Both apps run on **Vercel** as two separate projects from this one repository:
+
+| Vercel project | Root directory | What it runs |
+|---|---|---|
+| `taskflow` | `frontend` | The Next.js app |
+| `taskflow-backend` | `backend` | The Express API. Vercel detects Express with zero config and runs `src/app.js` as a single Vercel Function |
 
 ### 1. MongoDB Atlas
 1. Create a free cluster and a database user.
-2. In **Network Access**, allow `0.0.0.0/0`. Render's free tier has no fixed outbound IP.
+2. In **Network Access**, allow `0.0.0.0/0`. Vercel Functions have no fixed outbound IP.
 3. Copy the connection string and add the database name, e.g. `.../task_management?retryWrites=true&w=majority`.
 
-### 2. Backend on Render
-1. In Render, choose **New → Blueprint** and select this repository. `render.yaml` sets up the service: `rootDir: backend`, `npm ci`, `npm start`, health check `/api/health`, and a generated `JWT_SECRET`.
-2. Set `MONGODB_URI`. Set `CLIENT_URL` to your Vercel URL once you have it.
-3. After it deploys, check that `https://<your-service>.onrender.com/api/health` returns `{"status":"ok","db":"connected"}`.
+### 2. Backend
+```bash
+cd backend
+vercel link --project taskflow-backend
+vercel env add MONGODB_URI production
+vercel env add JWT_SECRET production      # long random string
+vercel env add NODE_ENV production        # value: production
+vercel env add CLIENT_URL production      # the frontend URL, e.g. https://taskflow-nu-lake.vercel.app
+vercel deploy --prod
+```
+Check that `https://<backend>.vercel.app/api/health` returns `{"status":"ok","db":"connected"}`.
 
-> On the free plan, the service sleeps after about 15 minutes of inactivity. The first request after that takes around 30–50 seconds.
+To run on serverless, the backend opens its MongoDB connection lazily on the first request and caches it for later requests (`src/config/db.js`). If the database can't be reached, it returns a `503` instead of crashing. Locally, `src/server.js` connects first and then calls `app.listen`.
 
-### 3. Frontend on Vercel
-1. In Vercel, choose **Add New → Project**, import this repository and set **Root Directory** to `frontend`.
-2. Add the environment variable `BACKEND_URL=https://<your-service>.onrender.com`.
-3. Deploy. Then go back to Render, set `CLIENT_URL` to the Vercel URL, and update the links at the top of this README.
+### 3. Frontend
+```bash
+cd frontend
+vercel link --project taskflow
+vercel env add BACKEND_URL production     # e.g. https://taskflow-backend-bay.vercel.app
+vercel deploy --prod
+```
+`BACKEND_URL` is read when the app is built, so redeploy the frontend whenever it changes.
+
+You can also connect both projects to the GitHub repository in the Vercel dashboard (Import Project → set the root directory) to deploy on every push.
+
+> **Alternative:** `render.yaml` is a ready-made Render blueprint if you'd rather host the API on Render.
+>
+> **Windows note:** if the Vercel CLI fails with `fetch failed` / `SELF_SIGNED_CERT_IN_CHAIN`, it's usually antivirus or network software inspecting HTTPS traffic. Run it with `$env:NODE_OPTIONS="--use-system-ca"` so Node trusts the Windows certificate store.
 
 ---
 
@@ -171,7 +193,7 @@ All routes except register and login require the auth cookie (an `Authorization:
 - **What "overdue" means.** A task is overdue when its due date has passed and its status isn't *completed*. The user picks a due date as a calendar day in their own timezone, and it is stored as **the end of that day**. So a task due "today" becomes overdue only after local midnight, not at UTC midnight.
 - **Search.** Search uses a case-insensitive regex on title and description, with the user's input escaped first. This allows partial matches like "rel" → "release". A MongoDB text index only matches whole words.
 - **Sorting by due date.** When sorting by due date, tasks without one always come last. This needs a small aggregation stage, because MongoDB sorts `null` values first.
-- **Notifications via polling.** The bell polls every 30 seconds instead of using WebSockets. This is simple and reliable on free hosting, where WebSocket connections are dropped when the server sleeps.
+- **Notifications via polling.** The bell polls every 30 seconds instead of using WebSockets. This is simple, and it works on serverless hosting like Vercel Functions, which can't keep WebSocket connections open.
 
 ## Assumptions and trade-offs
 
