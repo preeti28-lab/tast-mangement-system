@@ -1,6 +1,6 @@
 # NexTask – Task Management System
 
-A task management app for small teams. Users can create tasks, assign them to teammates, get notified when something is assigned to them or about to be due, and keep track of what is due or overdue. Admins decide what managers and members are allowed to do, manage the team, and get team analytics and an audit log. The UI works on phones, tablets and desktops, in light and dark mode.
+A task management app for small teams. Users can create tasks, assign them to teammates, get notified when something is assigned to them or about to be due, and keep track of what is due or overdue. Teammates can message each other in a WhatsApp-style chat. Admins decide what managers and members are allowed to do, manage the team, and get team analytics and an audit log. The UI works on phones, tablets and desktops, in light and dark mode.
 
 Built for the *Software Developer Take-Home Assignment*. It covers **every core requirement** and **seven of the eight optional advanced tasks**. The one left out is WebSocket-based real-time notifications; see [trade-offs](#assumptions-and-trade-offs).
 
@@ -32,7 +32,7 @@ Built for the *Software Developer Take-Home Assignment*. It covers **every core 
 | **Recurring tasks** | Tasks can repeat daily, weekly or monthly. Completing one creates the next occurrence with the due date moved forward. Monthly repeats clamp to the end of shorter months (Jan 31 → Feb 28). Re-completing never creates duplicates. |
 | **Audit logging** | Every create, edit (with field-level *from → to* changes), assignment, status change, delete, automatic repeat, registration and role change is logged. There is an *Activity Log* page (filterable, paginated) and a *History* section on each task. |
 | **Offline support (PWA)** | The app is installable, with a manifest and icons. A service worker caches the app shell, pages and API responses (network-first). When offline, task changes are **queued and synced automatically** when the connection comes back, with an offline banner and a pending count. |
-| **Unit and integration tests** | **71 Jest + Supertest tests** run against an in-memory MongoDB. They cover auth and password reset, login portals, CRUD, configurable role access and user management, search and filters, notifications and preferences, due reminders, recurrence, profile and password change, audit and analytics. |
+| **Unit and integration tests** | **82 Jest + Supertest tests** run against an in-memory MongoDB. They cover auth and password reset, login portals, CRUD, configurable role access and user management, search and filters, notifications and preferences, due reminders, recurrence, profile and password change, chat (privacy, unread counts, read receipts, polling, paging, delete), audit and analytics. |
 | **Analytics dashboard** | Completion rate, on-time rate, average time to complete, created vs. completed per week, overdue trend, breakdowns by status and priority, **completed tasks per user**, week-over-week comparison, a task funnel, completion cohorts and auto-generated insights. Roles with *Team analytics* can switch between *Team* and *Just me*, and see a workload map and a searchable team report on the *Team* page. |
 | **Customizable notifications** | On the *Settings* page you can mute everything, or switch in-app and email alerts on or off separately for *assigned*, *status changed* and *due in 1 hour*. The **due reminder** goes to the assignee (or the creator if nobody is assigned) once per task, and again if the due date is moved. Email goes out through SMTP when it's configured. |
 
@@ -54,6 +54,7 @@ Whatever the settings say, everyone can see, edit and delete tasks they created,
 
 ### Other features
 
+- **Chat:** one-to-one messages between anyone in the organization, in a WhatsApp-style layout (chat list on the left, conversation on the right; one pane at a time on phones). Messages show ✓ sent, ✓✓ delivered and blue ✓✓ read, plus *online* / *last seen*. You can search chats, start a new chat from the contact list or with the *Message* button on the *Team* page, copy messages, and delete your own *for everyone*. Older messages load as you scroll up. New messages update an unread badge in the sidebar and navbar, show a pop-up on any page, and send a desktop notification when the tab is in the background (opt-in; off when *Mute all* is on). It uses the REST API only, no sockets: the open chat checks for new messages every 3 s and the rest of the app every 10 s.
 - **Team page:** members grouped by role (tap a card to see what that role can do), and add / edit / remove members. Deleting a member unassigns their tasks and moves the tasks they created to the person deleting them.
 - **Profile page:** your stats, completion and on-time rates, renaming yourself and changing your password.
 - **Settings page:** light, dark or system theme, notification preferences, and role access (admins).
@@ -72,7 +73,7 @@ Browser ─────────► Next.js (frontend)                       
 
 - **Same-origin API.** The browser only talks to the Next.js origin. `/api/*` is forwarded to Express, so the auth cookie is first-party and there's no CORS in the browser.
 - **Serverless backend.** `src/app.js` runs as a single Vercel Function. The MongoDB connection is opened on the first request and cached for later ones. If the database can't be reached, the API returns a `503` instead of crashing.
-- **Notifications by polling.** The bell asks for new notifications every 30 s, and again whenever the tab becomes visible. New ones show a pop-up and make open task lists and dashboards refresh.
+- **Notifications by polling.** The bell asks for new notifications every 30 s, and again whenever the tab becomes visible. New ones show a pop-up and make open task lists and dashboards refresh. Chat uses the same approach, faster: every 3 s for the open conversation and every 10 s for the chat list.
 
 ### Project structure
 
@@ -82,8 +83,9 @@ backend/
     server.js              local entry (connect DB, listen)
     app.js                 express app (also the Vercel Function entry)
     config/db.js           cached MongoDB connection (serverless-friendly)
-    models/                User (role, notificationPrefs, reset OTP), Task, Notification, AuditLog, Setting
-    controllers/           auth, task, user, notification, dashboard, audit, analytics, settings
+    models/                User (role, notificationPrefs, reset OTP, lastSeenAt), Task, Notification, AuditLog, Setting,
+                           Conversation, Message
+    controllers/           auth, task, user, notification, dashboard, audit, analytics, settings, chat
     services/              accessService (role access matrix), auditService, notificationService (prefs + email),
                            reminderService (due in 1 hour), mailer
     middleware/            auth (protect, authorize, requirePermission), error handler
@@ -96,8 +98,8 @@ backend/
 frontend/
   src/
     app/(auth)/            login, admin/login, manager/login, register, forgot-password
-    app/(app)/             dashboard, tasks, analytics, activity, team, notifications, settings, profile
-    components/            layout (shell, sidebar, bell, offline sync), tasks, dashboard, analytics charts, team, ui
+    app/(app)/             dashboard, tasks, analytics, activity, chat, team, notifications, settings, profile
+    components/            layout (shell, sidebar, bell, offline sync), tasks, dashboard, analytics charts, team, chat, ui
     lib/                   API client, permissions, audit text, offline queue, task events, formatting
   public/sw.js             service worker
 ```
@@ -149,7 +151,7 @@ node scripts/seed-fresh.js --confirm --backup backup.json   # WIPES the database
 
 ```bash
 cd backend
-npm test          # 71 tests, in-memory MongoDB (no database setup needed)
+npm test          # 82 tests, in-memory MongoDB (no database setup needed)
 ```
 
 ### Environment variables
@@ -214,6 +216,12 @@ All routes except register, login, forgot/reset password and health require the 
 | GET | `/api/analytics?scope=me\|team` | Summary, breakdowns, 8-week trend, per-user stats (`team` needs *Team analytics*) |
 | GET | `/api/audit-logs?task=&action=&page=` | Audit trail. Roles with *Full activity log* see everything; others see the tasks they're involved in |
 | GET / PUT | `/api/settings/access` | Admin only: the role access matrix for managers and members |
+| GET | `/api/chat/conversations` | Your chats with the other person's presence, last message and unread count, plus `unreadTotal`. Also marks incoming messages delivered and updates your *last seen* |
+| POST | `/api/chat/conversations` | `{ userId }`. Opens (or creates) the one-to-one chat with a teammate |
+| GET | `/api/chat/conversations/:id/messages` | Newest 40 messages; `?before=<iso>` for older pages, `?since=<iso>` for new or changed messages (polling). Includes read / delivered times |
+| POST | `/api/chat/conversations/:id/messages` | `{ text }` (1–2000 characters) |
+| POST | `/api/chat/conversations/:id/read` | Mark the chat as read |
+| DELETE | `/api/chat/messages/:id` | Delete your own message for everyone |
 | GET | `/api/health` | Liveness check and DB state |
 
 ---
@@ -226,13 +234,15 @@ All routes except register, login, forgot/reset password and health require the 
 - **Audit entries store a title snapshot and the people involved.** Logs stay readable after a task is deleted, and members still see entries for tasks they were part of, such as a task that was reassigned away from them.
 - **Analytics need `completedAt`.** Completion time is recorded on the status change. The overdue trend asks "was this task past due and not yet completed at the end of week N?", so a task finished late still shows as overdue in the weeks before it was finished.
 - **Offline writes are queued by the app, not the service worker.** The app knows which requests are safe to replay (task create, update, delete), shows them as pending, and replays them in order when the connection returns. Cached API data is cleared on logout so the next person on the device can't read it.
+- **Chat receipts without extra writes per message.** Each conversation stores, per member, the time up to which they have *received* and *read* messages. Ticks are worked out by comparing a message's time with the other person's times, so reading a chat is one update, not one per message. Polling with `?since=` uses `updatedAt`, so deleted messages also reach the other side.
 - **Reminders without a scheduler.** The "due in 1 hour" sweep runs at most once a minute, either from a timer (local server) or when a client polls notifications (serverless, where there is no always-on process). Each task is claimed with an atomic update before the reminder is sent, so overlapping sweeps never send twice.
 - **Password reset can't be used to find accounts.** `forgot-password` gives the same answer for unknown emails. The code is stored hashed and stops working after 10 minutes or 5 wrong attempts.
 - **Overdue and timezones.** A due date is stored as the end of the chosen local day, so "due today" only becomes overdue after local midnight.
 
 ## Assumptions and trade-offs
 
-- **No WebSockets.** The backend runs as Vercel serverless functions, which can't keep WebSocket connections open. Socket.io would need a separate always-on server, so I chose polling instead: the bell checks every 30 s and on tab focus. Notifications can therefore take up to about 30 s to appear.
+- **No WebSockets.** The backend runs as Vercel serverless functions, which can't keep WebSocket connections open. Socket.io would need a separate always-on server, so I chose polling instead: the bell checks every 30 s and on tab focus, and chat every 3 s (open conversation) or 10 s (elsewhere). Notifications can take up to about 30 s and chat messages a few seconds to appear. There is no typing indicator.
+- **Chat is one-to-one.** There are no group chats or attachments yet.
 - **Everyone is a teammate.** All users can see the member list and assign tasks to each other. There are no separate workspaces.
 - **Email needs SMTP settings.** Preferences are saved either way, and the Settings page says when email isn't configured.
 - **Analytics are computed in memory per request.** This is fine for a small team. A larger deployment would pre-aggregate them.
