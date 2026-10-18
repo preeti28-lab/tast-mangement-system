@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { LogoutIcon } from "@/components/icons";
 import { initials } from "@/lib/format";
+import { ROLE_LABELS } from "@/lib/permissions";
 import { useClickOutside } from "./useClickOutside";
 import { useUser } from "./UserContext";
 
@@ -37,6 +38,9 @@ export default function UserMenu() {
           <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
             <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">{user.name}</p>
             <p className="truncate text-xs text-zinc-500">{user.email}</p>
+            <span className="mt-1.5 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+              {ROLE_LABELS[user.role]}
+            </span>
           </div>
           <button
             onClick={logout}

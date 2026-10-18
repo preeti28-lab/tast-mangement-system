@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
-import { ApiError, taskApi, type Task } from "@/lib/api";
+import { ApiError, OfflineQueuedError, taskApi, type Task } from "@/lib/api";
 
 type Props = {
   task: Task | null;
   onClose: () => void;
-  onDeleted: (task: Task) => void;
+  onDeleted: (task: Task, queued?: boolean) => void;
 };
 
 export default function DeleteTaskDialog({ task, onClose, onDeleted }: Props) {
@@ -27,6 +27,7 @@ export default function DeleteTaskDialog({ task, onClose, onDeleted }: Props) {
       await taskApi.remove(task._id);
       onDeleted(task);
     } catch (err) {
+      if (err instanceof OfflineQueuedError) return onDeleted(task, true);
       setError((err as ApiError).message);
     } finally {
       setDeleting(false);

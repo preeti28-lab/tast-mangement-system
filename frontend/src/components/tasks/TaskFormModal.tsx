@@ -8,23 +8,29 @@ import Modal from "@/components/ui/Modal";
 import { useUser } from "@/components/layout/UserContext";
 import {
   ApiError,
+  OfflineQueuedError,
   taskApi,
   type FieldErrors,
   type Task,
   type TaskInput,
   type TaskPriority,
+  type TaskRecurrence,
   type TaskStatus,
   type UserRef,
 } from "@/lib/api";
 import { dateInputToIso, toDateInput, todayInput } from "@/lib/format";
-import { PRIORITY_OPTIONS, STATUS_OPTIONS, selectClass } from "./options";
+import { PRIORITY_OPTIONS, RECURRENCE_OPTIONS, STATUS_OPTIONS, selectClass } from "./options";
+
+export type SaveResult =
+  | { mode: "created" | "updated"; task: Task; nextOccurrence?: Task }
+  | { mode: "queued" };
 
 type Props = {
   open: boolean;
   task: Task | null; // null = create
   users: UserRef[];
   onClose: () => void;
-  onSaved: (task: Task, mode: "created" | "updated") => void;
+  onSaved: (result: SaveResult) => void;
 };
 
 export default function TaskFormModal({ open, task, users, onClose, onSaved }: Props) {
@@ -42,6 +48,7 @@ type FormValues = {
   dueDate: string; // YYYY-MM-DD
   priority: TaskPriority;
   status: TaskStatus;
+  recurrence: TaskRecurrence;
   assignedTo: string;
 };
 
@@ -64,6 +71,7 @@ function TaskForm({
     dueDate: initialDue,
     priority: task?.priority ?? "medium",
     status: task?.status ?? "todo",
+    recurrence: task?.recurrence ?? "none",
     assignedTo: task?.assignedTo?._id ?? "",
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -89,6 +97,8 @@ function TaskForm({
     // overdue date can be kept while editing other fields.
     if (values.dueDate && values.dueDate !== initialDue && values.dueDate < todayInput())
       found.dueDate = "Due date can't be in the past";
+    if (values.recurrence !== "none" && !values.dueDate)
+      found.dueDate = "Recurring tasks need a due date";
     return found;
   };
 
@@ -105,16 +115,24 @@ function TaskForm({
       dueDate: values.dueDate ? dateInputToIso(values.dueDate, "end") : null,
       priority: values.priority,
       status: values.status,
+      recurrence: values.recurrence,
       assignedTo: values.assignedTo || null,
     };
 
     setSaving(true);
     try {
-      const { task: saved } = task
-        ? await taskApi.update(task._id, payload)
-        : await taskApi.create(payload);
-      onSaved(saved, task ? "updated" : "created");
+      if (task) {
+        const { task: saved, nextOccurrence } = await taskApi.update(task._id, payload);
+        onSaved({ mode: "updated", task: saved, nextOccurrence });
+      } else {
+        const { task: saved } = await taskApi.create(payload);
+        onSaved({ mode: "created", task: saved });
+      }
     } catch (err) {
+      if (err instanceof OfflineQueuedError) {
+        onSaved({ mode: "queued" });
+        return;
+      }
       const apiErr = err as ApiError;
       setErrors(apiErr.errors ?? {});
       setFormError(apiErr.message);
@@ -224,6 +242,31 @@ function TaskForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="space-y-1.5 sm:col-span-2">
+          <label htmlFor="recurrence" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Repeat
+          </label>
+          <select
+            id="recurrence"
+            name="recurrence"
+            value={values.recurrence}
+            onChange={onChange}
+            className={`${selectClass} block w-full`}
+          >
+            {RECURRENCE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {values.recurrence !== "none" && (
+            <p className="text-xs text-zinc-500">
+              When this task is completed, the next one is created automatically with the due date
+              moved forward.
+            </p>
+          )}
         </div>
       </div>
 

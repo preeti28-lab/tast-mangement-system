@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { LogoutIcon, XIcon } from "@/components/icons";
-import { NAV_ITEMS } from "./navigation";
+import { navItemsFor } from "./navigation";
 import { useUser } from "./UserContext";
 
 type Props = { open: boolean; onClose: () => void };
@@ -12,7 +12,7 @@ type Props = { open: boolean; onClose: () => void };
 export default function Sidebar({ open, onClose }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { logout } = useUser();
+  const { user, logout } = useUser();
 
   const isActive = (href: string) => {
     const [path, query] = href.split("?");
@@ -49,7 +49,7 @@ export default function Sidebar({ open, onClose }: Props) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {navItemsFor(user).map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
               <Link

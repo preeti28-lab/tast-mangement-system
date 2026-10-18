@@ -6,6 +6,9 @@ import { useUser } from "@/components/layout/UserContext";
 import { Spinner } from "@/components/layout/AppShell";
 import { taskApi, type ApiError, type Task, type TaskStatus } from "@/lib/api";
 import { formatDate, isOverdue } from "@/lib/format";
+import { canChangeStatus, canDeleteTask, canEditTask } from "@/lib/permissions";
+import { RECURRENCE_OPTIONS } from "./options";
+import TaskHistory from "./TaskHistory";
 import { PriorityBadge } from "./TaskBadges";
 import StatusSelect from "./StatusSelect";
 
@@ -51,7 +54,10 @@ function TaskDetail({
   if (!task) return <Spinner />;
 
   const isCreator = task.createdBy._id === user._id;
+  const canEdit = canEditTask(user, task);
+  const canDelete = canDeleteTask(user, task);
   const overdue = isOverdue(task);
+  const repeat = RECURRENCE_OPTIONS.find((o) => o.value === task.recurrence)?.label;
 
   const changeStatus = async (status: TaskStatus) => {
     setUpdating(true);
@@ -61,7 +67,7 @@ function TaskDetail({
   };
 
   const rows: [string, React.ReactNode][] = [
-    ["Status", <StatusSelect key="s" value={task.status} disabled={updating} onChange={changeStatus} />],
+    ["Status", <StatusSelect key="s" value={task.status} disabled={updating || !canChangeStatus(user, task)} onChange={changeStatus} />],
     ["Priority", <PriorityBadge key="p" priority={task.priority} />],
     [
       "Due date",
@@ -70,6 +76,7 @@ function TaskDetail({
         {overdue && " (overdue)"}
       </span>,
     ],
+    ["Repeats", repeat],
     ["Assigned to", task.assignedTo ? `${task.assignedTo.name} (${task.assignedTo.email})` : "Unassigned"],
     ["Created by", isCreator ? "You" : `${task.createdBy.name} (${task.createdBy.email})`],
     ["Created", formatDate(task.createdAt)],
@@ -93,26 +100,35 @@ function TaskDetail({
         ))}
       </dl>
 
-      {isCreator ? (
+      {canEdit || canDelete ? (
         <div className="flex justify-end gap-2">
-          <button
-            onClick={() => onDelete(task)}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => onEdit(task)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
-          >
-            Edit task
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => onDelete(task)}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+            >
+              Delete
+            </button>
+          )}
+          {canEdit && (
+            <button
+              onClick={() => onEdit(task)}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+            >
+              Edit task
+            </button>
+          )}
         </div>
       ) : (
         <p className="text-xs text-zinc-500">
-          Only the creator can edit or delete this task. You can update its status.
+          Only the creator, a manager or an admin can edit this task. You can update its status.
         </p>
       )}
+
+      <section>
+        <h4 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">History</h4>
+        <TaskHistory taskId={task._id} />
+      </section>
     </div>
   );
 }

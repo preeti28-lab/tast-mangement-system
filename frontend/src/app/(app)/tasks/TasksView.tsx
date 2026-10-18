@@ -9,11 +9,13 @@ import { useUser } from "@/components/layout/UserContext";
 import DeleteTaskDialog from "@/components/tasks/DeleteTaskDialog";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
 import TaskFilters, { type FilterValues } from "@/components/tasks/TaskFilters";
-import TaskFormModal from "@/components/tasks/TaskFormModal";
+import TaskFormModal, { type SaveResult } from "@/components/tasks/TaskFormModal";
+import { useTasksChanged } from "@/components/layout/RealtimeProvider";
 import TaskList from "@/components/tasks/TaskList";
 import { VIEW_OPTIONS } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
 import {
+  OfflineQueuedError,
   taskApi,
   userApi,
   type ApiError,
@@ -26,6 +28,7 @@ import {
   type UserRef,
 } from "@/lib/api";
 import { dateInputToIso } from "@/lib/format";
+import { isStaff } from "@/lib/permissions";
 
 const PAGE_SIZE = 10;
 
@@ -68,7 +71,9 @@ export default function TasksView() {
 
   // ---- Data loading
   const [refresh, setRefresh] = useState(0);
-  const reload = () => setRefresh((n) => n + 1);
+  const reload = useCallback(() => setRefresh((n) => n + 1), []);
+  // Refresh when tasks change elsewhere (Socket.io) or offline changes finish syncing.
+  useTasksChanged(reload);
 
   const query: TaskQuery = useMemo(
     () => ({
@@ -127,21 +132,27 @@ export default function TasksView() {
     if (creating) updateParams({ new: null }, { resetPage: false });
   };
 
-  const onSaved = (task: Task, mode: "created" | "updated") => {
-    toast(
-      mode === "created"
-        ? task.assignedTo && task.assignedTo._id !== user._id
-          ? `Task created and assigned to ${task.assignedTo.name}`
-          : "Task created"
-        : "Task updated"
-    );
+  const onSaved = (result: SaveResult) => {
+    if (result.mode === "queued") {
+      toast("You're offline — the change will sync when you're back online");
+    } else {
+      const { task, mode, nextOccurrence } = result;
+      toast(
+        mode === "created"
+          ? task.assignedTo && task.assignedTo._id !== user._id
+            ? `Task created and assigned to ${task.assignedTo.name}`
+            : "Task created"
+          : "Task updated"
+      );
+      if (nextOccurrence) toast(`Next occurrence created, due ${new Date(nextOccurrence.dueDate!).toLocaleDateString()}`);
+    }
     closeForm();
     setDetailVersion((v) => v + 1);
     reload();
   };
 
-  const onDeleted = (task: Task) => {
-    toast(`Deleted "${task.title}"`);
+  const onDeleted = (task: Task, queued = false) => {
+    toast(queued ? `"${task.title}" will be deleted when you're back online` : `Deleted "${task.title}"`);
     setDeleting(null);
     if (detailId === task._id) updateParams({ task: null }, { resetPage: false });
     reload();
@@ -151,11 +162,16 @@ export default function TasksView() {
     if (task.status === status) return task;
     setUpdatingId(task._id);
     try {
-      const { task: updated } = await taskApi.update(task._id, { status });
+      const { task: updated, nextOccurrence } = await taskApi.update(task._id, { status });
       toast("Status updated");
+      if (nextOccurrence) toast(`Next occurrence created, due ${new Date(nextOccurrence.dueDate!).toLocaleDateString()}`);
       reload();
       return updated;
     } catch (err) {
+      if (err instanceof OfflineQueuedError) {
+        toast("You're offline — the status will sync when you're back online");
+        return null;
+      }
       toast((err as ApiError).message, "error");
       return null;
     } finally {
@@ -179,7 +195,7 @@ export default function TasksView() {
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div role="tablist" aria-label="Task views" className="flex gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800/60">
-          {VIEW_OPTIONS.map((o) => (
+          {VIEW_OPTIONS.filter((o) => o.value !== "team" || isStaff(user)).map((o) => (
             <button
               key={o.value}
               role="tab"
@@ -246,7 +262,7 @@ export default function TasksView() {
         <div className={`space-y-4 transition-opacity ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
           <TaskList
             tasks={data.tasks}
-            currentUserId={user._id}
+            currentUser={user}
             updatingId={updatingId}
             onOpen={(t) => updateParams({ task: t._id }, { resetPage: false })}
             onEdit={setEditing}

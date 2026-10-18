@@ -1,14 +1,15 @@
 "use client";
 
-import { PencilIcon } from "@/components/icons";
-import type { Task, TaskStatus } from "@/lib/api";
+import { PencilIcon, RepeatIcon } from "@/components/icons";
+import type { Task, TaskStatus, User } from "@/lib/api";
+import { canChangeStatus, canDeleteTask, canEditTask } from "@/lib/permissions";
 import { formatDate, initials, isOverdue } from "@/lib/format";
 import { PriorityBadge } from "./TaskBadges";
 import StatusSelect from "./StatusSelect";
 
 type Props = {
   tasks: Task[];
-  currentUserId: string;
+  currentUser: User;
   updatingId: string | null;
   onOpen: (task: Task) => void;
   onEdit: (task: Task) => void;
@@ -24,7 +25,7 @@ const TrashIcon = () => (
 
 export default function TaskList({
   tasks,
-  currentUserId,
+  currentUser,
   updatingId,
   onOpen,
   onEdit,
@@ -45,8 +46,10 @@ export default function TaskList({
 
       <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
         {tasks.map((task) => {
-          const isCreator = task.createdBy._id === currentUserId;
-          const isAssignee = task.assignedTo?._id === currentUserId;
+          const isCreator = task.createdBy._id === currentUser._id;
+          const isAssignee = task.assignedTo?._id === currentUser._id;
+          const canEdit = canEditTask(currentUser, task);
+          const canDelete = canDeleteTask(currentUser, task);
           const overdue = isOverdue(task);
           const assignee = task.assignedTo;
 
@@ -63,6 +66,9 @@ export default function TaskList({
                       : "text-zinc-900 dark:text-zinc-100"
                   }`}
                 >
+                  {task.recurrence !== "none" && (
+                    <RepeatIcon className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-indigo-500" aria-label={`Repeats ${task.recurrence}`} />
+                  )}
                   {task.title}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-zinc-500">
@@ -99,14 +105,13 @@ export default function TaskList({
                 <span>
                   <StatusSelect
                     value={task.status}
-                    disabled={updatingId === task._id}
+                    disabled={updatingId === task._id || !canChangeStatus(currentUser, task)}
                     onChange={(status) => onStatusChange(task, status)}
                   />
                 </span>
 
                 <span className="ml-auto flex gap-1 lg:ml-0 lg:justify-end">
-                  {isCreator && (
-                    <>
+                  {canEdit && (
                       <button
                         onClick={() => onEdit(task)}
                         className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-indigo-600 dark:hover:bg-zinc-800"
@@ -115,6 +120,8 @@ export default function TaskList({
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
+                  )}
+                  {canDelete && (
                       <button
                         onClick={() => onDelete(task)}
                         className="rounded-md p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
@@ -123,7 +130,6 @@ export default function TaskList({
                       >
                         <TrashIcon />
                       </button>
-                    </>
                   )}
                 </span>
               </div>

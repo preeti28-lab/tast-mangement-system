@@ -1,7 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const AUTH_PAGES = ["/login", "/register"];
-const PROTECTED_PREFIXES = ["/dashboard", "/tasks", "/notifications"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/tasks",
+  "/notifications",
+  "/analytics",
+  "/activity",
+  "/team",
+  "/settings",
+];
 
 // Optimistic redirect based on cookie presence; the backend still verifies the JWT.
 export function proxy(request: NextRequest) {
@@ -26,6 +34,10 @@ export const config = {
     "/dashboard/:path*",
     "/tasks/:path*",
     "/notifications/:path*",
+    "/analytics/:path*",
+    "/activity/:path*",
+    "/team/:path*",
+    "/settings/:path*",
     // Router prefetches of the auth pages are skipped: right after login the client
     // re-prefetches the /login link, and redirecting that request to /dashboard 404s.
     {

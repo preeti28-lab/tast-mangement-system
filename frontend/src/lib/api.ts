@@ -1,14 +1,20 @@
+import { enqueueOffline, isQueueable } from "./offlineQueue";
+
+export type Role = "admin" | "manager" | "user";
+
 export type User = {
   _id: string;
   name: string;
   email: string;
+  role: Role;
   createdAt: string;
 };
 
-export type UserRef = Pick<User, "_id" | "name" | "email">;
+export type UserRef = Pick<User, "_id" | "name" | "email"> & { role?: Role };
 
 export type TaskStatus = "todo" | "in_progress" | "completed";
 export type TaskPriority = "low" | "medium" | "high";
+export type TaskRecurrence = "none" | "daily" | "weekly" | "monthly";
 
 export type Task = {
   _id: string;
@@ -17,6 +23,9 @@ export type Task = {
   dueDate?: string;
   priority: TaskPriority;
   status: TaskStatus;
+  recurrence: TaskRecurrence;
+  completedAt?: string | null;
+  nextOccurrence?: string | null;
   createdBy: UserRef;
   assignedTo: UserRef | null;
   createdAt: string;
@@ -44,6 +53,56 @@ export type Notification = {
   createdAt: string;
 };
 
+export type NotificationPrefs = {
+  muteAll: boolean;
+  inApp: { taskAssigned: boolean; taskUpdated: boolean };
+  email: { taskAssigned: boolean; taskUpdated: boolean };
+};
+
+export type AuditAction =
+  | "task.created"
+  | "task.updated"
+  | "task.assigned"
+  | "task.status_changed"
+  | "task.deleted"
+  | "task.recurred"
+  | "user.registered"
+  | "user.role_changed";
+
+export type AuditLog = {
+  _id: string;
+  actor: UserRef | null;
+  action: AuditAction;
+  task: string | null;
+  taskTitle: string;
+  targetUser: UserRef | null;
+  changes: { field: string; from: unknown; to: unknown }[];
+  createdAt: string;
+};
+
+export type Analytics = {
+  scope: "me" | "team";
+  summary: {
+    total: number;
+    completed: number;
+    open: number;
+    overdue: number;
+    completionRate: number;
+    onTimeRate: number;
+    avgCompletionDays: number | null;
+  };
+  byStatus: Record<TaskStatus, number>;
+  byPriority: Record<TaskPriority, number>;
+  trend: { weekStart: string; created: number; completed: number; overdue: number }[];
+  perUser: {
+    user: UserRef;
+    assigned: number;
+    completed: number;
+    overdue: number;
+    completionRate: number;
+  }[];
+};
+
 export type FieldErrors = Partial<Record<string, string>>;
 
 export class ApiError extends Error {
@@ -56,7 +115,21 @@ export class ApiError extends Error {
   }
 }
 
+/** Thrown when a change was saved to the offline queue instead of being sent. */
+export class OfflineQueuedError extends ApiError {
+  constructor() {
+    super("You're offline. The change was saved and will sync when you're back online.", 0);
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = init.method ?? "GET";
+  const queueable = isQueueable(method, path);
+  if (queueable && typeof navigator !== "undefined" && !navigator.onLine) {
+    enqueueOffline({ method, path, body: init.body as string | undefined });
+    throw new OfflineQueuedError();
+  }
+
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
@@ -65,6 +138,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       headers: { "Content-Type": "application/json", ...init.headers },
     });
   } catch {
+    if (queueable) {
+      enqueueOffline({ method, path, body: init.body as string | undefined });
+      throw new OfflineQueuedError();
+    }
     throw new ApiError("Unable to reach the server. Please try again.", 0);
   }
 
@@ -91,9 +168,10 @@ export const authApi = {
     }),
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
   me: () => request<{ user: User }>("/auth/me"),
+  socketToken: () => request<{ token: string }>("/auth/socket-token"),
 };
 
-export type TaskView = "all" | "assigned" | "created" | "overdue";
+export type TaskView = "all" | "assigned" | "created" | "overdue" | "team";
 export type TaskSort = "newest" | "oldest" | "due_asc" | "due_desc" | "updated";
 
 export type TaskQuery = {
@@ -114,6 +192,7 @@ export type TaskInput = {
   dueDate: string | null; // ISO
   priority: TaskPriority;
   status: TaskStatus;
+  recurrence: TaskRecurrence;
   assignedTo: string | null;
 };
 
@@ -134,12 +213,24 @@ export const taskApi = {
   create: (body: TaskInput) =>
     request<{ task: Task }>("/tasks", { method: "POST", body: JSON.stringify(body) }),
   update: (id: string, body: Partial<TaskInput>) =>
-    request<{ task: Task }>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+    request<{ task: Task; nextOccurrence?: Task }>(`/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   remove: (id: string) => request<{ message: string }>(`/tasks/${id}`, { method: "DELETE" }),
 };
 
 export const userApi = {
-  list: () => request<{ users: UserRef[] }>("/users"),
+  list: () => request<{ users: (UserRef & { role: Role; createdAt: string })[] }>("/users"),
+  updateRole: (id: string, role: Role) =>
+    request<{ user: User }>(`/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
+  getPreferences: () =>
+    request<{ preferences: NotificationPrefs; emailAvailable: boolean }>("/users/me/preferences"),
+  updatePreferences: (prefs: Partial<NotificationPrefs>) =>
+    request<{ preferences: NotificationPrefs; emailAvailable: boolean }>("/users/me/preferences", {
+      method: "PUT",
+      body: JSON.stringify(prefs),
+    }),
 };
 
 export const dashboardApi = {
@@ -152,4 +243,15 @@ export const notificationApi = {
   markRead: (id: string) =>
     request<{ notification: Notification }>(`/notifications/${id}/read`, { method: "PATCH" }),
   markAllRead: () => request<{ message: string }>("/notifications/read-all", { method: "PATCH" }),
+};
+
+export const auditApi = {
+  list: (query: { task?: string; action?: AuditAction | ""; page?: number; limit?: number }) =>
+    request<{ logs: AuditLog[]; total: number; page: number; pages: number }>(
+      `/audit-logs${toQueryString(query)}`
+    ),
+};
+
+export const analyticsApi = {
+  get: (scope: "me" | "team") => request<Analytics>(`/analytics?scope=${scope}`),
 };

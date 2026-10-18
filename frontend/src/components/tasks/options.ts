@@ -1,4 +1,4 @@
-import type { TaskPriority, TaskSort, TaskStatus, TaskView } from "@/lib/api";
+import type { TaskPriority, TaskRecurrence, TaskSort, TaskStatus, TaskView } from "@/lib/api";
 
 export const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: "todo", label: "To do" },
@@ -17,6 +17,14 @@ export const VIEW_OPTIONS: { value: TaskView; label: string }[] = [
   { value: "assigned", label: "Assigned to me" },
   { value: "created", label: "Created by me" },
   { value: "overdue", label: "Overdue" },
+  { value: "team", label: "All team tasks" },
+];
+
+export const RECURRENCE_OPTIONS: { value: TaskRecurrence; label: string }[] = [
+  { value: "none", label: "Does not repeat" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
 ];
 
 export const SORT_OPTIONS: { value: TaskSort; label: string }[] = [
