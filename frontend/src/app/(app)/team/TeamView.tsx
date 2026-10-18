@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/Surface";
 import { userApi, type ApiError, type Role, type UserRef } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { ROLE_LABELS, isStaff } from "@/lib/permissions";
+import TeamInsights from "@/components/team/TeamInsights";
 
 type Member = UserRef & { role: Role; createdAt: string };
 
@@ -131,6 +132,8 @@ export default function TeamView() {
           );
         })}
       </div>
+
+      {isStaff(user) && <TeamInsights />}
 
       <section className={`p-5 sm:p-6 ${cardClass}`}>
         <SectionHeader icon={UsersIcon} title="Members" subtitle="Everyone who can be assigned tasks." />
