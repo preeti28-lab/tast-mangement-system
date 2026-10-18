@@ -1,10 +1,21 @@
 import mongoose from "mongoose";
-import Task, { TASK_PRIORITIES, TASK_STATUSES } from "../models/Task.js";
+import Task, { TASK_PRIORITIES, TASK_RECURRENCES, TASK_STATUSES } from "../models/Task.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
+import { nextDueDate } from "../utils/recurrence.js";
+import {
+  canChangeStatus,
+  canDeleteTask,
+  canEditTask,
+  canViewTask,
+  isSameId,
+  isStaff,
+} from "../utils/permissions.js";
+import { diffTask, logAudit } from "../services/auditService.js";
+import { notifyUser } from "../services/notificationService.js";
 
-const USER_FIELDS = "name email";
+const USER_FIELDS = "name email role";
 const STATUS_LABELS = { todo: "To do", in_progress: "In progress", completed: "Completed" };
 
 // `noDue` is computed in the pipeline so tasks without a due date always sort last.
@@ -19,8 +30,6 @@ const SORTS = {
 const httpError = (status, message) => Object.assign(new Error(message), { status });
 
 const populateTask = (query) => query.populate("createdBy assignedTo", USER_FIELDS);
-
-const isSameId = (a, b) => !!a && !!b && a.toString() === b.toString();
 
 const involvedFilter = (userId) => ({ $or: [{ createdBy: userId }, { assignedTo: userId }] });
 
@@ -66,6 +75,11 @@ async function parseTaskInput(body, { partial = false } = {}) {
     else data.status = body.status;
   }
 
+  if (has("recurrence")) {
+    if (!TASK_RECURRENCES.includes(body.recurrence)) errors.recurrence = "Recurrence is invalid";
+    else data.recurrence = body.recurrence;
+  }
+
   if (has("assignedTo")) {
     if (body.assignedTo === null || body.assignedTo === "") {
       data.assignedTo = null;
@@ -81,28 +95,55 @@ async function parseTaskInput(body, { partial = false } = {}) {
   return { data, errors };
 }
 
-const notify = (recipient, actor, type, message, task) => {
-  if (!recipient || isSameId(recipient, actor._id)) return null;
-  return Notification.create({ recipient, type, message, task: task._id });
-};
-
-/** Loads a task the current user is allowed to see (creator or assignee). */
-async function findAccessibleTask(id, userId) {
+/** Loads a task the current user is allowed to see. */
+async function findAccessibleTask(id, user) {
   if (!mongoose.isValidObjectId(id)) throw httpError(400, "Invalid task id");
   const task = await Task.findById(id);
-  if (!task) throw httpError(404, "Task not found");
-  if (!isSameId(task.createdBy, userId) && !isSameId(task.assignedTo, userId)) {
-    // Same response as "missing" so ids of other users' tasks aren't revealed.
-    throw httpError(404, "Task not found");
-  }
+  // Same response as "missing" so ids of other users' tasks aren't revealed.
+  if (!task || !canViewTask(user, task)) throw httpError(404, "Task not found");
   return task;
 }
 
+const assignedMessage = (actor, task) => `${actor.name} assigned you a task: "${task.title}"`;
+
+/**
+ * When a recurring task is completed, create its next occurrence (once).
+ * The new task keeps the same details and assignee, with the due date moved forward.
+ */
+async function spawnNextOccurrence(task, actor) {
+  if (task.recurrence === "none" || task.status !== "completed" || task.nextOccurrence) return null;
+
+  const next = await Task.create({
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    recurrence: task.recurrence,
+    dueDate: nextDueDate(task.dueDate, task.recurrence),
+    createdBy: task.createdBy,
+    assignedTo: task.assignedTo,
+  });
+  task.nextOccurrence = next._id;
+  await task.save();
+
+  await logAudit({ actor, action: "task.recurred", task: next, changes: [{ field: "previous", from: null, to: task._id.toString() }] });
+  if (next.assignedTo) {
+    await notifyUser({
+      recipient: next.assignedTo,
+      actor,
+      type: "task_assigned",
+      message: `Next ${task.recurrence} occurrence of "${next.title}" is ready`,
+      task: next,
+    });
+  }
+  return next;
+}
+
 // GET /api/tasks
-// Query: view (all|assigned|created|overdue), search, status, priority,
+// Query: view (all|assigned|created|overdue|team), search, status, priority,
 //        dueFrom, dueTo (ISO dates), sort, page, limit
 export const listTasks = async (req, res) => {
-  const userId = req.user._id;
+  const user = req.user;
+  const userId = user._id;
   const { view = "all", search, status, priority, dueFrom, dueTo, sort = "newest" } = req.query;
 
   const conditions = [];
@@ -114,13 +155,17 @@ export const listTasks = async (req, res) => {
       conditions.push({ createdBy: userId });
       break;
     case "overdue":
-      conditions.push(involvedFilter(userId), {
+      conditions.push(isStaff(user) ? {} : involvedFilter(userId), {
         dueDate: { $lt: new Date() },
         status: { $ne: "completed" },
       });
       break;
     case "all":
       conditions.push(involvedFilter(userId));
+      break;
+    case "team":
+      if (!isStaff(user)) return res.status(403).json({ message: "Only managers and admins can view all team tasks" });
+      conditions.push({});
       break;
     default:
       return res.status(400).json({ message: "Invalid view" });
@@ -175,91 +220,136 @@ export const listTasks = async (req, res) => {
 
 // GET /api/tasks/:id
 export const getTask = async (req, res) => {
-  const task = await findAccessibleTask(req.params.id, req.user._id);
+  const task = await findAccessibleTask(req.params.id, req.user);
   res.json({ task: await populateTask(task) });
 };
 
 // POST /api/tasks
 export const createTask = async (req, res) => {
   const { data, errors } = await parseTaskInput(req.body);
+  if (data.recurrence && data.recurrence !== "none" && !data.dueDate && !errors.dueDate) {
+    errors.dueDate = "Recurring tasks need a due date";
+  }
   if (Object.keys(errors).length) {
     return res.status(400).json({ message: "Validation failed", errors });
   }
 
-  const task = await Task.create({ ...data, createdBy: req.user._id });
+  const task = await Task.create({
+    ...data,
+    completedAt: data.status === "completed" ? new Date() : null,
+    createdBy: req.user._id,
+  });
 
-  await notify(
-    task.assignedTo,
-    req.user,
-    "task_assigned",
-    `${req.user.name} assigned you a task: "${task.title}"`,
-    task
-  );
+  await logAudit({ actor: req.user, action: "task.created", task });
+  if (task.assignedTo) {
+    await logAudit({
+      actor: req.user,
+      action: "task.assigned",
+      task,
+      changes: [{ field: "assignedTo", from: null, to: task.assignedTo.toString() }],
+    });
+    await notifyUser({
+      recipient: task.assignedTo,
+      actor: req.user,
+      type: "task_assigned",
+      message: assignedMessage(req.user, task),
+      task,
+    });
+  }
+  await spawnNextOccurrence(task, req.user);
 
   res.status(201).json({ task: await populateTask(task) });
 };
 
 // PATCH /api/tasks/:id
-// The creator can edit every field; the assignee can only change the status.
+// Creator, managers and admins can edit every field; the assignee can only change the status.
 export const updateTask = async (req, res) => {
   const user = req.user;
-  const task = await findAccessibleTask(req.params.id, user._id);
-  const isCreator = isSameId(task.createdBy, user._id);
+  const task = await findAccessibleTask(req.params.id, user);
 
   const { data, errors } = await parseTaskInput(req.body, { partial: true });
+  const recurrence = data.recurrence ?? task.recurrence;
+  const dueDate = "dueDate" in data ? data.dueDate : task.dueDate;
+  if (recurrence !== "none" && !dueDate && !errors.dueDate) {
+    errors.dueDate = "Recurring tasks need a due date";
+  }
   if (Object.keys(errors).length) {
     return res.status(400).json({ message: "Validation failed", errors });
   }
   if (!Object.keys(data).length) {
     return res.status(400).json({ message: "Nothing to update" });
   }
-  if (!isCreator && Object.keys(data).some((key) => key !== "status")) {
-    return res
-      .status(403)
-      .json({ message: "Only the task creator can edit these details. You can update the status." });
+
+  const onlyStatus = Object.keys(data).every((key) => key === "status");
+  if (onlyStatus ? !canChangeStatus(user, task) : !canEditTask(user, task)) {
+    return res.status(403).json({
+      message: canChangeStatus(user, task)
+        ? "Only the task creator, a manager or an admin can edit these details. You can update the status."
+        : "You don't have permission to edit this task",
+    });
   }
 
-  const previousAssignee = task.assignedTo;
-  const previousStatus = task.status;
+  const before = task.toObject();
   task.set(data);
+  if ("status" in data && data.status !== before.status) {
+    task.completedAt = data.status === "completed" ? new Date() : null;
+  }
   await task.save();
 
-  const pending = [];
-  if ("assignedTo" in data && task.assignedTo && !isSameId(task.assignedTo, previousAssignee)) {
-    pending.push(
-      notify(
-        task.assignedTo,
-        user,
-        "task_assigned",
-        `${user.name} assigned you a task: "${task.title}"`,
-        task
-      )
-    );
-  }
-  if ("status" in data && data.status !== previousStatus) {
-    // Let the other party know the status moved.
-    const recipient = isCreator ? task.assignedTo : task.createdBy;
-    pending.push(
-      notify(
-        recipient,
-        user,
-        "task_updated",
-        `${user.name} marked "${task.title}" as ${STATUS_LABELS[task.status]}`,
-        task
-      )
-    );
-  }
-  await Promise.all(pending);
+  const changes = diffTask(before, task);
+  const assigneeChanged = changes.some((c) => c.field === "assignedTo");
+  const statusChange = changes.find((c) => c.field === "status");
+  const otherChanges = changes.filter((c) => c.field !== "assignedTo" && c.field !== "status");
 
-  res.json({ task: await populateTask(task) });
+  if (otherChanges.length) await logAudit({ actor: user, action: "task.updated", task, changes: otherChanges });
+  if (statusChange) await logAudit({ actor: user, action: "task.status_changed", task, changes: [statusChange] });
+  if (assigneeChanged) {
+    await logAudit({
+      actor: user,
+      action: "task.assigned",
+      task,
+      changes: changes.filter((c) => c.field === "assignedTo"),
+      // The previous assignee should still see that the task moved away from them.
+      extraInvolved: before.assignedTo ? [before.assignedTo] : [],
+    });
+    if (task.assignedTo) {
+      await notifyUser({
+        recipient: task.assignedTo,
+        actor: user,
+        type: "task_assigned",
+        message: assignedMessage(user, task),
+        task,
+      });
+    }
+  }
+  if (statusChange) {
+    // Let the other people on the task know the status moved.
+    const message = `${user.name} marked "${task.title}" as ${STATUS_LABELS[task.status]}`;
+    const recipients = [task.createdBy, assigneeChanged ? null : task.assignedTo].filter(
+      (id, i, list) => id && list.findIndex((other) => isSameId(other, id)) === i
+    );
+    await Promise.all(
+      recipients.map((recipient) =>
+        notifyUser({ recipient, actor: user, type: "task_updated", message, task })
+      )
+    );
+  }
+
+  const next = statusChange ? await spawnNextOccurrence(task, user) : null;
+
+  res.json({
+    task: await populateTask(task),
+    ...(next && { nextOccurrence: await populateTask(next) }),
+  });
 };
 
 // DELETE /api/tasks/:id
 export const deleteTask = async (req, res) => {
-  const task = await findAccessibleTask(req.params.id, req.user._id);
-  if (!isSameId(task.createdBy, req.user._id)) {
-    return res.status(403).json({ message: "Only the task creator can delete this task" });
+  const task = await findAccessibleTask(req.params.id, req.user);
+  if (!canDeleteTask(req.user, task)) {
+    return res.status(403).json({ message: "Only the task creator or an admin can delete this task" });
   }
   await Promise.all([task.deleteOne(), Notification.deleteMany({ task: task._id })]);
+  await logAudit({ actor: req.user, action: "task.deleted", task });
   res.json({ message: "Task deleted" });
 };
