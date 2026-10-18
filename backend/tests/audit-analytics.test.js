@@ -62,6 +62,11 @@ describe("analytics", () => {
     expect(body.scope).toBe("me");
     expect(body.summary).toMatchObject({ total: 4, completed: 1, open: 3, overdue: 1, completionRate: 25 });
     expect(body.byStatus).toEqual({ todo: 2, in_progress: 1, completed: 1 });
+    expect(body.cohorts).toHaveLength(6);
+    const thisWeekCohort = body.cohorts.at(-1);
+    expect(thisWeekCohort.size).toBe(4);
+    expect(thisWeekCohort.values[0]).toBe(25);
+    expect(thisWeekCohort.values.slice(1)).toEqual([null, null, null, null, null]);
     expect(body.byPriority.high).toBe(1);
     expect(body.trend).toHaveLength(8);
     expect(body.trend.at(-1)).toMatchObject({ created: 4, completed: 1, overdue: 1 });

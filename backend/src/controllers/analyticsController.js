@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import { isStaff } from "../utils/permissions.js";
 
 const WEEKS = 8;
+const COHORT_WEEKS = 6;
 const DAY = 24 * 60 * 60 * 1000;
 
 const rate = (part, whole) => (whole ? Math.round((part / whole) * 1000) / 10 : 0);
@@ -58,6 +59,25 @@ export const getAnalytics = async (req, res) => {
     };
   });
 
+  // Completion cohorts: tasks grouped by the week they were created (last COHORT_WEEKS
+  // weeks, oldest first); values[k] is the % of that cohort completed by the end of
+  // week k after creation, or null when week k hasn't started yet.
+  const cohorts = Array.from({ length: COHORT_WEEKS }, (_, i) => {
+    const start = new Date(thisWeek.getTime() - (COHORT_WEEKS - 1 - i) * 7 * DAY);
+    const end = new Date(start.getTime() + 7 * DAY);
+    const members = tasks.filter((t) => t.createdAt >= start && t.createdAt < end);
+    return {
+      weekStart: start.toISOString(),
+      size: members.length,
+      values: Array.from({ length: COHORT_WEEKS }, (_, k) => {
+        const weekK = new Date(start.getTime() + k * 7 * DAY);
+        if (weekK > now || !members.length) return null;
+        const at = new Date(Math.min(weekK.getTime() + 7 * DAY, now.getTime()));
+        return rate(members.filter((t) => t.completedAt && t.completedAt <= at).length, members.length);
+      }),
+    };
+  });
+
   let perUser = [];
   if (scope === "team") {
     const users = await User.find().select("name email role").lean();
@@ -91,6 +111,7 @@ export const getAnalytics = async (req, res) => {
       completed: completed.length,
       open: tasks.length - completed.length,
       overdue: overdue.length,
+      completedOnTime,
       completionRate: rate(completed.length, tasks.length),
       onTimeRate: rate(completedOnTime, completedWithDue),
       avgCompletionDays: completionDays.length
@@ -100,6 +121,7 @@ export const getAnalytics = async (req, res) => {
     byStatus: countBy("status", ["todo", "in_progress", "completed"]),
     byPriority: countBy("priority", ["low", "medium", "high"]),
     trend,
+    cohorts,
     perUser,
   });
 };

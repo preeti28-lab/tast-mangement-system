@@ -5,6 +5,9 @@ import FormAlert from "@/components/auth/FormAlert";
 import { BarList, DataTable, Legend, LineChart } from "@/components/analytics/charts";
 import StatCard from "@/components/dashboard/StatCard";
 import TopPerformer from "@/components/analytics/TopPerformer";
+import WeekComparison from "@/components/analytics/WeekComparison";
+import TaskFunnel from "@/components/analytics/TaskFunnel";
+import CompletionCohorts from "@/components/analytics/CompletionCohorts";
 import NeonGrid3D from "@/components/ui/NeonGrid3D";
 import { ActivityIcon, ChartIcon, CheckCircleIcon, ClockIcon, ListIcon, UsersIcon } from "@/components/icons";
 import { PageHeader, SectionHeader, cardClass, tabClass, tabListClass, type Tone } from "@/components/ui/Surface";
@@ -136,7 +139,12 @@ export default function AnalyticsView() {
 
           {scope === "team" && <TopPerformer perUser={data.perUser} />}
 
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <WeekComparison trend={data.trend} />
+            <TaskFunnel data={data} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <Card icon={ChartIcon} tone="indigo" title="Created vs. completed" subtitle="Tasks per week, last 8 weeks">
               <Legend
                 series={[
@@ -190,6 +198,8 @@ export default function AnalyticsView() {
               />
             </Card>
           </div>
+
+          {data.cohorts && <CompletionCohorts cohorts={data.cohorts} />}
 
           {scope === "team" && (
             <Card icon={UsersIcon} tone="violet" title="Completed tasks per user" subtitle="Based on tasks assigned to each person">

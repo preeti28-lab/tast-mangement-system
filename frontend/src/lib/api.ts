@@ -85,6 +85,7 @@ export type Analytics = {
   summary: {
     total: number;
     completed: number;
+    completedOnTime: number;
     open: number;
     overdue: number;
     completionRate: number;
@@ -94,6 +95,8 @@ export type Analytics = {
   byStatus: Record<TaskStatus, number>;
   byPriority: Record<TaskPriority, number>;
   trend: { weekStart: string; created: number; completed: number; overdue: number }[];
+  /** Tasks by creation week (last 6, oldest first); values[k] = % completed by week k, null = not yet. */
+  cohorts: { weekStart: string; size: number; values: (number | null)[] }[];
   perUser: {
     user: UserRef;
     assigned: number;

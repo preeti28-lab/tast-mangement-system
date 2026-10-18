@@ -176,3 +176,40 @@ export const PlusIcon = (p: IconProps) => (
     <path d="M12 5v14M5 12h14" />
   </Icon>
 );
+
+export const FilterIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 5h18l-7 8.5V19l-4 2v-7.5z" />
+  </Icon>
+);
+
+export const TrendingUpIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m3 17 6-6 4 4 8-8" />
+    <path d="M14 7h7v7" />
+  </Icon>
+);
+
+export const TrendingDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m3 7 6 6 4-4 8 8" />
+    <path d="M14 17h7v-7" />
+  </Icon>
+);
+
+export const TargetIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1" />
+  </Icon>
+);
+
+export const GridIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </Icon>
+);
