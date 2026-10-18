@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
+export const ROLES = ["admin", "manager", "user"];
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -23,6 +25,20 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters"],
       select: false,
+    },
+    role: { type: String, enum: ROLES, default: "user" },
+    // Per-user notification settings. `inApp` controls the bell / real-time alerts,
+    // `email` controls emails (sent only when SMTP is configured on the server).
+    notificationPrefs: {
+      muteAll: { type: Boolean, default: false },
+      inApp: {
+        taskAssigned: { type: Boolean, default: true },
+        taskUpdated: { type: Boolean, default: true },
+      },
+      email: {
+        taskAssigned: { type: Boolean, default: false },
+        taskUpdated: { type: Boolean, default: false },
+      },
     },
   },
   { timestamps: true }

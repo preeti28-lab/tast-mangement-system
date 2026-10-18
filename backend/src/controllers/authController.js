@@ -1,5 +1,6 @@
 import User from "../models/User.js";
-import { signToken, setAuthCookie, clearAuthCookie } from "../utils/token.js";
+import { signToken, signSocketToken, setAuthCookie, clearAuthCookie } from "../utils/token.js";
+import { logAudit } from "../services/auditService.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -30,7 +31,10 @@ export const register = async (req, res) => {
     });
   }
 
-  const user = await User.create({ name, email, password });
+  // The very first account becomes the admin so a fresh install can be managed.
+  const role = (await User.exists({ role: "admin" })) ? "user" : "admin";
+  const user = await User.create({ name, email, password, role });
+  await logAudit({ actor: user, action: "user.registered", targetUser: user._id, extraInvolved: [user._id] });
   sendAuth(res, 201, user);
 };
 
@@ -60,4 +64,9 @@ export const logout = (req, res) => {
 // GET /api/auth/me
 export const me = (req, res) => {
   res.json({ user: req.user });
+};
+
+// GET /api/auth/socket-token
+export const socketToken = (req, res) => {
+  res.json({ token: signSocketToken(req.user._id) });
 };
