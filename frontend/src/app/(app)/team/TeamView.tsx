@@ -1,12 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { useUser } from "@/components/layout/UserContext";
 import { selectClass } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
 import FlipCard3D from "@/components/ui/FlipCard3D";
-import { PencilIcon, PlusIcon, SettingsIcon, TrashIcon, UserIcon, UsersIcon } from "@/components/icons";
+import { ChatIcon, PencilIcon, PlusIcon, SettingsIcon, TrashIcon, UserIcon, UsersIcon } from "@/components/icons";
 import { IconBadge, PageHeader, TONE_BADGE, cardFlatClass, primaryButtonClass, type Tone, SectionCard } from "@/components/ui/Surface";
 import { userApi, type ApiError, type Role } from "@/lib/api";
 import { formatDate, initials } from "@/lib/format";
@@ -33,6 +34,7 @@ const ROLE_STYLE: Record<Role, { icon: typeof UserIcon; tone: Tone; back: string
 
 export default function TeamView() {
   const { user } = useUser();
+  const router = useRouter();
   const toast = useToast();
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState("");
@@ -202,10 +204,11 @@ export default function TeamView() {
                     {ROLE_LABELS[m.role]}
                   </span>
                 )}
-                {manages(m) && (
+                {(!isMe || manages(m)) && (
                   <span className="flex shrink-0 gap-1 self-end sm:self-auto">
-                    <IconButton icon={PencilIcon} label={`Edit ${m.name}`} onClick={() => setForm({ open: true, member: m })} />
-                    {!isMe && (
+                    {!isMe && <IconButton icon={ChatIcon} label={`Message ${m.name}`} onClick={() => router.push(`/chat?user=${m._id}`)} />}
+                    {manages(m) && <IconButton icon={PencilIcon} label={`Edit ${m.name}`} onClick={() => setForm({ open: true, member: m })} />}
+                    {manages(m) && !isMe && (
                       <IconButton icon={TrashIcon} tone="danger" label={`Remove ${m.name}`} onClick={() => setDeleting(m)} />
                     )}
                   </span>

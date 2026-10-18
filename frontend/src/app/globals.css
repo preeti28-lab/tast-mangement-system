@@ -544,3 +544,45 @@ body {
   40% { transform: rotate(-4deg); }
   50% { transform: rotate(10deg); }
 }
+
+/* ---- Chat (WhatsApp-style) ------------------------------------------------ */
+:root {
+  --chat-wall: #efeae2;
+  --chat-wall-dot: rgba(120, 100, 70, 0.09);
+  --chat-out: #d9fdd3;
+  --chat-in: #ffffff;
+  --chat-meta: #667781;
+  --chat-read: #53bdeb;
+}
+.dark {
+  --chat-wall: #0b141a;
+  --chat-wall-dot: rgba(255, 255, 255, 0.035);
+  --chat-out: #005c4b;
+  --chat-in: #202c33;
+  --chat-meta: #8696a0;
+  --chat-read: #53bdeb;
+}
+@theme inline {
+  --color-chat-out: var(--chat-out);
+  --color-chat-in: var(--chat-in);
+  --color-chat-meta: var(--chat-meta);
+  --color-chat-read: var(--chat-read);
+}
+/* Doodle-like wallpaper behind the messages: two offset dot grids on a warm tint. */
+.chat-wallpaper {
+  background-color: var(--chat-wall);
+  background-image:
+    radial-gradient(var(--chat-wall-dot) 1.2px, transparent 1.3px),
+    radial-gradient(var(--chat-wall-dot) 1.2px, transparent 1.3px);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
+}
+@keyframes popup-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-anim { animation: none !important; }
+}

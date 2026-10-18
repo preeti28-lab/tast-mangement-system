@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   "/analytics",
   "/activity",
   "/team",
+  "/chat",
   "/settings",
   "/profile",
 ];

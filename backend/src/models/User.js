@@ -30,6 +30,8 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     role: { type: String, enum: ROLES, default: "user" },
+    // Updated (at most every 15s) while the app is open; drives "online" / "last seen" in chat.
+    lastSeenAt: { type: Date, default: null },
     // Password-reset OTP: only a SHA-256 hash is stored, never the code itself.
     resetOtp: {
       hash: { type: String, select: false },

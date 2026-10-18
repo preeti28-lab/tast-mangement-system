@@ -3,6 +3,7 @@ import type { IconProps as PhosphorProps } from "@phosphor-icons/react";
 import {
   ArrowCounterClockwise,
   ArrowDown,
+  ArrowLeft,
   ArrowRight,
   ArrowUp,
   ArrowsDownUp,
@@ -14,6 +15,9 @@ import {
   CaretRight,
   DownloadSimple,
   ChartBar,
+  ChatCircleDots,
+  Check,
+  Checks,
   CheckCircle,
   Clock,
   EnvelopeSimple,
@@ -29,7 +33,9 @@ import {
   MagnifyingGlass,
   Monitor,
   Moon,
+  PaperPlaneRight,
   PencilSimpleLine,
+  WarningCircle,
   Play,
   Plus,
   Pulse,
@@ -109,3 +115,9 @@ export const EyeOffIcon = make(EyeSlash);
 export const LockIcon = make(LockSimple);
 export const TrashIcon = make(Trash);
 export const MonitorIcon = make(Monitor);
+export const ChatIcon = make(ChatCircleDots);
+export const SendIcon = make(PaperPlaneRight, "fill");
+export const CheckIcon = make(Check, "bold");
+export const DoubleCheckIcon = make(Checks, "bold");
+export const ArrowLeftIcon = make(ArrowLeft, "bold");
+export const AlertIcon = make(WarningCircle, "fill");

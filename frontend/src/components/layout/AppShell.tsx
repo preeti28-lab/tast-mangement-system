@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { AppLoader, InlineLoader, LOGOUT_STEPS } from "@/components/ui/Loader";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ChatProvider } from "@/components/chat/ChatProvider";
 import { authApi, type ApiError, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
 import Navbar from "./Navbar";
@@ -59,24 +60,26 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={ctx}>
       <ToastProvider>
-        {loggingOut && <AppLoader steps={LOGOUT_STEPS} overlay />}
-        <OfflineSync />
-        <TiltController />
-        <div className="relative isolate flex min-h-screen flex-1 bg-app">
-          {/* Color blobs the glass cards frost over */}
-          <div className="glass-backdrop" aria-hidden="true">
-            <span className="-top-32 right-[-8rem] h-[28rem] w-[28rem] bg-emerald-300 dark:bg-emerald-500" />
-            <span className="top-1/3 -left-40 h-[26rem] w-[26rem] bg-sky-300 dark:bg-sky-600" />
-            <span className="right-1/4 -bottom-40 h-[24rem] w-[24rem] bg-violet-300 dark:bg-violet-600" />
+        <ChatProvider>
+          {loggingOut && <AppLoader steps={LOGOUT_STEPS} overlay />}
+          <OfflineSync />
+          <TiltController />
+          <div className="relative isolate flex min-h-screen flex-1 bg-app">
+            {/* Color blobs the glass cards frost over */}
+            <div className="glass-backdrop" aria-hidden="true">
+              <span className="-top-32 right-[-8rem] h-[28rem] w-[28rem] bg-emerald-300 dark:bg-emerald-500" />
+              <span className="top-1/3 -left-40 h-[26rem] w-[26rem] bg-sky-300 dark:bg-sky-600" />
+              <span className="right-1/4 -bottom-40 h-[24rem] w-[24rem] bg-violet-300 dark:bg-violet-600" />
+            </div>
+            <Suspense>
+              <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </Suspense>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Navbar onMenuClick={() => setSidebarOpen(true)} />
+              <main key={pathname} className="page-enter flex-1 px-4 pt-4 pb-7 sm:px-6 lg:px-10">{children}</main>
+            </div>
           </div>
-          <Suspense>
-            <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          </Suspense>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Navbar onMenuClick={() => setSidebarOpen(true)} />
-            <main key={pathname} className="page-enter flex-1 px-4 pt-4 pb-7 sm:px-6 lg:px-10">{children}</main>
-          </div>
-        </div>
+        </ChatProvider>
       </ToastProvider>
     </UserContext.Provider>
   );

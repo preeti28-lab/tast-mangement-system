@@ -145,6 +145,31 @@ export type Analytics = {
   }[];
 };
 
+/** The other person in a chat, with presence. */
+export type ChatUser = UserRef & { role: Role; lastSeenAt: string | null; online: boolean };
+
+export type ChatMessage = {
+  _id: string;
+  conversation: string;
+  sender: string;
+  text: string;
+  deleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Conversation = {
+  _id: string;
+  user: ChatUser;
+  lastMessage: { _id: string; sender: string; text: string; deleted: boolean; createdAt: string } | null;
+  lastMessageAt: string | null;
+  unread: number;
+  myLastReadAt: string | null;
+  /** The other person has read / received everything sent up to these times. */
+  otherLastReadAt: string | null;
+  otherLastDeliveredAt: string | null;
+};
+
 export type FieldErrors = Partial<Record<string, string>>;
 
 export class ApiError extends Error {
@@ -317,6 +342,24 @@ export const settingsApi = {
   getAccess: () => request<RoleAccess>("/settings/access"),
   updateAccess: (access: Partial<RoleAccess["access"]>) =>
     request<RoleAccess>("/settings/access", { method: "PUT", body: JSON.stringify(access) }),
+};
+
+export const chatApi = {
+  conversations: () =>
+    request<{ conversations: Conversation[]; unreadTotal: number; notify: boolean }>("/chat/conversations"),
+  open: (userId: string) =>
+    request<{ conversation: Conversation }>("/chat/conversations", { method: "POST", body: JSON.stringify({ userId }) }),
+  messages: (id: string, query: { before?: string; since?: string } = {}) =>
+    request<{ messages: ChatMessage[]; hasMore: boolean; conversation: Conversation }>(
+      `/chat/conversations/${id}/messages${toQueryString(query)}`
+    ),
+  send: (id: string, text: string) =>
+    request<{ message: ChatMessage }>(`/chat/conversations/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+  markRead: (id: string) => request<{ readAt: string }>(`/chat/conversations/${id}/read`, { method: "POST" }),
+  remove: (messageId: string) => request<{ message: ChatMessage }>(`/chat/messages/${messageId}`, { method: "DELETE" }),
 };
 
 export const analyticsApi = {

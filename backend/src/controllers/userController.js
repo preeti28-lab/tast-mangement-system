@@ -5,6 +5,8 @@ import { isSameId } from "../utils/permissions.js";
 import { logAudit } from "../services/auditService.js";
 import Task from "../models/Task.js";
 import Notification from "../models/Notification.js";
+import Conversation from "../models/Conversation.js";
+import Message from "../models/Message.js";
 import { isEmailEnabled } from "../services/mailer.js";
 
 // GET /api/users?search=
@@ -101,6 +103,7 @@ export const updateUser = async (req, res) => {
 
 // DELETE /api/users/:id
 // Their assigned tasks become unassigned; tasks they created move to the person deleting them.
+// Their chats are removed for both sides.
 export const deleteUser = async (req, res) => {
   const [user, err] = await manageable(req, req.params.id);
   if (err) return fail(res, err);
@@ -113,6 +116,10 @@ export const deleteUser = async (req, res) => {
     Task.updateMany({ assignedTo: user._id }, { assignedTo: null }),
     Task.updateMany({ createdBy: user._id }, { createdBy: req.user._id }),
     Notification.deleteMany({ recipient: user._id }),
+    Conversation.find({ "members.user": user._id }, "_id").then((chats) => {
+      const ids = chats.map((c) => c._id);
+      return Promise.all([Message.deleteMany({ conversation: { $in: ids } }), Conversation.deleteMany({ _id: { $in: ids } })]);
+    }),
   ]);
   await user.deleteOne();
   await logAudit({

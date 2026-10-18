@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import { LogoutIcon, XIcon } from "@/components/icons";
 import { navItemsFor } from "./navigation";
 import { useUser } from "./UserContext";
+import { useChat } from "@/components/chat/ChatProvider";
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -13,6 +14,7 @@ export default function Sidebar({ open, onClose }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, logout } = useUser();
+  const { unreadTotal } = useChat();
 
   const isActive = (href: string) => {
     const [path, query] = href.split("?");
@@ -64,7 +66,17 @@ export default function Sidebar({ open, onClose }: Props) {
                 }`}
               >
                 <Icon />
-                {label}
+                <span className="flex-1">{label}</span>
+                {href === "/chat" && unreadTotal > 0 && (
+                  <span
+                    className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold leading-none ${
+                      active ? "bg-white text-brand-700" : "bg-brand-600 text-white"
+                    }`}
+                    aria-label={`${unreadTotal} unread`}
+                  >
+                    {unreadTotal > 99 ? "99+" : unreadTotal}
+                  </span>
+                )}
               </Link>
             );
           })}

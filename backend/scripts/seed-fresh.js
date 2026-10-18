@@ -1,6 +1,6 @@
 // Usage: node scripts/seed-fresh.js --confirm [--backup <file.json>]
 //
-// WIPES the database (users, tasks, activity log, notifications) and fills it with a
+// WIPES the database (users, tasks, activity log, notifications, chats) and fills it with a
 // fresh demo team and ~8 weeks of realistic work, so every dashboard, chart and table
 // has data. Role access settings are kept. With --backup, everything is first written
 // to a JSON file. Without --confirm it only prints what it would do.
@@ -14,6 +14,8 @@ import User from "../src/models/User.js";
 import Task from "../src/models/Task.js";
 import AuditLog from "../src/models/AuditLog.js";
 import Notification from "../src/models/Notification.js";
+import Conversation from "../src/models/Conversation.js";
+import Message from "../src/models/Message.js";
 
 const PASSWORD = "Test@123";
 const DAY = 24 * 60 * 60 * 1000;
@@ -104,6 +106,8 @@ const counts = {
   tasks: await Task.countDocuments(),
   auditlogs: await AuditLog.countDocuments(),
   notifications: await Notification.countDocuments(),
+  conversations: await Conversation.countDocuments(),
+  messages: await Message.countDocuments(),
 };
 console.log("Current data:", counts);
 
@@ -115,14 +119,21 @@ if (!confirm) {
 
 if (backupFile) {
   const dump = {};
-  for (const name of ["users", "tasks", "auditlogs", "notifications", "settings"]) {
+  for (const name of ["users", "tasks", "auditlogs", "notifications", "conversations", "messages", "settings"]) {
     dump[name] = await db.collection(name).find({}).toArray();
   }
   writeFileSync(backupFile, JSON.stringify({ takenAt: new Date(), db: db.name, ...dump }, null, 1));
   console.log(`Backup written to ${backupFile}`);
 }
 
-await Promise.all([User.deleteMany({}), Task.deleteMany({}), AuditLog.deleteMany({}), Notification.deleteMany({})]);
+await Promise.all([
+  User.deleteMany({}),
+  Task.deleteMany({}),
+  AuditLog.deleteMany({}),
+  Notification.deleteMany({}),
+  Conversation.deleteMany({}),
+  Message.deleteMany({}),
+]);
 console.log("Wiped users, tasks, activity log and notifications.");
 
 const now = Date.now();
