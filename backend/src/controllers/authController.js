@@ -1,8 +1,15 @@
+import crypto from "node:crypto";
 import User from "../models/User.js";
 import { signToken, setAuthCookie, clearAuthCookie } from "../utils/token.js";
 import { logAudit } from "../services/auditService.js";
+import { sendEmail, isEmailEnabled } from "../services/mailer.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_RESEND_MS = 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
+
+const hashOtp = (otp) => crypto.createHash("sha256").update(otp).digest("hex");
 
 const sendAuth = (res, status, user) => {
   setAuthCookie(res, signToken(user._id));
@@ -66,3 +73,83 @@ export const me = (req, res) => {
   res.json({ user: req.user });
 };
 
+
+// POST /api/auth/forgot-password
+// Always answers the same way so the endpoint can't be used to discover registered emails.
+export const forgotPassword = async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  if (!email || !EMAIL_RE.test(email)) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: { email: "Please enter a valid email" },
+    });
+  }
+
+  const reply = () =>
+    res.json({ message: "If an account exists for this email, an OTP has been sent to it." });
+
+  const user = await User.findOne({ email }).select("+resetOtp.sentAt");
+  if (!user) return reply();
+  if (user.resetOtp?.sentAt && Date.now() - user.resetOtp.sentAt.getTime() < OTP_RESEND_MS) {
+    return res.status(429).json({ message: "Please wait a minute before requesting another OTP" });
+  }
+
+  const otp = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+  user.resetOtp = {
+    hash: hashOtp(otp),
+    expiresAt: new Date(Date.now() + OTP_TTL_MS),
+    sentAt: new Date(),
+    attempts: 0,
+  };
+  await user.save();
+
+  if (!isEmailEnabled() && process.env.NODE_ENV === "development") {
+    console.log(`[dev] SMTP not configured. Password reset OTP for ${email}: ${otp}`);
+  }
+  await sendEmail({
+    to: email,
+    subject: "Your TaskFlow password reset OTP",
+    text:
+      `Hi ${user.name},\n\nYour OTP to reset your TaskFlow password is: ${otp}\n\n` +
+      `It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+  });
+  reply();
+};
+
+// POST /api/auth/reset-password
+export const resetPassword = async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const otp = String(req.body.otp ?? "").trim();
+  const { password } = req.body;
+
+  const errors = {};
+  if (!email || !EMAIL_RE.test(email)) errors.email = "Please enter a valid email";
+  if (!/^\d{6}$/.test(otp)) errors.otp = "Enter the 6-digit OTP";
+  if (!password || password.length < 8)
+    errors.password = "Password must be at least 8 characters";
+  if (Object.keys(errors).length) {
+    return res.status(400).json({ message: "Validation failed", errors });
+  }
+
+  const invalid = () =>
+    res.status(400).json({ message: "Invalid or expired OTP", errors: { otp: "Invalid or expired OTP" } });
+
+  const user = await User.findOne({ email }).select(
+    "+resetOtp.hash +resetOtp.expiresAt +resetOtp.attempts"
+  );
+  const stored = user?.resetOtp;
+  if (!stored?.hash || stored.expiresAt < new Date() || stored.attempts >= OTP_MAX_ATTEMPTS) {
+    return invalid();
+  }
+
+  const match = crypto.timingSafeEqual(Buffer.from(hashOtp(otp)), Buffer.from(stored.hash));
+  if (!match) {
+    await User.updateOne({ _id: user._id }, { $inc: { "resetOtp.attempts": 1 } });
+    return invalid();
+  }
+
+  user.password = password;
+  user.resetOtp = undefined;
+  await user.save();
+  res.json({ message: "Password reset successfully. You can now log in." });
+};

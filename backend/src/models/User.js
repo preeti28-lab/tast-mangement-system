@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     role: { type: String, enum: ROLES, default: "user" },
+    // Password-reset OTP: only a SHA-256 hash is stored, never the code itself.
+    resetOtp: {
+      hash: { type: String, select: false },
+      expiresAt: { type: Date, select: false },
+      sentAt: { type: Date, select: false },
+      attempts: { type: Number, default: 0, select: false },
+    },
     // Per-user notification settings. `inApp` controls the bell / real-time alerts,
     // `email` controls emails (sent only when SMTP is configured on the server).
     notificationPrefs: {
@@ -56,6 +63,7 @@ userSchema.methods.comparePassword = function (candidate) {
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
     delete ret.password;
+    delete ret.resetOtp;
     delete ret.__v;
     return ret;
   },

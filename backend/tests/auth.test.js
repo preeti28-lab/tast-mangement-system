@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { app, request, registerUser, useTestDatabase } from "./helpers.js";
 
@@ -66,5 +67,72 @@ describe("auth", () => {
   test("an invalid session cookie is cleared so the browser stops sending it", async () => {
     const res = await request(app).get("/api/auth/me").set("Cookie", "token=signed-with-an-old-secret").expect(401);
     expect(res.headers["set-cookie"][0]).toMatch(/^token=;.*Expires=Thu, 01 Jan 1970/);
+  });
+
+  describe("password reset with OTP", () => {
+    // The OTP is only stored hashed, so tests plant a known one directly in the database.
+    const plantOtp = (email, otp, extra = {}) =>
+      mongoose.connection.collection("users").updateOne(
+        { email },
+        {
+          $set: {
+            "resetOtp.hash": crypto.createHash("sha256").update(otp).digest("hex"),
+            "resetOtp.expiresAt": new Date(Date.now() + 60_000),
+            "resetOtp.attempts": 0,
+            ...extra,
+          },
+        }
+      );
+
+    test("forgot-password answers the same for known and unknown emails and stores a hashed OTP", async () => {
+      const { user } = await registerUser("Forgot");
+      const known = await request(app).post("/api/auth/forgot-password").send({ email: user.email }).expect(200);
+      const unknown = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: "nobody@example.com" })
+        .expect(200);
+      expect(known.body.message).toBe(unknown.body.message);
+
+      const stored = await mongoose.connection.collection("users").findOne({ email: user.email });
+      expect(stored.resetOtp.hash).toMatch(/^[0-9a-f]{64}$/);
+      expect(stored.resetOtp.expiresAt.getTime()).toBeGreaterThan(Date.now());
+    });
+
+    test("forgot-password is throttled to one OTP a minute", async () => {
+      const { user } = await registerUser("Throttle");
+      await request(app).post("/api/auth/forgot-password").send({ email: user.email }).expect(200);
+      await request(app).post("/api/auth/forgot-password").send({ email: user.email }).expect(429);
+    });
+
+    test("a valid OTP resets the password once", async () => {
+      const { user, password } = await registerUser("Reset");
+      await plantOtp(user.email, "123456");
+      await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: user.email, otp: "123456", password: "newpassword1" })
+        .expect(200);
+
+      await request(app).post("/api/auth/login").send({ email: user.email, password }).expect(401);
+      await request(app).post("/api/auth/login").send({ email: user.email, password: "newpassword1" }).expect(200);
+      await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: user.email, otp: "123456", password: "another123" })
+        .expect(400);
+    });
+
+    test("wrong, expired or over-guessed OTPs are rejected", async () => {
+      const { user } = await registerUser("BadOtp");
+      const body = { email: user.email, otp: "123456", password: "newpassword1" };
+
+      await plantOtp(user.email, "123456", { "resetOtp.expiresAt": new Date(Date.now() - 1000) });
+      await request(app).post("/api/auth/reset-password").send(body).expect(400);
+
+      await plantOtp(user.email, "123456");
+      for (let i = 0; i < 5; i++) {
+        await request(app).post("/api/auth/reset-password").send({ ...body, otp: "000000" }).expect(400);
+      }
+      // Correct code no longer works after too many wrong guesses.
+      await request(app).post("/api/auth/reset-password").send(body).expect(400);
+    });
   });
 });

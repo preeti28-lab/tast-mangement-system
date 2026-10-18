@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const AUTH_PAGES = ["/login", "/register"];
+const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/tasks",
@@ -41,7 +41,7 @@ export const config = {
     // Router prefetches of the auth pages are skipped: right after login the client
     // re-prefetches the /login link, and redirecting that request to /dashboard 404s.
     {
-      source: "/(login|register)",
+      source: "/(login|register|forgot-password)",
       missing: [{ type: "header", key: "next-router-prefetch" }],
     },
   ],

@@ -22,6 +22,31 @@ export function validateLogin(v: LoginValues): FieldErrors {
   return clean(errors);
 }
 
+export type ResetValues = { otp: string; password: string; confirmPassword: string };
+
+export function validateForgot(email: string): FieldErrors {
+  return clean({ email: validateEmail(email) });
+}
+
+export function validateReset(v: ResetValues): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!/^\d{6}$/.test(v.otp.trim())) errors.otp = "Enter the 6-digit OTP from your email";
+  Object.assign(errors, validateNewPassword(v.password, v.confirmPassword));
+  return clean(errors);
+}
+
+function validateNewPassword(password: string, confirmPassword: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!password) errors.password = "Password is required";
+  else if (password.length < 8) errors.password = "Password must be at least 8 characters";
+  else if (!/[A-Za-z]/.test(password) || !/\d/.test(password))
+    errors.password = "Password must contain a letter and a number";
+
+  if (!confirmPassword) errors.confirmPassword = "Please confirm your password";
+  else if (confirmPassword !== password) errors.confirmPassword = "Passwords do not match";
+  return errors;
+}
+
 export function validateRegister(v: RegisterValues): FieldErrors {
   const errors: FieldErrors = {};
   const name = v.name.trim();
@@ -31,13 +56,7 @@ export function validateRegister(v: RegisterValues): FieldErrors {
 
   errors.email = validateEmail(v.email);
 
-  if (!v.password) errors.password = "Password is required";
-  else if (v.password.length < 8) errors.password = "Password must be at least 8 characters";
-  else if (!/[A-Za-z]/.test(v.password) || !/\d/.test(v.password))
-    errors.password = "Password must contain a letter and a number";
-
-  if (!v.confirmPassword) errors.confirmPassword = "Please confirm your password";
-  else if (v.confirmPassword !== v.password) errors.confirmPassword = "Passwords do not match";
+  Object.assign(errors, validateNewPassword(v.password, v.confirmPassword));
 
   return clean(errors);
 }

@@ -9,7 +9,7 @@ import SubmitButton from "@/components/auth/SubmitButton";
 import { ApiError, authApi, type FieldErrors } from "@/lib/api";
 import { validateLogin, type LoginValues } from "@/lib/validation";
 
-export default function LoginForm() {
+export default function LoginForm({ passwordReset = false }: { passwordReset?: boolean }) {
   const router = useRouter();
   const [values, setValues] = useState<LoginValues>({ email: "", password: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -50,6 +50,14 @@ export default function LoginForm() {
       </div>
 
       <form onSubmit={onSubmit} noValidate className="space-y-4">
+        {passwordReset && !formError && (
+          <div
+            role="status"
+            className="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+          >
+            Password reset successfully. Log in with your new password.
+          </div>
+        )}
         <FormAlert message={formError} />
         <FormField
           label="Email"
@@ -71,6 +79,11 @@ export default function LoginForm() {
           onChange={onChange}
           error={errors.password}
         />
+        <div className="-mt-1 text-right">
+          <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            Forgot password?
+          </Link>
+        </div>
         <SubmitButton loading={loading}>{loading ? "Logging in..." : "Log in"}</SubmitButton>
       </form>
 
