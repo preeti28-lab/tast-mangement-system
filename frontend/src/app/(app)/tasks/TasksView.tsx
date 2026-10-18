@@ -10,7 +10,7 @@ import DeleteTaskDialog from "@/components/tasks/DeleteTaskDialog";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
 import TaskFilters, { type FilterValues } from "@/components/tasks/TaskFilters";
 import TaskFormModal, { type SaveResult } from "@/components/tasks/TaskFormModal";
-import { useTasksChanged } from "@/components/layout/RealtimeProvider";
+import { useTasksChanged } from "@/lib/taskEvents";
 import TaskList from "@/components/tasks/TaskList";
 import { VIEW_OPTIONS } from "@/components/tasks/options";
 import { useToast } from "@/components/ui/Toast";
@@ -72,7 +72,7 @@ export default function TasksView() {
   // ---- Data loading
   const [refresh, setRefresh] = useState(0);
   const reload = useCallback(() => setRefresh((n) => n + 1), []);
-  // Refresh when tasks change elsewhere (Socket.io) or offline changes finish syncing.
+  // Refresh when a new notification arrives or offline changes finish syncing.
   useTasksChanged(reload);
 
   const query: TaskQuery = useMemo(

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { BarList, DataTable, Legend, LineChart } from "@/components/analytics/charts";
 import { Spinner } from "@/components/layout/AppShell";
-import { useTasksChanged } from "@/components/layout/RealtimeProvider";
+import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { analyticsApi, type Analytics } from "@/lib/api";
 import { initials } from "@/lib/format";

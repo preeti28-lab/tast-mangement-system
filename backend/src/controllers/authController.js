@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import { signToken, signSocketToken, setAuthCookie, clearAuthCookie } from "../utils/token.js";
+import { signToken, setAuthCookie, clearAuthCookie } from "../utils/token.js";
 import { logAudit } from "../services/auditService.js";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -66,7 +66,3 @@ export const me = (req, res) => {
   res.json({ user: req.user });
 };
 
-// GET /api/auth/socket-token
-export const socketToken = (req, res) => {
-  res.json({ token: signSocketToken(req.user._id) });
-};

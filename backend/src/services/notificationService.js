@@ -7,8 +7,8 @@ const PREF_KEYS = { task_assigned: "taskAssigned", task_updated: "taskUpdated" }
 
 /**
  * Notifies a user about a task event, respecting their notification preferences.
- * The in-app notification is stored in MongoDB; the Socket.io server picks new
- * documents up through a change stream and pushes them to the user in real time.
+ * The in-app notification is stored in MongoDB and shown in the bell (the client
+ * polls for new ones); an email is also sent when the user opted in and SMTP is set.
  */
 export async function notifyUser({ recipient, actor, type, message, task }) {
   if (!recipient || isSameId(recipient, actor._id)) return null;

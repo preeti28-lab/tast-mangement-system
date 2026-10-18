@@ -62,10 +62,4 @@ describe("auth", () => {
     await request(app).get("/api/tasks").expect(401);
     await request(app).get("/api/tasks").set("Authorization", "Bearer not-a-jwt").expect(401);
   });
-
-  test("a socket token can't be used for the REST API", async () => {
-    const { agent } = await registerUser("Socket");
-    const { body } = await agent.get("/api/auth/socket-token").expect(200);
-    await request(app).get("/api/auth/me").set("Authorization", `Bearer ${body.token}`).expect(401);
-  });
 });

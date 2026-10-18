@@ -7,7 +7,6 @@ import { authApi, type User } from "@/lib/api";
 import { clearOfflineQueue } from "@/lib/offlineQueue";
 import Navbar from "./Navbar";
 import OfflineSync from "./OfflineSync";
-import { RealtimeProvider } from "./RealtimeProvider";
 import Sidebar from "./Sidebar";
 import { UserContext } from "./UserContext";
 
@@ -48,18 +47,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={ctx}>
       <ToastProvider>
-        <RealtimeProvider>
-          <OfflineSync />
-          <div className="flex min-h-screen flex-1 bg-zinc-50 dark:bg-zinc-950">
-            <Suspense>
-              <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            </Suspense>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <Navbar onMenuClick={() => setSidebarOpen(true)} />
-              <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
-            </div>
+        <OfflineSync />
+        <div className="flex min-h-screen flex-1 bg-zinc-50 dark:bg-zinc-950">
+          <Suspense>
+            <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          </Suspense>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Navbar onMenuClick={() => setSidebarOpen(true)} />
+            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
           </div>
-        </RealtimeProvider>
+        </div>
       </ToastProvider>
     </UserContext.Provider>
   );

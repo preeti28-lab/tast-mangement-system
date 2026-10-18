@@ -14,7 +14,7 @@ const API_CACHE = `taskflow-api-${VERSION}`;
 const PRECACHE = ["/offline.html", "/icon-192.png", "/icon-512.png"];
 
 // Never cache these: they are user-session or one-off responses.
-const API_NO_CACHE = ["/api/auth/socket-token", "/api/auth/logout", "/api/auth/login", "/api/auth/register"];
+const API_NO_CACHE = ["/api/auth/logout", "/api/auth/login", "/api/auth/register"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE)));

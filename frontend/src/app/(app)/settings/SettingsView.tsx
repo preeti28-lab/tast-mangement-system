@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { Spinner } from "@/components/layout/AppShell";
-import { useRealtime } from "@/components/layout/RealtimeProvider";
 import { useToast } from "@/components/ui/Toast";
 import { userApi, type ApiError, type NotificationPrefs } from "@/lib/api";
 
@@ -47,7 +46,6 @@ function Toggle({
 
 export default function SettingsView() {
   const toast = useToast();
-  const { status } = useRealtime();
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [emailAvailable, setEmailAvailable] = useState(false);
   const [error, setError] = useState("");
@@ -103,8 +101,7 @@ export default function SettingsView() {
       <section className="rounded-xl border border-zinc-200 bg-white px-5 pb-2 pt-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <h3 className="font-semibold text-zinc-900 dark:text-white">In-app alerts</h3>
         <p className="text-xs text-zinc-500">
-          Shown in the bell and pushed instantly while you&apos;re online
-          {status === "live" ? " (real-time connected)" : ""}.
+          Shown in the bell, with a pop-up when a new one arrives.
         </p>
         <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
           <Toggle

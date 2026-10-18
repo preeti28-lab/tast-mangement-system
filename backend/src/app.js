@@ -18,7 +18,7 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
-// Behind a hosting proxy (Render, Railway, ...) so req.secure / IPs are correct.
+// Behind a hosting proxy (Vercel, ...) so req.secure / IPs are correct.
 app.set("trust proxy", 1);
 
 app.use(

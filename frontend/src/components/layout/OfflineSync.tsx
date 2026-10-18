@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { QUEUE_EVENT, flushOfflineQueue, pendingCount } from "@/lib/offlineQueue";
-import { TASKS_CHANGED_EVENT } from "./RealtimeProvider";
+import { emitTasksChanged } from "@/lib/taskEvents";
 
 const subscribeOnline = (cb: () => void) => {
   window.addEventListener("online", cb);
@@ -29,7 +29,7 @@ export default function OfflineSync() {
     flushOfflineQueue().then(({ synced, failed }) => {
       if (synced) toast(`Synced ${synced} offline change${synced === 1 ? "" : "s"}`);
       if (failed) toast(`${failed} offline change${failed === 1 ? "" : "s"} couldn't be applied`, "error");
-      if (synced || failed) window.dispatchEvent(new Event(TASKS_CHANGED_EVENT));
+      if (synced || failed) emitTasksChanged();
     });
   }, [online, toast]);
 

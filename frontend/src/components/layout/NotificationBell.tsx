@@ -6,18 +6,18 @@ import { BellIcon } from "@/components/icons";
 import { notificationApi, type Notification } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
-import { useRealtime } from "./RealtimeProvider";
+import { emitTasksChanged } from "@/lib/taskEvents";
 import { useClickOutside } from "./useClickOutside";
 
 const POLL_MS = 30_000;
-const RESYNC_MS = 120_000;
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
-  const { status, onNotification } = useRealtime();
+  // Ids seen so far; null until the first load so existing notifications don't pop up.
+  const seen = useRef<Set<string> | null>(null);
   const toast = useToast();
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(ref, open, close);
@@ -27,35 +27,33 @@ export default function NotificationBell() {
       notificationApi
         .list()
         .then((data) => {
+          const fresh = seen.current
+            ? data.notifications.filter((n) => !n.read && !seen.current!.has(n._id))
+            : [];
+          seen.current = new Set(data.notifications.map((n) => n._id));
           setItems(data.notifications);
           setUnread(data.unreadCount);
+          // Pop up new notifications and let open pages refresh their task data.
+          fresh.slice(0, 3).forEach((n) => toast(n.message));
+          if (fresh.length) emitTasksChanged();
         })
         // Keep the last known state; the bell is not critical.
         .catch(() => {}),
-    []
+    [toast]
   );
 
-  // Polling is the fallback; while the socket is live it only runs occasionally to resync.
-  const pollMs = status === "live" ? RESYNC_MS : POLL_MS;
+  // Poll regularly, and right away when the tab becomes visible again.
   useEffect(() => {
     const first = setTimeout(load, 0);
-    const id = setInterval(load, pollMs);
+    const id = setInterval(load, POLL_MS);
+    const onVisible = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearTimeout(first);
       clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [load, pollMs]);
-
-  // Real-time: new notifications arrive over Socket.io.
-  useEffect(
-    () =>
-      onNotification((n) => {
-        setItems((list) => [n, ...list.filter((item) => item._id !== n._id)].slice(0, 20));
-        setUnread((count) => count + 1);
-        toast(n.message);
-      }),
-    [onNotification, toast]
-  );
+  }, [load]);
 
   const openNotification = (n: Notification) => {
     close();

@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
 import request from "supertest";
-import { MongoMemoryReplSet } from "mongodb-memory-server";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import app from "../src/app.js";
 
-let replSet;
+let mongo;
 
-/** Starts an in-memory MongoDB replica set (replica set = change streams work). */
+/** Starts a throwaway in-memory MongoDB for the test file. */
 export function useTestDatabase() {
   beforeAll(async () => {
-    replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
-    process.env.MONGODB_URI = replSet.getUri("taskflow_test");
+    mongo = await MongoMemoryServer.create();
+    process.env.MONGODB_URI = mongo.getUri("taskflow_test");
   });
 
   afterEach(async () => {
@@ -20,7 +20,7 @@ export function useTestDatabase() {
 
   afterAll(async () => {
     await mongoose.disconnect();
-    await replSet?.stop();
+    await mongo?.stop();
   });
 }
 

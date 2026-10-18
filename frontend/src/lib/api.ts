@@ -168,7 +168,6 @@ export const authApi = {
     }),
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
   me: () => request<{ user: User }>("/auth/me"),
-  socketToken: () => request<{ token: string }>("/auth/socket-token"),
 };
 
 export type TaskView = "all" | "assigned" | "created" | "overdue" | "team";

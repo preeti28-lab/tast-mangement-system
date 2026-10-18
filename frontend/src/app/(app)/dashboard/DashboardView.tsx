@@ -8,7 +8,7 @@ import FormAlert from "@/components/auth/FormAlert";
 import { CheckCircleIcon, ClockIcon, InboxIcon, PencilIcon, PlusIcon } from "@/components/icons";
 import { Spinner } from "@/components/layout/AppShell";
 import { useUser } from "@/components/layout/UserContext";
-import { useTasksChanged } from "@/components/layout/RealtimeProvider";
+import { useTasksChanged } from "@/lib/taskEvents";
 import { dashboardApi, type DashboardData } from "@/lib/api";
 
 export default function DashboardView() {
@@ -16,7 +16,7 @@ export default function DashboardView() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
-  // Live-update the numbers when tasks change elsewhere.
+  // Refresh the numbers when a new notification arrives or offline changes sync.
   useTasksChanged(() => setRefresh((n) => n + 1));
 
   useEffect(() => {

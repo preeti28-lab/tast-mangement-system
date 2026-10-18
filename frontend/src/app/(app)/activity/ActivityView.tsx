@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import FormAlert from "@/components/auth/FormAlert";
 import { Spinner } from "@/components/layout/AppShell";
-import { useTasksChanged } from "@/components/layout/RealtimeProvider";
+import { useTasksChanged } from "@/lib/taskEvents";
 import { useUser } from "@/components/layout/UserContext";
 import { selectClass } from "@/components/tasks/options";
 import { auditApi, type AuditAction, type AuditLog } from "@/lib/api";
